@@ -3,6 +3,7 @@ package com.dnproject.platform.service;
 import com.dnproject.platform.domain.Animal;
 import com.dnproject.platform.domain.constant.AnimalStatus;
 import com.dnproject.platform.dto.publicapi.AnimalItem;
+import com.dnproject.platform.exception.PublicApiException;
 import com.dnproject.platform.repository.AnimalRepository;
 import com.dnproject.platform.repository.ShelterRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,5 +105,53 @@ class AnimalSyncServiceTest {
         assertThat(result.addedCount()).isEqualTo(0);
         verify(animalRepository, never()).delete(any());
         verify(animalRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("공공 API 호출이 모두 실패하면 결과에 전체 실패와 사유가 기록된다")
+    void allApiCallsFailedIsReported() {
+        when(publicApiService.getAbandonedAnimals(any(), any(), anyString(), any(), any(), any(), anyInt(), anyInt()))
+                .thenThrow(new PublicApiException("공공 API 호출 실패 (HTTP 403)"));
+
+        AnimalSyncService.SyncResult result = animalSyncService.syncFromPublicApi(3, null, null);
+
+        assertThat(result.completelyFailed()).isTrue();
+        assertThat(result.failedRequestCount()).isEqualTo(2); // 개, 고양이 각 1회
+        assertThat(result.errorMessage()).contains("HTTP 403");
+        assertThat(result.failureSummary()).contains("모두 실패").contains("HTTP 403");
+        assertThat(result.addedCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("일부 축종만 실패하면 부분 실패로 기록되고 성공한 축종의 결과는 유지된다")
+    void partialFailureKeepsSucceededResults() {
+        AnimalItem item = new AnimalItem();
+        item.setDesertionNo("dog-1");
+        item.setProcessState("보호중");
+        when(publicApiService.getAbandonedAnimals(any(), any(), eq("417000"), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of(item));
+        when(publicApiService.getAbandonedAnimals(any(), any(), eq("422400"), any(), any(), any(), anyInt(), anyInt()))
+                .thenThrow(new PublicApiException("공공 API 호출 실패 (HTTP 500)"));
+        when(animalRepository.findByPublicApiAnimalId("dog-1")).thenReturn(Optional.empty());
+        when(shelterRepository.findFirstByName(anyString())).thenReturn(Optional.empty());
+
+        AnimalSyncService.SyncResult result = animalSyncService.syncFromPublicApi(3, null, null);
+
+        assertThat(result.addedCount()).isEqualTo(1);
+        assertThat(result.hasFailures()).isTrue();
+        assertThat(result.completelyFailed()).isFalse();
+        assertThat(result.failureSummary()).contains("1건 실패").contains("HTTP 500");
+    }
+
+    @Test
+    @DisplayName("API 호출이 성공하면 결과 0건이어도 실패가 아니다")
+    void emptyResultIsNotFailure() {
+        when(publicApiService.getAbandonedAnimals(any(), any(), anyString(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(Collections.emptyList());
+
+        AnimalSyncService.SyncResult result = animalSyncService.syncFromPublicApi(3, null, null);
+
+        assertThat(result.hasFailures()).isFalse();
+        assertThat(result.failureSummary()).isNull();
     }
 }

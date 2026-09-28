@@ -4,6 +4,7 @@ import com.dnproject.platform.dto.publicapi.AnimalItem;
 import com.dnproject.platform.dto.publicapi.KindItem;
 import com.dnproject.platform.dto.publicapi.PublicApiResponse;
 import com.dnproject.platform.dto.publicapi.ShelterItem;
+import com.dnproject.platform.exception.PublicApiException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -69,6 +71,8 @@ public class PublicApiService {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
     /** URL 쿼리 문자열의 serviceKey 값. 키 원문과 인코딩 형태가 달라도 가리기 위해 사용한다. */
     private static final Pattern SERVICE_KEY_PARAM = Pattern.compile("(?i)(serviceKey=)[^&\\s\"'<>]+");
+    /** 공공데이터포털 인증 오류 XML의 사유 코드 (예: SERVICE_KEY_IS_NOT_REGISTERED_ERROR) */
+    private static final Pattern RETURN_AUTH_MSG = Pattern.compile("<returnAuthMsg>([A-Za-z0-9_ ]{1,100})</returnAuthMsg>");
 
     /**
      * 유기동물 목록 조회
@@ -76,11 +80,13 @@ public class PublicApiService {
      * @param orgCd 시군구코드 (없으면 null)
      * @param upkind 축종 417000=개, 422400=고양이
      * @param state notice=공고중, protect=보호중
+     * @return 조회 결과. 서비스 키가 설정되지 않았으면 빈 목록
+     * @throws PublicApiException HTTP 오류, 연결 실패, 해석할 수 없는 응답, 오류 코드 응답일 때
      */
     public List<AnimalItem> getAbandonedAnimals(String uprCd, String orgCd, String upkind,
                                                  String state, LocalDate bgnde, LocalDate endde,
                                                  int pageNo, int numOfRows) {
-        if (serviceKey == null || serviceKey.isBlank() || "your-public-api-service-key".equals(serviceKey)) {
+        if (!isApiKeyConfigured()) {
             log.warn("공공 API 서비스 키가 설정되지 않았습니다. 빈 목록을 반환합니다.");
             return Collections.emptyList();
         }
@@ -97,66 +103,84 @@ public class PublicApiService {
         if (endde != null) builder.queryParam("endde", endde.format(DATE_FORMAT));
         String uri = builder.build().toUriString();
 
+        String json;
         try {
-            String json = webClientBuilder.build()
+            json = webClientBuilder.build()
                     .get()
                     .uri(uri)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
-            List<AnimalItem> result = parseAnimalItems(json);
-            if (result.isEmpty() && json != null && json.length() < 2000) {
-                log.info("공공 API 유기동물 조회 빈 결과. 응답(앞 1500자): {}", abbreviate(maskServiceKey(json), 1500));
-            } else if (result.isEmpty()) {
-                log.info("공공 API 유기동물 조회 빈 결과. upkind={} state={} bgnde={} endde={} pageNo={}", upkind, state,
-                        bgnde != null ? bgnde.format(DATE_FORMAT) : "", endde != null ? endde.format(DATE_FORMAT) : "", pageNo);
-            }
-            return result;
         } catch (WebClientResponseException e) {
-            // e.getMessage()에는 serviceKey가 포함된 요청 URL이 들어 있으므로 로그에 쓰지 않는다.
+            // e.getMessage()에는 serviceKey가 포함된 요청 URL이 들어 있으므로 로그·예외 메시지에 쓰지 않는다.
             log.error("공공 API 유기동물 조회 실패 upkind={} pageNo={}: HTTP {} 응답본문(앞 500자): {}", upkind, pageNo,
                     e.getStatusCode().value(), abbreviate(maskServiceKey(e.getResponseBodyAsString()), 500));
-            return Collections.emptyList();
+            throw new PublicApiException("공공 API 호출 실패 (HTTP " + e.getStatusCode().value() + ")");
         } catch (Exception e) {
             log.error("공공 API 유기동물 조회 실패 upkind={} pageNo={}: {}", upkind, pageNo, describeError(e));
-            return Collections.emptyList();
+            throw new PublicApiException("공공 API 호출 실패 (" + e.getClass().getSimpleName() + ")");
         }
+
+        List<AnimalItem> result = parseAnimalItems(json);
+        if (result.isEmpty()) {
+            log.info("공공 API 유기동물 조회 빈 결과. upkind={} state={} bgnde={} endde={} pageNo={}", upkind, state,
+                    bgnde != null ? bgnde.format(DATE_FORMAT) : "", endde != null ? endde.format(DATE_FORMAT) : "", pageNo);
+        }
+        return result;
     }
 
     /**
-     * 응답 JSON에서 item 리스트 추출 (단일 객체인 경우 리스트로 감싸서 처리)
+     * 응답 JSON에서 item 리스트 추출 (단일 객체인 경우 리스트로 감싸서 처리).
+     * 정상 응답인데 결과가 없으면 빈 리스트를 반환하고,
+     * 응답을 해석할 수 없거나 오류 코드가 오면 PublicApiException을 던진다.
      */
     @SuppressWarnings("unchecked")
-    private List<AnimalItem> parseAnimalItems(String json) {
+    List<AnimalItem> parseAnimalItems(String json) {
+        if (json == null || json.isBlank()) {
+            throw new PublicApiException("공공 API 응답이 비어 있습니다.");
+        }
+        Map<String, Object> map;
         try {
-            if (json == null || json.isBlank()) return Collections.emptyList();
-            Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {});
-            Object response = map.get("response");
-            if (response == null) return Collections.emptyList();
-            Map<String, Object> bodyMap = (Map<String, Object>) response;
-            Object body = bodyMap.get("body");
-            if (body == null) {
-                Object header = bodyMap.get("header");
-                if (header instanceof Map) {
-                    Object rc = ((Map<?, ?>) header).get("resultCode");
-                    Object msg = ((Map<?, ?>) header).get("resultMsg");
-                    log.warn("공공 API body 없음. header resultCode={} resultMsg={}", rc, msg);
-                }
+            map = objectMapper.readValue(json, new TypeReference<>() {});
+        } catch (Exception e) {
+            // 인증 오류 등은 JSON이 아니라 XML(OpenAPI_ServiceResponse)로 온다.
+            log.warn("공공 API 응답 파싱 실패. 응답(앞 500자): {}", abbreviate(maskServiceKey(json), 500));
+            Matcher m = RETURN_AUTH_MSG.matcher(json);
+            throw new PublicApiException(m.find()
+                    ? "공공 API 오류 응답: " + m.group(1).trim()
+                    : "공공 API 응답을 해석할 수 없습니다.");
+        }
+        Object response = map.get("response");
+        if (!(response instanceof Map)) {
+            throw new PublicApiException("공공 API 응답 형식이 올바르지 않습니다.");
+        }
+        Map<String, Object> bodyMap = (Map<String, Object>) response;
+        Object body = bodyMap.get("body");
+        if (body == null) {
+            Object header = bodyMap.get("header");
+            Object rc = header instanceof Map ? ((Map<?, ?>) header).get("resultCode") : null;
+            Object msg = header instanceof Map ? ((Map<?, ?>) header).get("resultMsg") : null;
+            if ("00".equals(String.valueOf(rc))) {
                 return Collections.emptyList();
             }
-            Object items = ((Map<String, Object>) body).get("items");
-            if (items == null) return Collections.emptyList();
-            if (!(items instanceof Map)) return Collections.emptyList();
-            Object item = ((Map<String, Object>) items).get("item");
-            if (item == null) return Collections.emptyList();
+            log.warn("공공 API body 없음. header resultCode={} resultMsg={}", rc, msg);
+            throw new PublicApiException(abbreviate(maskServiceKey(
+                    "공공 API 오류 응답 (resultCode=" + rc + ", resultMsg=" + msg + ")"), 300));
+        }
+        if (!(body instanceof Map)) return Collections.emptyList();
+        Object items = ((Map<String, Object>) body).get("items");
+        // 결과가 0건이면 items가 빈 문자열로 온다.
+        if (!(items instanceof Map)) return Collections.emptyList();
+        Object item = ((Map<String, Object>) items).get("item");
+        if (item == null) return Collections.emptyList();
+        try {
             if (item instanceof List) {
                 return objectMapper.convertValue(item, new TypeReference<List<AnimalItem>>() {});
             }
-            AnimalItem single = objectMapper.convertValue(item, AnimalItem.class);
-            return List.of(single);
-        } catch (Exception e) {
-            log.warn("공공 API 응답 파싱 실패: {}", e.getMessage());
-            return Collections.emptyList();
+            return List.of(objectMapper.convertValue(item, AnimalItem.class));
+        } catch (IllegalArgumentException e) {
+            log.warn("공공 API item 변환 실패: {}", e.getMessage());
+            throw new PublicApiException("공공 API 응답 항목을 해석할 수 없습니다.");
         }
     }
 

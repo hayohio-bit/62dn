@@ -1,5 +1,6 @@
 package com.dnproject.platform.service;
 
+import com.dnproject.platform.exception.PublicApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(OutputCaptureExtension.class)
 class PublicApiServiceTest {
@@ -52,17 +54,74 @@ class PublicApiServiceTest {
     }
 
     @Test
-    @DisplayName("공공 API가 403을 반환해도 로그에 serviceKey가 남지 않는다")
-    void forbiddenResponseDoesNotLogServiceKey(CapturedOutput output) {
+    @DisplayName("공공 API가 403을 반환하면 실패 예외를 던지고, 예외 메시지와 로그에 serviceKey가 남지 않는다")
+    void forbiddenResponseThrowsWithoutLeakingServiceKey(CapturedOutput output) {
         PublicApiService s = createService(request -> Mono.just(
                 ClientResponse.create(HttpStatus.FORBIDDEN).body("Forbidden").build()));
 
-        s.getAbandonedAnimals(null, null, "417000", null, LocalDate.now().minusDays(1), LocalDate.now(), 1, 100);
+        assertThatThrownBy(() -> s.getAbandonedAnimals(null, null, "417000", null,
+                LocalDate.now().minusDays(1), LocalDate.now(), 1, 100))
+                .isInstanceOf(PublicApiException.class)
+                .hasMessageContaining("HTTP 403")
+                .hasMessageNotContaining(KEY)
+                .hasMessageNotContaining(ENCODED_KEY)
+                .hasNoCause();
 
         assertThat(output.getAll())
                 .contains("HTTP 403")
                 .doesNotContain(KEY)
                 .doesNotContain(ENCODED_KEY);
+    }
+
+    @Test
+    @DisplayName("정상 응답에 결과가 0건이면 빈 목록을 반환한다")
+    void emptyResultIsNotFailure() {
+        String json = "{\"response\":{\"header\":{\"resultCode\":\"00\",\"resultMsg\":\"NORMAL SERVICE.\"},"
+                + "\"body\":{\"items\":\"\",\"numOfRows\":100,\"pageNo\":1,\"totalCount\":0}}}";
+
+        assertThat(service.parseAnimalItems(json)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("정상 응답의 item 배열을 AnimalItem 목록으로 바꾼다")
+    void parsesItems() {
+        String json = "{\"response\":{\"header\":{\"resultCode\":\"00\"},\"body\":{\"items\":{\"item\":["
+                + "{\"desertionNo\":\"1\",\"processState\":\"보호중\"},{\"desertionNo\":\"2\",\"processState\":\"종료(입양)\"}]}}}}";
+
+        assertThat(service.parseAnimalItems(json))
+                .extracting("desertionNo")
+                .containsExactly("1", "2");
+    }
+
+    @Test
+    @DisplayName("인증 오류 XML 응답은 사유 코드를 담은 실패 예외로 바꾼다")
+    void xmlAuthErrorIsFailure() {
+        String xml = "<OpenAPI_ServiceResponse><cmmMsgHeader><errMsg>SERVICE ERROR</errMsg>"
+                + "<returnAuthMsg>SERVICE_KEY_IS_NOT_REGISTERED_ERROR</returnAuthMsg>"
+                + "<returnReasonCode>30</returnReasonCode></cmmMsgHeader></OpenAPI_ServiceResponse>";
+
+        assertThatThrownBy(() -> service.parseAnimalItems(xml))
+                .isInstanceOf(PublicApiException.class)
+                .hasMessageContaining("SERVICE_KEY_IS_NOT_REGISTERED_ERROR");
+    }
+
+    @Test
+    @DisplayName("body 없이 오류 resultCode가 오면 실패 예외를 던진다")
+    void errorResultCodeIsFailure() {
+        String json = "{\"response\":{\"header\":{\"resultCode\":\"22\",\"resultMsg\":\"LIMITED NUMBER OF SERVICE REQUESTS EXCEEDS ERROR.\"}}}";
+
+        assertThatThrownBy(() -> service.parseAnimalItems(json))
+                .isInstanceOf(PublicApiException.class)
+                .hasMessageContaining("resultCode=22");
+    }
+
+    @Test
+    @DisplayName("서비스 키가 없으면 API를 호출하지 않고 빈 목록을 반환한다")
+    void missingKeyReturnsEmptyWithoutCalling() {
+        PublicApiService s = createService(request -> Mono.error(new AssertionError("호출되면 안 됨")));
+        ReflectionTestUtils.setField(s, "serviceKey", "");
+
+        assertThat(s.getAbandonedAnimals(null, null, "417000", null, null, null, 1, 100)).isEmpty();
     }
 
     @Test

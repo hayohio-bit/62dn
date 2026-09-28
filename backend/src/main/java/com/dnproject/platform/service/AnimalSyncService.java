@@ -4,6 +4,7 @@ import com.dnproject.platform.domain.Animal;
 import com.dnproject.platform.domain.Shelter;
 import com.dnproject.platform.domain.constant.*;
 import com.dnproject.platform.dto.publicapi.AnimalItem;
+import com.dnproject.platform.exception.PublicApiException;
 import com.dnproject.platform.repository.AnimalRepository;
 import com.dnproject.platform.repository.ShelterRepository;
 import com.dnproject.platform.util.AddressRegionParser;
@@ -59,10 +60,51 @@ public class AnimalSyncService {
     /** 신규 추가용 기간 (7일) - 종료된 동물 삭제 누락 방지 */
     private static final int NEW_DAYS = 7;
 
-    /** addedCount: 신규 추가, updatedCount: 기존 수정, removedCount: 입양·만료 삭제 */
-    public record SyncResult(int addedCount, int updatedCount, int removedCount) {
+    /**
+     * addedCount: 신규 추가, updatedCount: 기존 수정, removedCount: 입양·만료 삭제.
+     * failedRequestCount/succeededRequestCount: 공공 API 페이지 요청의 실패/성공 횟수.
+     * errorMessage: 첫 번째 API 실패 사유 (실패가 없으면 null). 서비스 키는 포함하지 않는다.
+     */
+    public record SyncResult(int addedCount, int updatedCount, int removedCount,
+            int failedRequestCount, int succeededRequestCount, String errorMessage) {
+
+        public SyncResult(int addedCount, int updatedCount, int removedCount) {
+            this(addedCount, updatedCount, removedCount, 0, 0, null);
+        }
+
         public int syncedCount() {
             return addedCount + updatedCount;
+        }
+
+        /** API 요청이 하나라도 실패했는지 */
+        public boolean hasFailures() {
+            return failedRequestCount > 0;
+        }
+
+        /** API 요청이 모두 실패해 아무 데이터도 받지 못했는지 */
+        public boolean completelyFailed() {
+            return failedRequestCount > 0 && succeededRequestCount == 0;
+        }
+
+        /** 동기화 이력·응답에 남길 실패 요약. 실패가 없으면 null */
+        public String failureSummary() {
+            if (completelyFailed()) {
+                return "공공 API 호출이 모두 실패해 동기화하지 못했습니다. " + errorMessage;
+            }
+            if (hasFailures()) {
+                return "공공 API 호출 " + failedRequestCount + "건 실패. " + errorMessage;
+            }
+            return null;
+        }
+    }
+
+    /** 동기화 중 건수와 API 실패를 모으는 누적기 */
+    private static final class SyncCounter {
+        int added, updated, removed, failedRequests, succeededRequests;
+        String firstError;
+
+        SyncResult toResult() {
+            return new SyncResult(added, updated, removed, failedRequests, succeededRequests, firstError);
         }
     }
 
@@ -78,21 +120,14 @@ public class AnimalSyncService {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(days);
 
-        int added = 0, updated = 0, removed = 0;
+        SyncCounter counter = new SyncCounter();
         if (speciesFilter == null || "DOG".equalsIgnoreCase(speciesFilter)) {
-            var c = syncByUpkind(DOG_CODE, startDate, endDate, maxPages);
-            added += c[0];
-            updated += c[1];
-            removed += c[2];
+            syncByUpkind(DOG_CODE, startDate, endDate, maxPages, counter);
         }
         if (speciesFilter == null || "CAT".equalsIgnoreCase(speciesFilter)) {
-            var c = syncByUpkind(CAT_CODE, startDate, endDate, maxPages);
-            added += c[0];
-            updated += c[1];
-            removed += c[2];
+            syncByUpkind(CAT_CODE, startDate, endDate, maxPages, counter);
         }
-
-        return new SyncResult(added, updated, removed);
+        return counter.toResult();
     }
 
     /**
@@ -104,17 +139,10 @@ public class AnimalSyncService {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(NEW_DAYS);
 
-        int added = 0, updated = 0, removed = 0;
-        var dog = syncByUpkind(DOG_CODE, startDate, endDate, null);
-        added += dog[0];
-        updated += dog[1];
-        removed += dog[2];
-        var cat = syncByUpkind(CAT_CODE, startDate, endDate, null);
-        added += cat[0];
-        updated += cat[1];
-        removed += cat[2];
-
-        return new SyncResult(added, updated, removed);
+        SyncCounter counter = new SyncCounter();
+        syncByUpkind(DOG_CODE, startDate, endDate, null, counter);
+        syncByUpkind(CAT_CODE, startDate, endDate, null, counter);
+        return counter.toResult();
     }
 
     /**
@@ -185,15 +213,27 @@ public class AnimalSyncService {
         SKIPPED
     }
 
-    /** @return int[3] = { addedCount, updatedCount, removedCount } */
-    private int[] syncByUpkind(String upkind, LocalDate startDate, LocalDate endDate, Integer maxPages) {
+    /** 축종 하나를 페이지 단위로 동기화하고 결과를 counter에 더한다. */
+    private void syncByUpkind(String upkind, LocalDate startDate, LocalDate endDate, Integer maxPages,
+            SyncCounter counter) {
         int pageNo = 1;
         int numOfRows = 100;
-        int added = 0, updated = 0, removed = 0;
         // state 필터 없이 전체 조회 → 입양·안락사 등 상태 변경된 동물도 포함
         while (true) {
-            List<AnimalItem> items = publicApiService.getAbandonedAnimals(
-                    null, null, upkind, null, startDate, endDate, pageNo, numOfRows);
+            List<AnimalItem> items;
+            try {
+                items = publicApiService.getAbandonedAnimals(
+                        null, null, upkind, null, startDate, endDate, pageNo, numOfRows);
+            } catch (PublicApiException e) {
+                // 이후 페이지 존재 여부를 알 수 없으므로 이 축종의 동기화를 중단한다.
+                log.warn("공공 API 조회 실패로 동기화 중단 upkind={} pageNo={}: {}", upkind, pageNo, e.getMessage());
+                counter.failedRequests++;
+                if (counter.firstError == null) {
+                    counter.firstError = e.getMessage();
+                }
+                break;
+            }
+            counter.succeededRequests++;
             if (items == null || items.isEmpty())
                 break;
             for (AnimalItem item : items) {
@@ -205,9 +245,9 @@ public class AnimalSyncService {
                     SyncAction action = requiresNewTransactionTemplate.execute(status -> upsertAnimal(item));
                     if (action != null) {
                         switch (action) {
-                            case ADDED -> added++;
-                            case UPDATED -> updated++;
-                            case REMOVED -> removed++;
+                            case ADDED -> counter.added++;
+                            case UPDATED -> counter.updated++;
+                            case REMOVED -> counter.removed++;
                             case SKIPPED -> {
                                 /* ignore */ }
                         }
@@ -222,7 +262,6 @@ public class AnimalSyncService {
                 break;
             pageNo++;
         }
-        return new int[] { added, updated, removed };
     }
 
     /** @return ADDED=신규추가, UPDATED=기존수정, REMOVED=보호종료삭제, SKIPPED=무시 */

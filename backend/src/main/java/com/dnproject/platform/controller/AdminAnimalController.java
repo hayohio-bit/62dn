@@ -3,15 +3,20 @@ package com.dnproject.platform.controller;
 import com.dnproject.platform.domain.constant.SyncTriggerType;
 import com.dnproject.platform.dto.response.ApiResponse;
 import com.dnproject.platform.dto.response.PageResponse;
+import com.dnproject.platform.exception.CustomException;
 import com.dnproject.platform.service.AnimalService;
+import com.dnproject.platform.service.AnimalSyncService;
 import com.dnproject.platform.service.PublicApiService;
 import com.dnproject.platform.service.SyncHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -21,6 +26,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/animals")
 @RequiredArgsConstructor
+@Slf4j
 public class AdminAnimalController {
 
         private final AnimalService animalService;
@@ -34,25 +40,47 @@ public class AdminAnimalController {
                         @RequestParam(required = false) Integer maxPages,
                         @RequestParam(required = false) String species) {
                 boolean apiKeyConfigured = publicApiService.isApiKeyConfigured();
+                String speciesFilter = species != null ? species : "ALL";
+                AnimalSyncService.SyncResult result;
                 try {
-                        var result = animalService.syncFromPublicApiWithStatus(days, maxPages, species);
-                        syncHistoryService.save(result, SyncTriggerType.MANUAL, days, species != null ? species : "ALL",
-                                        null);
-                        return ApiResponse.success("동기화 완료", Map.of(
-                                        "addedCount", result.addedCount(),
-                                        "updatedCount", result.updatedCount(),
-                                        "syncedCount", result.syncedCount(),
-                                        "removedCount", result.removedCount(),
-                                        "days", days,
-                                        "species", species != null ? species : "ALL",
-                                        "apiKeyConfigured", apiKeyConfigured));
+                        result = animalService.syncFromPublicApiWithStatus(days, maxPages, species);
                 } catch (Exception e) {
-                        syncHistoryService.save(
-                                        new com.dnproject.platform.service.AnimalSyncService.SyncResult(0, 0, 0),
-                                        SyncTriggerType.MANUAL, days, species != null ? species : "ALL",
-                                        e.getMessage());
-                        throw new RuntimeException("API 동기화 중 오류 발생: " + e.getMessage(), e);
+                        // 예외는 GlobalExceptionHandler가 기록하고 일반 오류 문구로 응답한다.
+                        syncHistoryService.save(new AnimalSyncService.SyncResult(0, 0, 0),
+                                        SyncTriggerType.MANUAL, days, speciesFilter, "동기화 중 서버 오류가 발생했습니다.");
+                        throw new RuntimeException("API 동기화 중 오류 발생", e);
                 }
+
+                String errorMessage = syncErrorMessage(result, apiKeyConfigured);
+                syncHistoryService.save(result, SyncTriggerType.MANUAL, days, speciesFilter, errorMessage);
+
+                // 모든 API 호출이 실패하면 받은 데이터가 없으므로 오류로 응답한다 (관리자 화면이 오류 메시지를 표시한다).
+                if (result.completelyFailed()) {
+                        throw new CustomException(errorMessage, HttpStatus.BAD_GATEWAY, "PUBLIC_API_SYNC_FAILED");
+                }
+
+                Map<String, Object> data = new LinkedHashMap<>();
+                data.put("addedCount", result.addedCount());
+                data.put("updatedCount", result.updatedCount());
+                data.put("syncedCount", result.syncedCount());
+                data.put("removedCount", result.removedCount());
+                data.put("days", days);
+                data.put("species", speciesFilter);
+                data.put("apiKeyConfigured", apiKeyConfigured);
+                data.put("success", apiKeyConfigured && !result.hasFailures());
+                data.put("failedRequestCount", result.failedRequestCount());
+                if (errorMessage != null) {
+                        data.put("errorMessage", errorMessage);
+                }
+                return ApiResponse.success(result.hasFailures() ? "동기화 일부 실패" : "동기화 완료", data);
+        }
+
+        /** 동기화 이력과 응답에 남길 실패 사유. 실패가 없으면 null */
+        private static String syncErrorMessage(AnimalSyncService.SyncResult result, boolean apiKeyConfigured) {
+                if (!apiKeyConfigured) {
+                        return "공공 API 키가 설정되지 않아 동기화하지 않았습니다.";
+                }
+                return result.failureSummary();
         }
 
         @Operation(summary = "동기화 실행 후 비보호 상태 동물 일괄 정리 (입양·안락사·반환 등)")
@@ -68,8 +96,11 @@ public class AdminAnimalController {
                         syncRemoved = syncResult.removedCount();
                         syncAdded = syncResult.addedCount();
                         syncUpdated = syncResult.updatedCount();
+                        syncError = syncErrorMessage(syncResult, publicApiService.isApiKeyConfigured());
                 } catch (Exception e) {
-                        syncError = e.getMessage();
+                        // 예외 메시지에는 SQL 등 내부 정보가 들어갈 수 있으므로 응답에는 일반 문구만 쓴다.
+                        log.error("정리 전 동기화 중 예외", e);
+                        syncError = "동기화 중 서버 오류가 발생했습니다.";
                 }
 
                 // 2) 혹시 남은 ADOPTED / NULL / 만료 상태 레코드도 정리

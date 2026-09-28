@@ -28,11 +28,18 @@ public class PublicApiSyncScheduler {
         log.info("공공데이터 유기동물 스케줄 동기화 시작");
         try {
             var result = animalSyncService.syncDailySchedule();
-            syncHistoryService.save(result, SyncTriggerType.AUTO, null, "ALL", null);
-            log.info("공공데이터 유기동물 스케줄 동기화 완료: 신규={}, 수정={}, 삭제={}", result.addedCount(), result.updatedCount(), result.removedCount());
+            String errorMessage = result.failureSummary();
+            syncHistoryService.save(result, SyncTriggerType.AUTO, null, "ALL", errorMessage);
+            if (errorMessage != null) {
+                log.error("공공데이터 유기동물 스케줄 동기화 실패: {} (신규={}, 수정={}, 삭제={})", errorMessage,
+                        result.addedCount(), result.updatedCount(), result.removedCount());
+            } else {
+                log.info("공공데이터 유기동물 스케줄 동기화 완료: 신규={}, 수정={}, 삭제={}", result.addedCount(), result.updatedCount(), result.removedCount());
+            }
         } catch (Exception e) {
             log.error("공공데이터 유기동물 스케줄 동기화 실패", e);
-            syncHistoryService.save(new AnimalSyncService.SyncResult(0, 0, 0), SyncTriggerType.AUTO, null, "ALL", e.getMessage());
+            syncHistoryService.save(new AnimalSyncService.SyncResult(0, 0, 0), SyncTriggerType.AUTO, null, "ALL",
+                    "동기화 중 서버 오류가 발생했습니다.");
         }
     }
 }
