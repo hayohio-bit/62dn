@@ -24,8 +24,27 @@ export default function AnimalDetailPage() {
   const [imageModalOpen, setImageModalOpen] = useState(false);
 
   useEffect(() => {
-    if (id) loadAnimal();
-  }, [id]);
+    if (!id) return;
+    // 다른 동물로 이동한 뒤 늦게 도착한 이전 응답은 무시한다.
+    let cancelled = false;
+    const loadAnimal = async () => {
+      try {
+        setLoading(true);
+        const data = await animalApi.getById(Number(id));
+        if (!cancelled) setAnimal(data);
+      } catch {
+        if (cancelled) return;
+        alert("동물 정보를 불러오는데 실패했습니다.");
+        navigate("/animals");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    loadAnimal();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, navigate]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -34,19 +53,6 @@ export default function AnimalDetailPage() {
       setFavoriteIds([]);
     }
   }, [isAuthenticated]);
-
-  const loadAnimal = async () => {
-    try {
-      setLoading(true);
-      const data = await animalApi.getById(Number(id));
-      setAnimal(data);
-    } catch (err) {
-      alert("동물 정보를 불러오는데 실패했습니다.");
-      navigate("/animals");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
