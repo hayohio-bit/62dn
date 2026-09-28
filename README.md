@@ -92,6 +92,17 @@ API 문서는 백엔드 실행 후 http://localhost:8080/swagger-ui.html 에서 
 | `DATA_API_KEY` | 공공데이터포털 서비스 키 |
 | `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_PASSWORD` | 선택. 두 값이 모두 있고 해당 회원이 없을 때만 최초 관리자 계정을 만듭니다 |
 
+## 배포 (AWS EC2 + RDS)
+
+`.github/workflows/deploy.yml`이 테스트·빌드 후 EC2에 jar와 프론트엔드 정적 파일을 올리고, nginx·systemd 설정(`deploy/`)을 적용한 뒤 헬스 체크까지 합니다.
+
+- 실행: Actions 탭의 "Deploy (EC2)"에서 Run workflow, 또는 `./deploy.sh`
+- 자동 배포: 저장소 변수 `DEPLOY_ENABLED`를 `true`로 두면 main push마다 배포합니다
+- 필수 시크릿: `EC2_HOST`, `EC2_SSH_KEY`, `RDS_ENDPOINT`, `RDS_USERNAME`, `RDS_PASSWORD`, `JWT_SECRET`, `FRONTEND_URL`
+- 선택 시크릿: `DATA_API_KEY`, `VITE_MAP_API_KEY`, `VITE_KAKAO_CLIENT_ID`, `VITE_KAKAO_REDIRECT_URI`, `KAKAO_CLIENT_SECRET`, `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_REDIRECT_URI`, `GOOGLE_CLIENT_SECRET`, `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_PASSWORD`
+
+인프라는 `terraform/`으로 만들 수 있습니다 (`terraform.tfvars.example` 참고).
+
 ## 프로젝트 구조
 
 ```

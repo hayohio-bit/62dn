@@ -6,9 +6,11 @@ After=network.target
 Type=simple
 User=ec2-user
 WorkingDirectory=/home/ec2-user/app
-ExecStart=/home/ec2-user/app/start.sh
+# 배포 워크플로가 GitHub Secrets 값으로 만드는 파일 (권한 600)
+EnvironmentFile=/home/ec2-user/app/.env.prod
+ExecStart=/usr/bin/java -Xmx512m -jar /home/ec2-user/app/platform-0.0.1-SNAPSHOT.jar
 Restart=on-failure
-RestartSec=10
+RestartSec=5
 StandardOutput=append:/home/ec2-user/log.out
 StandardError=append:/home/ec2-user/err.out
 

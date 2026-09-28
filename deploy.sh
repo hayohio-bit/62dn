@@ -1,26 +1,15 @@
 #!/bin/bash
-# DN Platform - GitHub Actions 배포 트리거
-# 실행 시 main 브랜치에 push하여 자동 배포
+# DN Platform - GitHub Actions 배포 워크플로(Deploy (EC2))를 수동 실행한다.
+# 커밋·push는 하지 않는다. 배포할 코드는 먼저 main에 올라가 있어야 한다.
+# 필요: gh CLI 로그인 (gh auth status)
 
-set -e
+set -euo pipefail
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$PROJECT_DIR"
+REF="${1:-main}"
 
-echo "=== DN Platform 배포 ==="
-echo "변경사항 확인 중..."
-git status
-
-if [[ -n $(git status -s) ]]; then
-  read -p "커밋 메시지 (기본: Deploy): " msg
-  msg=${msg:-Deploy}
-  git add .
-  git commit -m "$msg"
-  git push origin main
-  echo ""
-  echo "✅ Push 완료. GitHub Actions에서 배포가 진행됩니다."
-  echo "   확인: https://github.com/every-git/62dn/actions"
-  echo "   접속: http://3.35.68.178.nip.io (구글 로그인 등 OAuth는 이 주소로 접속)"
-else
-  echo "변경사항이 없습니다. 강제 push하려면: git push origin main"
-fi
+echo "=== DN Platform 배포: ${REF} ==="
+gh workflow run deploy.yml --ref "$REF"
+sleep 3
+echo "진행 상황:"
+gh run list --workflow deploy.yml --limit 1
+echo "실시간 확인: gh run watch \$(gh run list --workflow deploy.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
