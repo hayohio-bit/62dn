@@ -1,76 +1,76 @@
 package com.dnproject.platform.service;
 
 import com.dnproject.platform.domain.Animal;
-import com.dnproject.platform.domain.AnimalFavorite;
+import com.dnproject.platform.domain.Favorite;
 import com.dnproject.platform.domain.User;
-import com.dnproject.platform.dto.response.FavoriteResponse;
-import com.dnproject.platform.repository.AnimalFavoriteRepository;
+import com.dnproject.platform.dto.response.AnimalResponse;
+import com.dnproject.platform.dto.response.ApiResponse;
+import com.dnproject.platform.dto.response.PageResponse;
+import com.dnproject.platform.exception.NotFoundException;
 import com.dnproject.platform.repository.AnimalRepository;
+import com.dnproject.platform.repository.FavoriteRepository;
 import com.dnproject.platform.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.dnproject.platform.mapper.AnimalMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class FavoriteService {
 
-    private final AnimalFavoriteRepository animalFavoriteRepository;
-    private final AnimalRepository animalRepository;
+    private final FavoriteRepository favoriteRepository;
     private final UserRepository userRepository;
+    private final AnimalRepository animalRepository;
+    private final AnimalService animalService;
+    private final AnimalMapper animalMapper;
 
     @Transactional
-    public FavoriteResponse addFavorite(Long userId, Long animalId) {
-        if (animalFavoriteRepository.findByUserIdAndAnimalId(userId, animalId).isPresent()) {
-            throw new IllegalArgumentException("이미 찜한 동물입니다.");
-        }
-
+    public void add(Long userId, Long animalId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
         Animal animal = animalRepository.findById(animalId)
-                .orElseThrow(() -> new EntityNotFoundException("동물을 찾을 수 없습니다."));
-
-        AnimalFavorite favorite = AnimalFavorite.builder()
+                .orElseThrow(() -> new NotFoundException("동물을 찾을 수 없습니다."));
+        if (favoriteRepository.existsByUser_IdAndAnimal_Id(userId, animalId)) {
+            return; // 이미 찜함 → idempotent
+        }
+        Favorite favorite = Favorite.builder()
                 .user(user)
                 .animal(animal)
                 .build();
-        AnimalFavorite saved = animalFavoriteRepository.save(favorite);
-        return FavoriteResponse.from(saved);
+        favoriteRepository.save(favorite);
     }
 
     @Transactional
-    public void removeFavorite(Long userId, Long animalId) {
-        AnimalFavorite favorite = animalFavoriteRepository.findByUserIdAndAnimalId(userId, animalId)
-                .orElseThrow(() -> new EntityNotFoundException("찜 정보를 찾을 수 없습니다."));
-        animalFavoriteRepository.delete(favorite);
+    public void remove(Long userId, Long animalId) {
+        favoriteRepository.deleteByUser_IdAndAnimal_Id(userId, animalId);
     }
 
-    @Transactional
-    public FavoriteResponse toggleFavorite(Long userId, Long animalId) {
-        Optional<AnimalFavorite> favoriteOpt = animalFavoriteRepository.findByUserIdAndAnimalId(userId, animalId);
-
-        if (favoriteOpt.isPresent()) {
-            animalFavoriteRepository.delete(favoriteOpt.get());
-            return null;
-        }
-
-        return addFavorite(userId, animalId);
-    }
-
-    public List<FavoriteResponse> getMyFavorites(Long userId) {
-        return animalFavoriteRepository.findByUserId(userId).stream()
-                .map(FavoriteResponse::from)
+    @Transactional(readOnly = true)
+    public PageResponse<AnimalResponse> getMyList(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Favorite> pageResult = favoriteRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
+        List<AnimalResponse> content = pageResult.getContent().stream()
+                .map(f -> animalMapper.toResponse(f.getAnimal()))
                 .toList();
+        return PageResponse.<AnimalResponse>builder()
+                .content(content)
+                .page(pageResult.getNumber())
+                .size(pageResult.getSize())
+                .totalElements(pageResult.getTotalElements())
+                .totalPages(pageResult.getTotalPages())
+                .first(pageResult.isFirst())
+                .last(pageResult.isLast())
+                .build();
     }
 
+    @Transactional(readOnly = true)
     public List<Long> getMyFavoriteAnimalIds(Long userId) {
-        return animalFavoriteRepository.findByUserId(userId).stream()
-                .map(favorite -> favorite.getAnimal().getId())
-                .toList();
+        return favoriteRepository.findAnimalIdsByUser_Id(userId);
     }
 }

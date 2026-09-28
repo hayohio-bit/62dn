@@ -1,22 +1,22 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import AnimatedSection from '@/components/motion/AnimatedSection';
-import AnimatedText from '@/components/motion/AnimatedText';
-import { animalApi, favoriteApi } from '@/api';
-import { useAuthStore } from '@/store/authStore';
-import FavoriteButton from '@/components/animals/FavoriteButton';
-import type { Animal } from '@/types/entities';
-import { formatAge } from '@/utils/formatters';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import AnimatedSection from "@/components/motion/AnimatedSection";
+import AnimatedText from "@/components/motion/AnimatedText";
+import { animalApi, favoriteApi } from "@/api";
+import { useAuthStore } from "@/store/authStore";
+import FavoriteButton from "@/components/animals/FavoriteButton";
+import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
+import type { Animal } from "@/types/entities";
 
 const speciesLabels: Record<string, string> = {
-  DOG: '강아지',
-  CAT: '고양이',
+  DOG: "강아지",
+  CAT: "고양이",
 };
 
 const sizeLabels: Record<string, string> = {
-  SMALL: '소형',
-  MEDIUM: '중형',
-  LARGE: '대형',
+  SMALL: "소형",
+  MEDIUM: "중형",
+  LARGE: "대형",
 };
 
 export default function AdoptableSection() {
@@ -29,13 +29,10 @@ export default function AdoptableSection() {
       .getAll({
         page: 0,
         sizeParam: 20,
-        sort: 'random',
+        sort: "registerDate,asc",
       })
       .then((data) => {
-        const content = (data?.content ?? []).filter(
-          (a) => a.status === 'PROTECTED' || a.status === 'FOSTERING'
-        );
-        setAdoptablePets(content.slice(0, 8));
+        setAdoptablePets((data?.content ?? []).slice(0, 8));
       })
       .catch(() => setAdoptablePets([]));
   }, []);
@@ -45,7 +42,10 @@ export default function AdoptableSection() {
       setFavoriteIds([]);
       return;
     }
-    favoriteApi.getMyFavoriteIds().then(setFavoriteIds).catch(() => setFavoriteIds([]));
+    favoriteApi
+      .getMyFavoriteIds()
+      .then(setFavoriteIds)
+      .catch(() => setFavoriteIds([]));
   }, [isAuthenticated]);
   return (
     <section className="landing-section landing-magnet">
@@ -64,34 +64,46 @@ export default function AdoptableSection() {
           </div>
           <div className="landing-pet-grid">
             {adoptablePets.map((animal) => (
-              <Link key={animal.id} to={`/animals/${animal.id}`} className="landing-pet-card relative">
+              <Link
+                key={animal.id}
+                to={`/animals/${animal.id}`}
+                className="landing-pet-card relative"
+              >
                 <div className="absolute top-3 right-3 z-10">
                   <FavoriteButton
                     animalId={animal.id}
                     isFavorited={favoriteIds.includes(animal.id)}
                     onToggle={(added) => {
                       setFavoriteIds((prev) =>
-                        added ? [...prev, animal.id] : prev.filter((id) => id !== animal.id)
+                        added
+                          ? [...prev, animal.id]
+                          : prev.filter((id) => id !== animal.id),
                       );
                     }}
                     size="sm"
                   />
                 </div>
                 <div
-                  className="landing-pet-card-img"
+                  className="landing-pet-card-img relative overflow-hidden"
                   style={{
-                    backgroundImage: animal.imageUrl ? `url(${animal.imageUrl})` : 'none',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundImage: animal.imageUrl
+                      ? `url(${animal.imageUrl})`
+                      : "none",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
                   }}
-                />
+                >
+                  {!animal.imageUrl && <AnimalImageFallback />}
+                </div>
                 <div className="landing-pet-card-body">
                   <p className="landing-pet-card-name">{animal.name}</p>
                   <p className="landing-pet-card-meta">
-                    {speciesLabels[animal.species]} · {formatAge(animal.age)} · {sizeLabels[animal.size]}
+                    {speciesLabels[animal.species]} · {animal.age}세 ·{" "}
+                    {sizeLabels[animal.size]}
                   </p>
                   <p className="landing-pet-card-story">
-                    {animal.description || `${animal.breed} · ${animal.shelterName}`}
+                    {animal.description ||
+                      `${animal.breed} · ${animal.shelterName}`}
                   </p>
                 </div>
               </Link>

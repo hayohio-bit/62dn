@@ -1,13 +1,9 @@
 package com.dnproject.platform.domain.constant;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-@Getter
-@RequiredArgsConstructor
+/**
+ * 성별
+ */
 public enum Gender {
-    M("남성"),
-    F("여성");
-
-    private final String description;
+    MALE,
+    FEMALE
 }

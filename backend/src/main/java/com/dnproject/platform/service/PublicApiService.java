@@ -4,178 +4,241 @@ import com.dnproject.platform.dto.publicapi.AnimalItem;
 import com.dnproject.platform.dto.publicapi.KindItem;
 import com.dnproject.platform.dto.publicapi.PublicApiResponse;
 import com.dnproject.platform.dto.publicapi.ShelterItem;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+import jakarta.annotation.PostConstruct;
 
-@Slf4j
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 공공데이터포털 - 국가동물보호정보시스템 구조동물조회 API 클라이언트 (v2)
+ * API 문서: https://www.data.go.kr/data/15098931/openapi.do
+ * End Point: https://apis.data.go.kr/1543061/abandonmentPublicService_v2
+ */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PublicApiService {
 
-    /** API-Quick-Reference: 구조동물 상세 메인 엔드포인트 */
-    private static final String ABANDONMENT_PATH = "/abandonmentPublicService_v2/abandonmentPublic_v2";
+    private final WebClient.Builder webClientBuilder;
+    private final ObjectMapper objectMapper;
 
-    private final RestTemplate restTemplate = new RestTemplate();
-
-    @Value("${animal.api.base-url}")
-    private String baseUrl;
-
-    @Value("${animal.api.service-key}")
+    @Value("${public-api.service-key:}")
     private String serviceKey;
 
-    @Value("${animal.api.service-key-encoded:}")
-    private String serviceKeyEncoded;
+    /** 구조동물 조회 v2: https://apis.data.go.kr/1543061/abandonmentPublicService_v2 */
+    @Value("${public-api.base-url:https://apis.data.go.kr/1543061}")
+    private String apiBaseUrl;
 
-    @Value("${animal.api.params.bgnde:20260101}")
-    private String defaultBgnde;
+    private String getAbandonmentBase() {
+        return apiBaseUrl + "/abandonmentPublicService_v2";
+    }
 
-    @Value("${animal.api.params.endde:20260206}")
-    private String defaultEndde;
+    public boolean isApiKeyConfigured() {
+        return serviceKey != null && !serviceKey.isBlank() && !"your-public-api-service-key".equals(serviceKey);
+    }
 
-    @Value("${animal.api.params.state:notice}")
-    private String defaultState;
+    @PostConstruct
+    void logApiKeyStatus() {
+        if (isApiKeyConfigured()) {
+            log.info("공공 API 키 로드됨 (접두사: {})", serviceKey != null && serviceKey.length() >= 8 ? serviceKey.substring(0, 8) + "..." : "?");
+        } else {
+            log.warn("공공 API 키 미설정. backend/.env 의 DATA_API_KEY 를 확인하세요.");
+        }
+    }
+    private static final String ABANDONMENT_LIST_PATH = "/abandonmentPublic_v2";
+    private static final String KIND_LIST_PATH = "/getKindList";
+    /** data_go_kr.md 동물보호센터 정보 조회 서비스 End Point (v2) */
+    private static final String SHELTER_BASE = "https://apis.data.go.kr/1543061/animalShelterSrvc_v2";
+    private static final String SHELTER_LIST_PATH = "/shelterInfo_v2";
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    @Value("${animal.api.params.numOfRows:100}")
-    private int defaultNumOfRows;
-
-    @Value("${animal.api.params._type:json}")
-    private String defaultType;
-
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
-
-    public List<AnimalItem> getAnimalList(String bgnde, String endde, String upkind, String uprCd, String orgCd,
-            String careRegNo, int pageNo, int numOfRows) {
-
-        // Use defaults if provided values are null or empty
-        String effectiveBgnde = (bgnde == null || bgnde.isEmpty()) ? defaultBgnde : bgnde;
-        String effectiveEndde = (endde == null || endde.isEmpty()) ? defaultEndde : endde;
-        int effectiveNumOfRows = (numOfRows <= 0) ? defaultNumOfRows : numOfRows;
-
-        String effectiveServiceKey = (serviceKeyEncoded != null && !serviceKeyEncoded.isEmpty())
-                ? serviceKeyEncoded
-                : serviceKey;
+    /**
+     * 유기동물 목록 조회
+     * @param uprCd 시도코드 (없으면 null)
+     * @param orgCd 시군구코드 (없으면 null)
+     * @param upkind 축종 417000=개, 422400=고양이
+     * @param state notice=공고중, protect=보호중
+     */
+    public List<AnimalItem> getAbandonedAnimals(String uprCd, String orgCd, String upkind,
+                                                 String state, LocalDate bgnde, LocalDate endde,
+                                                 int pageNo, int numOfRows) {
+        if (serviceKey == null || serviceKey.isBlank() || "your-public-api-service-key".equals(serviceKey)) {
+            log.warn("공공 API 서비스 키가 설정되지 않았습니다. 빈 목록을 반환합니다.");
+            return Collections.emptyList();
+        }
+        var builder = UriComponentsBuilder.fromHttpUrl(getAbandonmentBase() + ABANDONMENT_LIST_PATH)
+                .queryParam("serviceKey", serviceKey)
+                .queryParam("pageNo", pageNo)
+                .queryParam("numOfRows", numOfRows)
+                .queryParam("_type", "json");
+        if (uprCd != null && !uprCd.isBlank()) builder.queryParam("upr_cd", uprCd);
+        if (orgCd != null && !orgCd.isBlank()) builder.queryParam("org_cd", orgCd);
+        if (upkind != null && !upkind.isBlank()) builder.queryParam("upkind", upkind);
+        if (state != null && !state.isBlank()) builder.queryParam("state", state);
+        if (bgnde != null) builder.queryParam("bgnde", bgnde.format(DATE_FORMAT));
+        if (endde != null) builder.queryParam("endde", endde.format(DATE_FORMAT));
+        String uri = builder.build().toUriString();
 
         try {
-            String encodedServiceKey = URLEncoder.encode(effectiveServiceKey, StandardCharsets.UTF_8);
-
-            URI uri = UriComponentsBuilder.fromUriString(baseUrl + ABANDONMENT_PATH)
-                    .queryParam("serviceKey", encodedServiceKey)
-                    .queryParam("bgnde", effectiveBgnde)
-                    .queryParam("endde", effectiveEndde)
-                    .queryParam("upkind", upkind)
-                    .queryParam("upr_cd", uprCd)
-                    .queryParam("org_cd", orgCd)
-                    .queryParam("care_reg_no", careRegNo)
-                    .queryParam("state", defaultState)
-                    .queryParam("pageNo", pageNo)
-                    .queryParam("numOfRows", effectiveNumOfRows)
-                    .queryParam("_type", defaultType)
-                    .build(true)
-                    .toUri();
-
-            log.info("Calling Public API: {}", uri);
-
-            ResponseEntity<String> responseEntity = restTemplate.exchange(
-                    uri,
-                    HttpMethod.GET,
-                    null,
-                    String.class);
-            String rawResponse = responseEntity.getBody();
-            log.info("======== RAW API RESPONSE START ========");
-            log.info(rawResponse);
-            log.info("======== RAW API RESPONSE END ========");
-
-            PublicApiResponse<AnimalItem> apiResponse = objectMapper.readValue(rawResponse,
-                    new com.fasterxml.jackson.core.type.TypeReference<PublicApiResponse<AnimalItem>>() {
-                    });
-            return extractItems(new ResponseEntity<>(apiResponse, org.springframework.http.HttpStatus.OK));
-        } catch (org.springframework.web.client.HttpStatusCodeException e) {
-            log.error("Error calling Public API: {}", e.getMessage());
-            try {
-                java.nio.file.Files.writeString(java.nio.file.Paths.get("error_response.txt"),
-                        e.getResponseBodyAsString(), java.nio.charset.StandardCharsets.UTF_8);
-            } catch (Exception ex) {
-                log.error("Failed to write error response to file", ex);
+            String json = webClientBuilder.build()
+                    .get()
+                    .uri(uri)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            List<AnimalItem> result = parseAnimalItems(json);
+            if (result.isEmpty() && json != null && json.length() < 2000) {
+                log.info("공공 API 유기동물 조회 빈 결과. 응답(앞 1500자): {}", json.substring(0, Math.min(1500, json.length())));
+            } else if (result.isEmpty()) {
+                log.info("공공 API 유기동물 조회 빈 결과. upkind={} state={} bgnde={} endde={} pageNo={}", upkind, state,
+                        bgnde != null ? bgnde.format(DATE_FORMAT) : "", endde != null ? endde.format(DATE_FORMAT) : "", pageNo);
             }
-            return List.of();
+            return result;
+        } catch (org.springframework.web.reactive.function.client.WebClientResponseException e) {
+            log.error("공공 API 유기동물 조회 실패: {} - 응답본문: {}", e.getMessage(), e.getResponseBodyAsString());
+            return Collections.emptyList();
         } catch (Exception e) {
-            log.error("Error calling Public API: {}", e.getMessage());
-            return List.of();
+            log.error("공공 API 유기동물 조회 실패: {}", e.getMessage());
+            return Collections.emptyList();
         }
     }
 
-    public List<ShelterItem> getShelterList(String uprCd, String orgCd) {
-        String key = (serviceKeyEncoded != null && !serviceKeyEncoded.isEmpty()) ? serviceKeyEncoded : serviceKey;
-
+    /**
+     * 응답 JSON에서 item 리스트 추출 (단일 객체인 경우 리스트로 감싸서 처리)
+     */
+    @SuppressWarnings("unchecked")
+    private List<AnimalItem> parseAnimalItems(String json) {
         try {
-            String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8);
-            URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/animalShelterSrvc_v2/shelterInfo_v2")
-                    .queryParam("serviceKey", encodedKey)
-                    .queryParam("upr_cd", uprCd)
-                    .queryParam("org_cd", orgCd)
-                    .queryParam("_type", "json")
-                    .build(true)
-                    .toUri();
-
-            ResponseEntity<PublicApiResponse<ShelterItem>> response = restTemplate.exchange(
-                    uri,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<PublicApiResponse<ShelterItem>>() {
-                    });
-            return extractItems(response);
+            if (json == null || json.isBlank()) return Collections.emptyList();
+            Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {});
+            Object response = map.get("response");
+            if (response == null) return Collections.emptyList();
+            Map<String, Object> bodyMap = (Map<String, Object>) response;
+            Object body = bodyMap.get("body");
+            if (body == null) {
+                Object header = bodyMap.get("header");
+                if (header instanceof Map) {
+                    Object rc = ((Map<?, ?>) header).get("resultCode");
+                    Object msg = ((Map<?, ?>) header).get("resultMsg");
+                    log.warn("공공 API body 없음. header resultCode={} resultMsg={}", rc, msg);
+                }
+                return Collections.emptyList();
+            }
+            Object items = ((Map<String, Object>) body).get("items");
+            if (items == null) return Collections.emptyList();
+            if (!(items instanceof Map)) return Collections.emptyList();
+            Object item = ((Map<String, Object>) items).get("item");
+            if (item == null) return Collections.emptyList();
+            if (item instanceof List) {
+                return objectMapper.convertValue(item, new TypeReference<List<AnimalItem>>() {});
+            }
+            AnimalItem single = objectMapper.convertValue(item, AnimalItem.class);
+            return List.of(single);
         } catch (Exception e) {
-            log.error("Error fetching shelter list: {}", e.getMessage());
-            return List.of();
+            log.warn("공공 API 응답 파싱 실패: {}", e.getMessage());
+            return Collections.emptyList();
         }
     }
 
-    public List<KindItem> getKindList(String upKindCd) {
-        String key = (serviceKeyEncoded != null && !serviceKeyEncoded.isEmpty()) ? serviceKeyEncoded : serviceKey;
-
+    /**
+     * 보호소 목록 조회
+     */
+    public List<ShelterItem> getShelters(String uprCd, String orgCd) {
+        if (serviceKey == null || serviceKey.isBlank()) {
+            return Collections.emptyList();
+        }
+        String uri = UriComponentsBuilder.fromHttpUrl(SHELTER_BASE + SHELTER_LIST_PATH)
+                .queryParam("serviceKey", serviceKey)
+                .queryParam("upr_cd", uprCd != null ? uprCd : "")
+                .queryParam("org_cd", orgCd != null ? orgCd : "")
+                .queryParam("_type", "json")
+                .build()
+                .toUriString();
         try {
-            String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8);
-            URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/abandonmentPublicService_v2/kind_v2")
-                    .queryParam("serviceKey", encodedKey)
-                    .queryParam("up_kind_cd", upKindCd)
-                    .queryParam("_type", "json")
-                    .build(true)
-                    .toUri();
-
-            ResponseEntity<PublicApiResponse<KindItem>> response = restTemplate.exchange(
-                    uri,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<PublicApiResponse<KindItem>>() {
-                    });
-            return extractItems(response);
+            String json = webClientBuilder.build().get().uri(uri).retrieve().bodyToMono(String.class).block();
+            return parseShelterItems(json);
         } catch (Exception e) {
-            log.error("Error fetching kind list: {}", e.getMessage());
-            return List.of();
+            log.error("공공 API 보호소 조회 실패: {}", e.getMessage());
+            return Collections.emptyList();
         }
     }
 
-    private <T> List<T> extractItems(ResponseEntity<PublicApiResponse<T>> response) {
-        PublicApiResponse<T> body = response.getBody();
-        if (body != null &&
-                body.getResponse() != null &&
-                body.getResponse().getBody() != null &&
-                body.getResponse().getBody().getItems() != null) {
-            List<T> items = body.getResponse().getBody().getItems().getItem();
-            return items != null ? items : List.of();
+    @SuppressWarnings("unchecked")
+    private List<ShelterItem> parseShelterItems(String json) {
+        try {
+            Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {});
+            Object response = map.get("response");
+            if (response == null) return Collections.emptyList();
+            Object body = ((Map<String, Object>) response).get("body");
+            if (body == null) return Collections.emptyList();
+            Object items = ((Map<String, Object>) body).get("items");
+            if (items == null) return Collections.emptyList();
+            Object item = ((Map<String, Object>) items).get("item");
+            if (item == null) return Collections.emptyList();
+            if (item instanceof List) {
+                return objectMapper.convertValue(item, new TypeReference<List<ShelterItem>>() {});
+            }
+            ShelterItem single = objectMapper.convertValue(item, ShelterItem.class);
+            return List.of(single);
+        } catch (Exception e) {
+            return Collections.emptyList();
         }
-        return List.of();
+    }
+
+    /**
+     * 품종 목록 조회 (kindCd → 품종명 매핑용)
+     * @param upkind 417000=개, 422400=고양이
+     */
+    public List<KindItem> getKindList(String upkind) {
+        if (serviceKey == null || serviceKey.isBlank()) return Collections.emptyList();
+        String uri = UriComponentsBuilder.fromHttpUrl(getAbandonmentBase() + KIND_LIST_PATH)
+                .queryParam("serviceKey", serviceKey)
+                .queryParam("upkind", upkind != null ? upkind : "417000")
+                .queryParam("_type", "json")
+                .build()
+                .toUriString();
+        try {
+            String json = webClientBuilder.build().get().uri(uri).retrieve().bodyToMono(String.class).block();
+            return parseKindItems(json);
+        } catch (Exception e) {
+            log.warn("공공 API 품종 조회 실패 upkind={}: {}", upkind, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<KindItem> parseKindItems(String json) {
+        try {
+            if (json == null || json.isBlank()) return Collections.emptyList();
+            Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {});
+            Object response = map.get("response");
+            if (response == null) return Collections.emptyList();
+            Object body = ((Map<String, Object>) response).get("body");
+            if (body == null) return Collections.emptyList();
+            Object items = ((Map<String, Object>) body).get("items");
+            if (items == null) return Collections.emptyList();
+            if (!(items instanceof Map)) return Collections.emptyList();
+            Object item = ((Map<String, Object>) items).get("item");
+            if (item == null) return Collections.emptyList();
+            if (item instanceof List) {
+                return objectMapper.convertValue(item, new TypeReference<List<KindItem>>() {});
+            }
+            return List.of(objectMapper.convertValue(item, KindItem.class));
+        } catch (Exception e) {
+            log.warn("품종 API 응답 파싱 실패: {}", e.getMessage());
+            return Collections.emptyList();
+        }
     }
 }

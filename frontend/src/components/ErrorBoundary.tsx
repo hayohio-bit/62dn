@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -21,20 +21,38 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('ErrorBoundary:', error, info.componentStack);
+    console.error("ErrorBoundary:", error, info.componentStack);
   }
 
   render() {
     if (this.state.hasError && this.state.error) {
       if (this.props.fallback) return this.props.fallback;
       return (
-        <div style={{ padding: '2rem', textAlign: 'center', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <p style={{ color: 'var(--toss-gray-700)', marginBottom: '0.5rem' }}>일시적인 오류가 발생했습니다.</p>
-          <p style={{ fontSize: '0.875rem', color: 'var(--toss-gray-500)' }}>{this.state.error.message}</p>
+        <div
+          style={{
+            padding: "2rem",
+            textAlign: "center",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <p style={{ color: "var(--toss-gray-700)", marginBottom: "0.5rem" }}>
+            일시적인 오류가 발생했습니다.
+          </p>
+          <p style={{ fontSize: "0.875rem", color: "var(--toss-gray-500)" }}>
+            {this.state.error.message}
+          </p>
           <button
             type="button"
             onClick={() => this.setState({ hasError: false, error: null })}
-            style={{ marginTop: '1rem', padding: '0.5rem 1rem', cursor: 'pointer' }}
+            style={{
+              marginTop: "1rem",
+              padding: "0.5rem 1rem",
+              cursor: "pointer",
+            }}
           >
             다시 시도
           </button>

@@ -1,12 +1,31 @@
 spring:
-  config:
-    activate:
-      on-profile: prod
+  # Flyway 활성화 (운영 환경에서도 마이그레이션 자동화)
+  flyway:
+    enabled: true
+    validate-on-migrate: false # 체크섬 불일치로 인한 기동 실패 방지
+    baseline-on-migrate: true # 기존 스키마를 기준으로 마이그레이션 기동을 위한 추가 설정
+
+  # Database Configuration (Production)
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+
+  # JPA - Production mode
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate # 운영 환경: 스키마 검증만 수행
     show-sql: false
-  datasource:
-    url: ${PROD_DB_URL}
-    username: ${PROD_DB_USERNAME}
-    password: ${PROD_DB_PASSWORD}
+
+# Logging
+logging:
+  level:
+    root: WARN
+    com.dnproject: INFO

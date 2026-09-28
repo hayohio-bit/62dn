@@ -7,7 +7,6 @@ import axiosInstance from "@/lib/axios";
 import type {
   PreferenceRequest,
   PreferenceResponse,
-  AnimalListResponse,
   ApiResponse,
 } from "@/types/dto";
 
@@ -37,7 +36,7 @@ export const preferenceApi = {
    * 선호도 기반 추천 동물 목록
    */
   getRecommendedAnimals: async (page = 0, size = 12) => {
-    const response = await axiosInstance.get<ApiResponse<AnimalListResponse>>(
+    const response = await axiosInstance.get<ApiResponse<any>>(
       "/animals/recommendations",
       { params: { page, size } },
     );

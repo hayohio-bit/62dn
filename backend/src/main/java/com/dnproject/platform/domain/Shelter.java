@@ -6,8 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import com.dnproject.platform.domain.common.BaseTimeEntity;
 
 @Entity
 @Table(name = "shelters", indexes = {
@@ -17,8 +16,8 @@ import java.util.List;
 })
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Shelter extends BaseTimeEntity {
 
@@ -32,27 +31,22 @@ public class Shelter extends BaseTimeEntity {
     @Column(nullable = false, length = 255)
     private String address;
 
-    @Column(precision = 10, scale = 8)
-    private BigDecimal latitude; // 위도
+    /** 주소에서 파싱한 시·도 (필터 정확 매칭용, 예: 서울, 경기) */
+    @Column(name = "region_sido", length = 20)
+    private String regionSido;
 
-    @Column(precision = 11, scale = 8)
-    private BigDecimal longitude; // 경도
+    /** 주소에서 파싱한 시·군·구 (필터 정확 매칭용, 예: 강남구, 남양주시) */
+    @Column(name = "region_sigungu", length = 30)
+    private String regionSigungu;
+
+    private BigDecimal latitude;
+    private BigDecimal longitude;
 
     @Column(nullable = false, length = 20)
     private String phone;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String email;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id")
-    private User manager;
-
-    @Column(name = "manager_name", nullable = false, length = 50)
-    private String managerName;
-
-    @Column(name = "manager_phone", nullable = false, length = 20)
-    private String managerPhone;
 
     @Column(name = "business_registration_number", unique = true, length = 20)
     private String businessRegistrationNumber;
@@ -61,30 +55,14 @@ public class Shelter extends BaseTimeEntity {
     private String businessRegistrationFile;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "verification_status", nullable = false, length = 20) // ENUM
+    @Column(name = "verification_status", nullable = false, length = 20)
     @Builder.Default
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
     @Column(name = "public_api_shelter_id", length = 50)
-    private String publicApiShelterId; // 공공 데이터 api 연동용
+    private String publicApiShelterId;
 
     @Column(name = "verified_at")
     private LocalDateTime verifiedAt;
-
-    @OneToMany(mappedBy = "shelter")
-    @Builder.Default
-    private List<Volunteer> volunteers = new ArrayList<>();
-
-    @OneToMany(mappedBy = "shelter")
-    @Builder.Default
-    private List<VolunteerRecruitment> volunteerRecruitments = new ArrayList<>();
-
-    public void updateVerificationStatus(VerificationStatus status) {
-        this.verificationStatus = status;
-
-        if (status == VerificationStatus.VERIFIED) {
-            this.verifiedAt = LocalDateTime.now();
-        }
-    }
 
 }

@@ -1,7 +1,7 @@
 const stats = [
-  { value: '12,000+', label: '연간 구조 동물' },
-  { value: '350+', label: '제휴 보호소' },
-  { value: '8,000+', label: '입양·임보 성사' },
+  { value: "12,000+", label: "연간 구조 동물" },
+  { value: "350+", label: "제휴 보호소" },
+  { value: "8,000+", label: "입양·임보 성사" },
 ];
 
 export default function StatsSection() {

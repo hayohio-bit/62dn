@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
-import { useLocation, useNavigationType } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { useLocation, useNavigationType } from "react-router-dom";
 
 /**
  * 스크롤 복원 컴포넌트
@@ -19,8 +19,8 @@ export default function ScrollRestoration() {
     const onScroll = () => {
       lastScrollY.current = window.scrollY;
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // beforeunload 시 sessionStorage에 저장 (새로고침/탭 닫기 대비)
@@ -29,18 +29,24 @@ export default function ScrollRestoration() {
       if (prevKey.current) {
         scrollPositions.current[prevKey.current] = lastScrollY.current;
       }
-      sessionStorage.setItem('scrollPositions', JSON.stringify(scrollPositions.current));
+      sessionStorage.setItem(
+        "scrollPositions",
+        JSON.stringify(scrollPositions.current),
+      );
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
   // sessionStorage에서 복원 (탭 재진입 시)
   useEffect(() => {
-    const saved = sessionStorage.getItem('scrollPositions');
+    const saved = sessionStorage.getItem("scrollPositions");
     if (saved) {
       try {
-        scrollPositions.current = { ...scrollPositions.current, ...JSON.parse(saved) };
+        scrollPositions.current = {
+          ...scrollPositions.current,
+          ...JSON.parse(saved),
+        };
       } catch {
         // ignore
       }
@@ -54,7 +60,7 @@ export default function ScrollRestoration() {
       scrollPositions.current[prevKey.current] = lastScrollY.current;
     }
 
-    if (navigationType === 'POP') {
+    if (navigationType === "POP") {
       const savedPosition = scrollPositions.current[location.key];
       if (savedPosition !== undefined) {
         window.scrollTo(0, savedPosition);
@@ -69,7 +75,7 @@ export default function ScrollRestoration() {
 
   // 비동기로 렌더되는 목록(API 등)은 DOM이 늦게 채워지므로, 한 번 더 복원 (스크롤은 이미 맞춰져 있으면 변화 없음)
   useEffect(() => {
-    if (navigationType !== 'POP') return;
+    if (navigationType !== "POP") return;
     const savedPosition = scrollPositions.current[location.key];
     if (savedPosition === undefined) return;
     const id = requestAnimationFrame(() => {

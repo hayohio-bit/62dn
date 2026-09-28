@@ -2,13 +2,13 @@
  * 인증 전역 상태 (Zustand)
  */
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { User } from '@/types/entities';
-import type { TokenResponse, UserResponse } from '@/types/dto';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { User } from "@/types/entities";
+import type { TokenResponse, UserResponse } from "@/types/dto";
 
-const TOKEN_ACCESS = 'accessToken';
-const TOKEN_REFRESH = 'refreshToken';
+const TOKEN_ACCESS = "accessToken";
+const TOKEN_REFRESH = "refreshToken";
 
 export type LoginOptions = { keepLoggedIn?: boolean };
 
@@ -26,11 +26,15 @@ function getTokenStorage(keepLoggedIn: boolean): Storage {
 }
 
 export function getAccessToken(): string | null {
-  return localStorage.getItem(TOKEN_ACCESS) || sessionStorage.getItem(TOKEN_ACCESS);
+  return (
+    localStorage.getItem(TOKEN_ACCESS) || sessionStorage.getItem(TOKEN_ACCESS)
+  );
 }
 
 export function getRefreshToken(): string | null {
-  return localStorage.getItem(TOKEN_REFRESH) || sessionStorage.getItem(TOKEN_REFRESH);
+  return (
+    localStorage.getItem(TOKEN_REFRESH) || sessionStorage.getItem(TOKEN_REFRESH)
+  );
 }
 
 function userResponseToUser(r: UserResponse): User {
@@ -38,8 +42,8 @@ function userResponseToUser(r: UserResponse): User {
     id: r.id,
     email: r.email,
     name: r.name,
-    phone: '',
-    role: r.role as User['role'],
+    phone: "",
+    role: r.role as User["role"],
     createdAt: new Date().toISOString(),
   };
 }
@@ -54,9 +58,11 @@ export const useAuthStore = create<AuthState>()(
       login: (tokenResponse, options) => {
         const storage = getTokenStorage(options?.keepLoggedIn ?? true);
         storage.setItem(TOKEN_ACCESS, tokenResponse.accessToken);
-        storage.setItem(TOKEN_REFRESH, tokenResponse.refreshToken ?? '');
+        storage.setItem(TOKEN_REFRESH, tokenResponse.refreshToken ?? "");
         set({
-          user: tokenResponse.user ? userResponseToUser(tokenResponse.user) : null,
+          user: tokenResponse.user
+            ? userResponseToUser(tokenResponse.user)
+            : null,
           accessToken: tokenResponse.accessToken,
           isAuthenticated: true,
         });
@@ -77,13 +83,13 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       partialize: (s) => ({ user: s.user, isAuthenticated: s.isAuthenticated }),
       onRehydrateStorage: () => (storedState) => {
         if (storedState?.isAuthenticated && !getAccessToken()) {
           useAuthStore.getState().logout();
         }
       },
-    }
-  )
+    },
+  ),
 );

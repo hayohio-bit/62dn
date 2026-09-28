@@ -2,39 +2,53 @@
  * 인증 API
  */
 
-import axiosInstance from '@/lib/axios';
-import type { ApiResponse } from '@/types/dto';
+import axiosInstance from "@/lib/axios";
+import type { ApiResponse } from "@/types/dto";
 import type {
   LoginRequest,
   SignupRequest,
-  ShelterSignupResponse,
   TokenResponse,
   UserResponse,
   UpdateMeRequest,
-} from '@/types/dto';
+  FindEmailRequest,
+  ResetPasswordRequest,
+} from "@/types/dto";
 
 export const authApi = {
   signup: (data: SignupRequest) =>
-    axiosInstance.post<ApiResponse<UserResponse>>('/auth/signup', data),
-
-  /** 보호소 회원가입 (multipart: 폼 필드 + 사업자등록증 파일). Content-Type 제거 시 브라우저가 boundary 포함 multipart로 설정 */
-  shelterSignup: (formData: FormData) =>
-    axiosInstance.post<ApiResponse<ShelterSignupResponse>>('/auth/shelter-signup', formData, {
-      headers: { 'Content-Type': false as unknown as string },
-    }),
+    axiosInstance.post<ApiResponse<UserResponse>>("/auth/signup", data),
 
   login: (data: LoginRequest) =>
-    axiosInstance.post<ApiResponse<TokenResponse>>('/auth/login', data),
+    axiosInstance.post<ApiResponse<TokenResponse>>("/auth/login", data),
 
-  logout: () =>
-    axiosInstance.post<ApiResponse<null>>('/auth/logout'),
+  /** 구글 인가 코드로 로그인 (백엔드에서 토큰 교환 후 JWT 발급) */
+  googleLogin: (code: string) =>
+    axiosInstance.post<ApiResponse<TokenResponse>>("/auth/google", { code }),
 
-  getMe: () =>
-    axiosInstance.get<ApiResponse<UserResponse>>('/auth/me'),
+  /** 카카오 인가 코드로 로그인 (백엔드에서 토큰 교환 후 JWT 발급) */
+  kakaoLogin: (code: string) =>
+    axiosInstance.post<ApiResponse<TokenResponse>>("/auth/kakao", { code }),
+
+  logout: () => axiosInstance.post<ApiResponse<null>>("/auth/logout"),
+
+  getMe: () => axiosInstance.get<ApiResponse<UserResponse>>("/auth/me"),
 
   updateMe: (data: UpdateMeRequest) =>
-    axiosInstance.patch<ApiResponse<UserResponse>>('/auth/me', data),
+    axiosInstance.patch<ApiResponse<UserResponse>>("/auth/me", data),
 
   refresh: (refreshToken: string) =>
-    axiosInstance.post<ApiResponse<TokenResponse>>('/auth/refresh', { refreshToken }),
+    axiosInstance.post<ApiResponse<TokenResponse>>("/auth/refresh", {
+      refreshToken,
+    }),
+
+  /** 이메일(아이디) 찾기 — 이름+전화번호로 마스킹된 이메일 반환 */
+  findEmail: (data: FindEmailRequest) =>
+    axiosInstance.post<ApiResponse<{ maskedEmail: string }>>(
+      "/auth/find-email",
+      data,
+    ),
+
+  /** 비밀번호 재설정 — 이메일+이름+전화번호 확인 후 새 비밀번호 설정 */
+  resetPassword: (data: ResetPasswordRequest) =>
+    axiosInstance.post<ApiResponse<null>>("/auth/reset-password", data),
 };

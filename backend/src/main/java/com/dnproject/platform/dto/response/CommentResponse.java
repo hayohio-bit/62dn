@@ -1,28 +1,22 @@
 package com.dnproject.platform.dto.response;
 
-import com.dnproject.platform.domain.Comment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Getter
-@Builder
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class CommentResponse {
-    private Long id;
-    private String content;
-    private String writerName;
-    private LocalDateTime createdAt;
 
-    // Mapping
-    public static CommentResponse from(Comment comment) {
-        return CommentResponse.builder()
-                .id(comment.getId())
-                .content(comment.getContent())
-                .writerName(comment.getUser().getName())
-                .createdAt(comment.getCreatedAt())
-                .build();
-    }
+    private Long id;
+    private Long boardId;
+    private Long userId;
+    private String userName;
+    private String content;
+    private Instant createdAt;
 }

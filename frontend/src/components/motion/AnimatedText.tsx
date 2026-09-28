@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useMemo, useRef } from "react";
+import { motion, useInView } from "framer-motion";
 
 const appleEase: [number, number, number, number] = [0.25, 0.1, 0.25, 1.0];
 
@@ -19,9 +19,14 @@ function splitByWords(text: string) {
   return text.split(/(\s+)/).filter((chunk) => chunk.length > 0);
 }
 
-export default function AnimatedText({ text, className = '', delay = 0, stagger = true }: AnimatedTextProps) {
+export default function AnimatedText({
+  text,
+  className = "",
+  delay = 0,
+  stagger = true,
+}: AnimatedTextProps) {
   const ref = useRef<HTMLSpanElement | null>(null);
-  const inView = useInView(ref, { once: true, margin: '-64px' });
+  const inView = useInView(ref, { once: true, margin: "-64px" });
 
   const chunks = useMemo(() => splitByWords(text), [text]);
 
@@ -30,8 +35,8 @@ export default function AnimatedText({ text, className = '', delay = 0, stagger 
       <motion.span
         ref={ref}
         className={className}
-        initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
-        animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+        initial={{ opacity: 0, y: 24, filter: "blur(10px)" }}
+        animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
         transition={{ duration: 0.8, delay, ease: appleEase }}
       >
         {text}
@@ -44,10 +49,17 @@ export default function AnimatedText({ text, className = '', delay = 0, stagger 
       {chunks.map((chunk, i) => (
         <motion.span
           key={`${chunk}-${i}`}
-          style={{ display: 'inline-block', whiteSpace: chunk.trim().length === 0 ? 'pre' : 'normal' }}
-          initial={{ opacity: 0, y: 18, filter: 'blur(10px)' }}
-          animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-          transition={{ duration: 0.7, delay: delay + i * 0.04, ease: appleEase }}
+          style={{
+            display: "inline-block",
+            whiteSpace: chunk.trim().length === 0 ? "pre" : "normal",
+          }}
+          initial={{ opacity: 0, y: 18, filter: "blur(10px)" }}
+          animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+          transition={{
+            duration: 0.7,
+            delay: delay + i * 0.04,
+            ease: appleEase,
+          }}
         >
           {chunk}
         </motion.span>
@@ -55,4 +67,3 @@ export default function AnimatedText({ text, className = '', delay = 0, stagger 
     </span>
   );
 }
-

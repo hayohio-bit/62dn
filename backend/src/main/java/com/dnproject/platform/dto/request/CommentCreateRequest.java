@@ -1,28 +1,15 @@
 package com.dnproject.platform.dto.request;
 
-
-import com.dnproject.platform.domain.Board;
-import com.dnproject.platform.domain.Comment;
-import com.dnproject.platform.domain.User;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Getter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class CommentCreateRequest {
-    private Long boardId;
-    private String content;
 
-    // Mapping
-    public Comment toEntity(Board board, User user) {
-        return Comment.builder()
-                .content(this.content)
-                .board(board)
-                .user(user)
-                .build();
-    }
+    @NotBlank(message = "댓글 내용은 필수입니다")
+    private String content;
 }

@@ -1,0 +1,16 @@
+[Unit]
+Description=DN Platform Backend
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/app
+ExecStart=/home/ec2-user/app/start.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/home/ec2-user/log.out
+StandardError=append:/home/ec2-user/err.out
+
+[Install]
+WantedBy=multi-user.target

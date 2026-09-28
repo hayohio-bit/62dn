@@ -1,156 +1,165 @@
-[![git ](https://img.shields.io/badge/git-Developer_Onboarding_One_Click_Setup_Guide-111827?style=for-the-badge&logo=git&logoColor=white)](https://hayohio-bit.github.io/62dn-project-2026/dev-env-setup-guide)
+# DN Platform - 62댕냥이 매칭 플랫폼
 
-# 🐶 유기동물 입양/임보 매칭 플랫폼 (62dn-project-2026)
+유기동물 입양/임시보호 매칭, 봉사활동 및 물품 후원 신청 플랫폼
 
-이 프로젝트는 유기동물과 새로운 가족을 연결해주는 입양/임보 매칭 플랫폼입니다. 사용자 맞춤형 추천 시스템을 통해 유기동물 입양 및 임시 보호 활성화를 목표로 합니다.
-
-## 🛠 Tech Stack
-
-### Backend
-- **Framework**: Spring Boot 3.4.2
-- **Language**: Java 21
-- **Database**: MySQL (Connector/J)
-- **Security**: Spring Security + JWT (jjwt 0.12.5)
-- **Build Tool**: Gradle
-- **API Documentation**: SpringDoc OpenAPI (Swagger UI)
+## 기술 스택
 
 ### Frontend
-- **Framework**: React 18.2
-- **Language**: TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS, Framer Motion
-- **State Management**: Zustand, React Query (TanStack Query)
-- **HTTP Client**: Axios
+- React 18 + TypeScript
+- Vite (빌드 도구)
+- TailwindCSS (스타일링)
+- React Query (서버 상태 관리)
+- Zustand (클라이언트 상태 관리)
+- Axios (HTTP 클라이언트)
 
-## 📂 Project Structure
+### Backend
+- Java 21
+- Spring Boot 3.2
+- Spring Security + JWT
+- Spring Data JPA
+- MySQL 8.0
 
-```text
-dn-project/
-├── backend/          # Spring Boot API 서버
-├── frontend/         # React 웹 애플리케이션
-├── docs/             # 프로젝트 문서 및 설계 자료
-└── README.md         # 메인 설명 파일
+### External Services
+- 공공데이터 API (유기동물/보호소 정보)
+- Resend (이메일 발송)
+- Map API (지도)
+
+## 입양 파트와 쇼핑몰 구조 참조
+
+- **입양(동물 목록·상세·신청)** 은 쇼핑몰 구조에서 일정 부분을 차용합니다 (썸네일 카드, 상세 페이지, “주문” → “입양 신청”).
+- **백엔드**: 프로젝트 루트의 `스프링부트_Gemini.md` (Spring Boot 쇼핑몰) 아키텍처를 참조합니다. Item → Animal, ItemImg → AnimalImage, Order → Adoption 등으로 도메인만 매핑하여 적용.
+- **프론트엔드**: 책/문서는 Thymeleaf 기준이지만, **본 프로젝트는 React**로 구현합니다.
+- 상세 매핑표와 기능 대응은 [docs/입양_쇼핑몰_구조_매핑.md](docs/입양_쇼핑몰_구조_매핑.md)를 참고하세요.
+
+## 프로젝트 구조
+
+```
+DN_project01/
+├── frontend/              # React 프론트엔드
+│   ├── src/
+│   │   ├── api/          # API 통신 모듈
+│   │   ├── components/   # 재사용 컴포넌트
+│   │   ├── pages/        # 페이지 컴포넌트
+│   │   ├── hooks/        # 커스텀 훅
+│   │   ├── store/        # Zustand 스토어
+│   │   ├── types/        # TypeScript 타입
+│   │   └── utils/        # 유틸리티 함수
+│   └── ...
+│
+├── backend/               # Spring Boot 백엔드
+│   └── src/main/java/com/dnproject/platform/
+│       ├── config/       # 설정 클래스
+│       ├── security/     # 보안 (JWT)
+│       ├── domain/       # Entity 클래스
+│       ├── repository/   # JPA Repository
+│       ├── service/      # 비즈니스 로직
+│       ├── controller/   # REST Controller
+│       ├── dto/          # DTO 클래스
+│       ├── exception/    # 예외 처리
+│       └── constant/     # 상수, Enum
+│
+├── docs/                  # 문서
+│   ├── API_SPEC.md       # API 명세서
+│   ├── 입양_쇼핑몰_구조_매핑.md  # 입양↔쇼핑몰 도메인·기능 매핑 (백엔드=문서 참조, 프론트=React)
+│   └── schema.sql        # MySQL DDL
+│
+└── .claude/skills/        # Claude Code Skills
 ```
 
-## 🚀 Getting Started
+## 시작하기
 
-### Prerequisites
-- JDK 21 이상
-- Node.js 18 이상
-- MySQL 8.x 이상
+### 요구사항
+- Node.js 18+
+- Java 21
+- MySQL 8.0 (로컬 설치)
 
-### 1. Repository Clone
-팀원들은 먼저 레포지토리를 클론합니다.
-```bash
-git clone https://github.com/hayohio-bit/62dn-project-2026.git
-cd 62dn-project-2026
-```
+### 환경 설정
 
-### 2. Environment Setup (.env)
-로컬 개발 환경 설정을 위해 각 디렉토리의 `.env.example` 파일을 복사하여 `.env` 파일을 생성합니다.
+1. **데이터베이스 설정 (MySQL 8.0)**
 
-#### Backend (`/backend`)
-1. `backend` 폴더로 이동합니다.
-2. `.env.example` 파일을 `.env`로 복사합니다.
-3. 데이터베이스 계정 정보 및 JWT 시크릿 키 등을 환경에 맞게 수정합니다.
-   - `DB_USERNAME`: 본인의 MySQL 계정 (기본값: root)
-   - `DB_PASSWORD`: 본인의 MySQL 비밀번호
-   - `JWT_SECRET`: 최소 32자 이상의 임의 문자열
+   로컬에 MySQL 8.0을 설치한 뒤, DB `dn_platform`을 생성하고 백엔드가 접속할 수 있게 합니다.  
+   상세 절차(DB 생성, 테이블 생성, 연결 설정)는 **[docs/DATABASE.md](docs/DATABASE.md)** 를 참고하세요.
 
-#### Frontend (`/frontend`)
-1. `frontend` 폴더로 이동합니다.
-2. `.env.example` 파일을 `.env`로 복사합니다.
-3. 필요한 API 키를 설정합니다. (상세 내용은 [프론트엔드 연동 가이드](frontend/API_INTEGRATION_GUIDE.md) 참고)
-   - `VITE_API_BASE_URL`: 백엔드 API 주소 (기본값: http://localhost:8080/api)
-   - `VITE_MAP_API_KEY`: [카카오 개발자 콘솔](https://developers.kakao.com/)에서 발급받은 JavaScript 키
+   - 개발 환경(`application-dev.yml`)에서는 `spring.jpa.hibernate.ddl-auto: update`로 **자동 생성**됩니다.
+   - 수동 DDL이 필요하면 `docs/schema.sql`을 MySQL에 실행하세요.
 
-### 3. Database Setup
-1. MySQL 서버에 접속합니다.
-2. [docs/sql.txt](docs/sql.txt) 파일의 내용을 실행하여 데이터베이스(`DN_Platform`)와 필요한 테이블들을 생성합니다.
-
-#### 주요 테이블 명세
-전체 테이블 구조는 [docs/sql.txt](docs/sql.txt)에서 확인할 수 있습니다. (총 15개 테이블)
-
-| 테이블명 | 설명 |
-| :--- | :--- |
-| **users** | 회원 정보 및 권한 (USER, MANAGER) 관리 |
-| **animals** | 보호 중인 유기동물 상세 프로필 (공공데이터 API 연동) |
-| **shelters** | 보호소 정보 및 담당 관리자 매칭 |
-| **adoptions** | 입양 및 임시보호 신청/승인 프로세스 관리 |
-| **boards** | 자유게시판, 공지사항, 입양 후기 등 커뮤니티 |
-| **volunteers** | 봉사 모집 및 신청 내역 관리 |
-| **donations** | 물품/현금 후원 신청 및 내역 관리 |
-| **...** | 알림, 댓글, 이미지, 동기화 로그 등 |
-
-### 4. Running the Application
-
-#### Backend Setup
-1. `backend` 디렉토리에서 다음 명령어를 실행하여 서버를 시작합니다:
+2. **Backend 실행**
    ```bash
-   ./gradlew bootRun
+   # 프로젝트 루트(DN_project01)에서 - backend/.env 자동 로드
+   ./scripts/run-backend-dev.sh
    ```
-2. Swagger UI: `http://localhost:8080/swagger-ui/index.html` 에서 API 명세를 확인할 수 있습니다.
+   (또는 `cd backend` 후 `./gradlew bootRun --args='--spring.profiles.active=dev'`. DB 비밀번호는 `backend/.env` 또는 `DB_PASSWORD` 환경 변수로 설정.)
 
-#### Frontend Setup
-1. `frontend` 디렉토리에서 의존성 패키지를 설치합니다:
+3. **Frontend 실행**
    ```bash
+   cd frontend
+   cp .env.example .env   # 최초 1회, 필요 시 VITE_API_BASE_URL 확인
    npm install
-   ```
-2. 로컬 개발 서버를 실행합니다:
-   ```bash
    npm run dev
    ```
-3. 브라우저에서 `http://localhost:5173` 으로 접속합니다.
 
-## ✨ Key Features
-- **맞춤형 추천**: 설문 데이터를 기반으로 사용자에게 가장 적합한 유기동물 추천
-- **입양/임보 관리**: 입양 신청 및 승인 프로세스 관리
-- **성공 사례**: 실제 입양 성공 사례 공유 및 커뮤니티
-- **반응형 디자인**: 모바일과 데스크탑 모두 최적화된 UX/UI
+4. **연동 확인 (로그인·회원가입부터)**  
+   백엔드와 프론트를 둘 다 켠 뒤, 회원가입 → 로그인 → 마이페이지 → 동물 목록 순으로 확인하려면 **[docs/INTEGRATION_CHECK.md](docs/INTEGRATION_CHECK.md)** 를 참고하세요.
 
-## 🤝 협업 가이드
+### 환경 변수
 
-### Git 워크플로우
-**📖 완전한 가이드**: [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md)
-
-#### 브랜치 전략
-- **GitHub Flow** 사용 (간소화된 워크플로우)
-- `main`: 프로덕션 배포 브랜치 (보호됨)
-- `feature/<name>`: 기능 개발
-- `fix/<name>`: 버그 수정
-- `hotfix/<name>`: 긴급 수정
-
-#### 작업 흐름
-```bash
-# 1. 최신 main으로 동기화
-git checkout main && git pull origin main
-
-# 2. 작업 브랜치 생성
-git checkout -b feature/<기능명>
-
-# 3. 작업 후 커밋 (Conventional Commits)
-git commit -m "feat(scope): 설명"
-
-# 4. 푸시 및 PR 생성
-git push origin feature/<기능명>
+**Backend (application-dev.yml 또는 환경변수)**
+```
+DB_USERNAME=root
+DB_PASSWORD=root
+JWT_SECRET=your-256-bit-base64-encoded-secret
+RESEND_API_KEY=re_xxxxxxxx
+PUBLIC_API_SERVICE_KEY=your-public-api-key
 ```
 
-#### 커밋 메시지 (Conventional Commits)
-- `feat(auth): add JWT login` - 새 기능
-- `fix(animal): resolve null pointer` - 버그 수정
-- `docs(readme): update setup guide` - 문서
-- `refactor(api): extract helper function` - 리팩토링
-- `chore(deps): update spring boot` - 빌드/설정
+**Frontend (.env)**
+```
+VITE_API_BASE_URL=http://localhost:8080/api
+VITE_MAP_API_KEY=your-map-api-key
+```
 
-#### Pull Request 규칙
-- ✅ 모든 코드 변경은 **PR 필수** (main 직접 푸시 금지)
-- ✅ **최소 1명 승인** 후 머지
-- ✅ **CI 통과** 확인 (자동 린트, 테스트, 빌드)
-- ✅ PR 템플릿 작성 (변경사항, 테스트 방법, 체크리스트)
+## 주요 기능
 
-#### 코드 리뷰
-- CODEOWNERS 파일에 따라 자동으로 리뷰어 지정
-- 보안, 성능, 테스트 커버리지 확인
-- 건설적인 피드백 제공
+### 일반 사용자
+- 유기동물 조회 및 검색
+- 입양·임보 절차 안내 (신청·예약은 보호소 전화)
+- 봉사활동 신청
+- 물품 후원 신청
+- 커뮤니티 게시판
 
-**자세한 내용**: [Git 워크플로우 완전 가이드](docs/GIT_WORKFLOW.md) | [충돌 해결 가이드](docs/GIT_CONFLICT_POSTMORTEM.md)
+### 보호소 관리자
+- 동물 수동 등록 (공공API 미제공 시)
+- 봉사 모집공고 등록
+- 물품 후원 요청 등록
+- 신청 승인/거절 처리
+
+### 시스템 관리자
+- 회원 관리
+- 보호소 인증 관리
+- 전체 게시판 관리
+
+## API 문서
+
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- API 명세서: [docs/API_SPEC.md](docs/API_SPEC.md)
+
+## 개발 가이드
+
+### Claude Code Skills
+이 프로젝트는 `.claude/skills/` 폴더에 개발 가이드를 포함하고 있습니다:
+
+- `feature-planner.md` - 기능 개발 계획 수립
+- `react-component.md` - React 컴포넌트 생성
+- `spring-entity.md` - JPA Entity 생성
+- `spring-api.md` - REST API 생성
+- `spring-security.md` - 보안 설정
+- `api-module.md` - Frontend API 모듈
+- `zustand-store.md` - 상태 관리
+- `database-schema.md` - 데이터베이스 스키마
+- `email-service.md` - 이메일 서비스
+- `public-api.md` - 공공데이터 API 연동
+- `typescript-types.md` - TypeScript 타입 정의
+
+## 라이선스
+
+MIT License

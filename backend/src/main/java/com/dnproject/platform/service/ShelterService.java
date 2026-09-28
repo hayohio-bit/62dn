@@ -1,77 +1,71 @@
 package com.dnproject.platform.service;
 
 import com.dnproject.platform.domain.Shelter;
-import com.dnproject.platform.domain.User;
-import com.dnproject.platform.domain.constant.Role;
-import com.dnproject.platform.dto.request.ShelterSignupRequest;
-import com.dnproject.platform.dto.request.ShelterVerifyRequest;
+import com.dnproject.platform.domain.constant.VerificationStatus;
+import com.dnproject.platform.dto.response.PublicShelterResponse;
 import com.dnproject.platform.dto.response.ShelterResponse;
-import com.dnproject.platform.dto.response.ShelterSignupResponse;
+import com.dnproject.platform.exception.NotFoundException;
 import com.dnproject.platform.repository.ShelterRepository;
-import com.dnproject.platform.repository.UserRepository;
+import com.dnproject.platform.mapper.ShelterMapper;
+import com.dnproject.platform.util.AddressRegionParser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
 
 @Service
 @RequiredArgsConstructor
 public class ShelterService {
 
     private final ShelterRepository shelterRepository;
-    private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final ShelterMapper shelterMapper;
 
-    // 보호소 회원 가입.
+    @Transactional(readOnly = true)
+    public ShelterResponse getById(Long shelterId) {
+        Shelter shelter = shelterRepository.findById(shelterId)
+                .orElseThrow(() -> new NotFoundException("보호소를 찾을 수 없습니다. id=" + shelterId));
+        return shelterMapper.toResponse(shelter);
+    }
+
+    /**
+     * regionSido/regionSigungu가 비어 있는 보호소에 대해 주소를 파싱해 채움.
+     * 기존 데이터 보정 및 공공API 동기화 시 이름으로만 찾아 생성된 보호소 보정용.
+     */
     @Transactional
-    public ShelterSignupResponse registerShelter(ShelterSignupRequest request) {
-        if (shelterRepository.existsByBusinessRegistrationNumber(request.getBusinessRegistrationNumber())) {
-            throw new IllegalArgumentException("이미 등록된 사업자 번호입니다.");
+    public int backfillRegionFromAddress() {
+        List<Shelter> all = shelterRepository.findAll();
+        int updated = 0;
+        for (Shelter s : all) {
+            if (s.getRegionSido() != null)
+                continue;
+            String addr = s.getAddress();
+            if (addr == null || addr.isBlank())
+                continue;
+            String[] region = AddressRegionParser.parse(addr);
+            if (region[0] != null || region[1] != null) {
+                s.setRegionSido(region[0]);
+                s.setRegionSigungu(region[1]);
+                shelterRepository.save(s);
+                updated++;
+            }
         }
-        if (userRepository.existsByEmail((request.getEmail()))) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일 입니다.");
-        }
-
-        User manager = User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .name(request.getManagerName())
-                .phone(request.getManagerPhone())
-                .role(Role.SHELTER_ADMIN)
-                .build();
-
-        userRepository.save(manager);
-
-        Shelter shelter = request.toEntity(manager);
-        Shelter savedShelter = shelterRepository.save(shelter);
-
-        return ShelterSignupResponse.from(savedShelter);
+        if (updated > 0)
+            log.info("Shelter region backfill: {} shelters updated", updated);
+        return updated;
     }
 
-    public Page<ShelterResponse> getShelters(Pageable pageable) {
-        return shelterRepository.findAll(pageable)
-                .map(ShelterResponse::from);
-    }
-
-    // 보호소 상세 조회.
-    public ShelterResponse getShelter(Long id) {
-        Shelter shelter = shelterRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 보호소를 찾을 수 없습니다."));
-
-        return ShelterResponse.from(shelter);
-    }
-
-    // 보호소 상태 변경
-    @Transactional
-    public ShelterResponse verifyShelter(Long id, ShelterVerifyRequest request) {
-        Shelter shelter = shelterRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 보호소를 찾을 수 없습니다."));
-
-        shelter.updateVerificationStatus(request.getStatus());
-
-        return ShelterResponse.from(shelter);
+    @Transactional(readOnly = true)
+    public Page<PublicShelterResponse> searchPublicShelters(String regionSido, String keyword, Pageable pageable) {
+        return shelterRepository.searchPublicShelters(regionSido, keyword, pageable)
+                .map(shelterMapper::toPublicResponse);
     }
 
 }

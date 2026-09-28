@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 interface MagneticScrollOptions {
   enabled?: boolean;
@@ -22,7 +22,10 @@ interface MagneticScrollOptions {
  * - 사용자가 스크롤을 멈추면, 가장 가까운 섹션으로 부드럽게 정렬합니다.
  * - scroll-snap처럼 별도의 스크롤 컨테이너를 만들지 않아도 동작합니다.
  */
-export default function useMagneticScroll(selector: string, options: MagneticScrollOptions = {}) {
+export default function useMagneticScroll(
+  selector: string,
+  options: MagneticScrollOptions = {},
+) {
   const {
     enabled = true,
     topOffsetPx = 64,
@@ -42,7 +45,9 @@ export default function useMagneticScroll(selector: string, options: MagneticScr
     };
 
     const snapToNearest = () => {
-      const nodes = Array.from(document.querySelectorAll<HTMLElement>(selector));
+      const nodes = Array.from(
+        document.querySelectorAll<HTMLElement>(selector),
+      );
       if (nodes.length === 0) return;
 
       const targetY = topOffsetPx;
@@ -58,7 +63,7 @@ export default function useMagneticScroll(selector: string, options: MagneticScr
       if (best.dist > thresholdPx) return;
 
       isAutoScrollingRef.current = true;
-      best.el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      best.el.scrollIntoView({ behavior: "smooth", block: "start" });
 
       window.setTimeout(() => {
         isAutoScrollingRef.current = false;
@@ -71,11 +76,10 @@ export default function useMagneticScroll(selector: string, options: MagneticScr
       settleTimerRef.current = window.setTimeout(snapToNearest, settleDelayMs);
     };
 
-    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
-      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener("scroll", onScroll);
       clearTimer();
     };
   }, [enabled, selector, settleDelayMs, thresholdPx, topOffsetPx]);
 }
-

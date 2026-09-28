@@ -1,13 +1,9 @@
 package com.dnproject.platform.domain.constant;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-@Getter
-@RequiredArgsConstructor
+/**
+ * 공공데이터 동기화 실행 구분: 스케줄(자동) / 관리자 수동
+ */
 public enum SyncTriggerType {
-    MANUAL("수동실행"),
-    SCHEDULED("스케줄러 실행");
-
-        private final String description;
+    AUTO,   // 스케줄(매일 새벽 2시 등)
+    MANUAL  // 관리자 수동 실행
 }

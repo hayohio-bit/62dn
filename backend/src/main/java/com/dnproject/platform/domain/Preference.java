@@ -1,18 +1,20 @@
 package com.dnproject.platform.domain;
 
-import com.dnproject.platform.domain.constant.Size;
 import com.dnproject.platform.domain.constant.Species;
+import com.dnproject.platform.domain.constant.Size;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import com.dnproject.platform.domain.common.BaseTimeEntity;
 
 @Entity
 @Table(name = "preferences")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class Preference extends BaseTimeEntity{
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Preference extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,38 +28,20 @@ public class Preference extends BaseTimeEntity{
     @Column(length = 10)
     private Species species;
 
+    @Column(name = "min_age")
     private Integer minAge;
+
+    @Column(name = "max_age")
     private Integer maxAge;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
     private Size size;
 
+    @Column(length = 50)
     private String region;
+
+    @Column(length = 100)
     private String temperament;
-
-
-    @Builder
-    public Preference(User user, Species species, Integer minAge, Integer maxAge,
-                      Size size, String region, String temperament) {
-        this.user = user;
-        this.species = species;
-        this.minAge = minAge;
-        this.maxAge = maxAge;
-        this.size = size;
-        this.region = region;
-        this.temperament = temperament;
-    }
-
-    // 선호도 정보 수정
-    public void update(Species species, Integer minAge, Integer maxAge,
-                       Size size, String region, String temperament) {
-        this.species = species;
-        this.minAge = minAge;
-        this.maxAge = maxAge;
-        this.size = size;
-        this.region = region;
-        this.temperament = temperament;
-    }
 
 }

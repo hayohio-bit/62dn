@@ -1,51 +1,65 @@
 spring:
-  application:
-    name: dnplatform
   profiles:
     active: dev
+
+  application:
+    name: dn-platform
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    show-sql: true
+    open-in-view: false
+
+  # File Upload
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
-# 공공데이터포털 구조동물조회 API (API-Quick-Reference.md 참고)
-animal:
-  upload-path: d:/dn-project/uploads
-  api:
-    base-url: ${GOV_API_BASE_URL:https://apis.data.go.kr/1543061}
-    # serviceKey: GET 요청 시 URL 인코딩 필요 시 GOV_API_KEY_ENCODED 사용
-    service-key: ${GOV_API_KEY:${ANIMAL_API_KEY:yMP6lpEQqhP8+loxfdMTCQFf6L7lis9mWT2UtOUFTyo+bG0ZGCpAN3VwGQj0tC217bLATyoRw7+dLMQ5mfC1Wg==}}
-    service-key-encoded: ${GOV_API_KEY_ENCODED:}
-    params:
-      bgnde: ${GOV_API_BGNDE:20260101}
-      endde: ${GOV_API_ENDDE:20260206}
-      state: notice
-      pageNo: 1
-      numOfRows: 100
-      _type: json
+# 업로드 파일 저장 경로 (상대 경로 = 서버 실행 시 작업 디렉터리 기준)
+# 예: backend/에서 gradlew 실행 시 → backend/uploads. 다른 경로에서 실행하면 파일을 찾지 못할 수 있으므로,
+# 재시작 시 같은 디렉터리에서 실행하거나 file.upload-dir을 절대 경로로 설정하세요.
+file:
+  upload-dir: uploads
 
-resend:
-  api-key: ${RESEND_API_KEY:re_QAy5siEB_mwAjLdDrcXh3f6L3AnfSFarJ}
-  from-email: noreply@dn-platform.com
-  from-name: DN Platform
+# Server Configuration
+server:
+  port: 8080
 
-kakao:
-  rest-api-key: ${KAKAO_REST_API_KEY:abe5b23bb7cbeb9f0f77760d4f742d7f}
-  javascript-key: ${KAKAO_JAVASCRIPT_KEY:bb97221a6d16600ec42f6e1b12d68ed3}
-  admin-key: ${KAKAO_ADMIN_KEY:b4d55266c81e1d7170d2cf9d6b2b19db}
+# CORS (comma-separated origins)
+cors:
+  allowed-origins: http://localhost:5173,http://localhost:5175,http://localhost:3000
 
-api:
-  config:
-    timeout: ${API_CALL_TIMEOUT_SECONDS:30}
-    retry-count: ${API_RETRY_COUNT:3}
-    daily-limit: ${API_DAILY_LIMIT:10000}
+# 프론트엔드 URL (이메일 내 관리자 로그인 바로가기 링크 등)
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
 
+# JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:secretkeysecretkeysecretkeysecretkeysecretkeysecretkeysecretkey}
-  expiration: 86400000 # 24 hours
-  refresh-expiration: 604800000 # 7 days
+  secret: ${JWT_SECRET:local-dev-only-jwt-secret-not-for-production-use}
+  access-token-validity: ${JWT_ACCESS_VALIDITY:86400} # 24 hours (로그인 유지 개선)
+  refresh-token-validity: ${JWT_REFRESH_VALIDITY:2592000} # 30 days
 
-logging:
-  level:
-    root: INFO
-    com.dnproject.platform: DEBUG
+# 환경 변수: DATA_API_KEY 또는 PUBLIC_API_SERVICE_KEY
+# base-url: 1543061 (TeamApple 등 실제 사용). 500 시 활용신청 후 본인 Encoding 키 사용
+public-api:
+  service-key: ${DATA_API_KEY:${PUBLIC_API_SERVICE_KEY:your-public-api-service-key}}
+  base-url: ${PUBLIC_API_BASE_URL:https://apis.data.go.kr/1543061}
+  # 스케줄 동기화: true 시 매일 지정 시간에 공공데이터 자동 수집 (일 1회 권장)
+  sync-enabled: ${PUBLIC_API_SYNC_ENABLED:true}
+  sync-cron: ${PUBLIC_API_SYNC_CRON:0 0 2 * * *} # 기본: 매일 새벽 2시 (초 분 시 일 월 요일)
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha

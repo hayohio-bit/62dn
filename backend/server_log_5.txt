@@ -1,2 +1,0 @@
-Starting a Gradle Daemon, 1 busy and 2 incompatible and 2 stopped Daemons could not be reused, use --status for details
-일괄 작업을 끝내시겠습니까 (Y/N)? 

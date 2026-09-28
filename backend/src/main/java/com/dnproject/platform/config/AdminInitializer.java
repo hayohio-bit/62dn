@@ -6,42 +6,38 @@ import com.dnproject.platform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-@Component
-@RequiredArgsConstructor
+import java.util.Optional;
+
 @Slf4j
+@Component
+@Order(1)
+@RequiredArgsConstructor
 public class AdminInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args) {
-        String adminEmail = "admin@admin.com";
-        java.util.Optional<User> userOpt = userRepository.findByEmail(adminEmail);
-
-        if (userOpt.isEmpty()) {
-            log.info("Creating default admin account: {}", adminEmail);
-            User admin = User.builder()
-                    .email(adminEmail)
+    @Transactional
+    public void run(String... args) throws Exception {
+        Optional<User> admin = userRepository.findByEmailTrimmed("admin@admin.com");
+        if (admin.isEmpty()) {
+            User newAdmin = User.builder()
+                    .email("admin@admin.com")
+                    .name("시스템 관리자")
                     .password(passwordEncoder.encode("1234"))
-                    .name("시스템관리자")
+                    .phone("010-0000-0000")
                     .role(Role.SUPER_ADMIN)
                     .build();
-            userRepository.save(admin);
-            log.info("Admin account initialized successfully as SUPER_ADMIN.");
+            userRepository.save(newAdmin);
+            log.info("Default super admin created: admin@admin.com");
         } else {
-            User existingUser = userOpt.get();
-            if (existingUser.getRole() != Role.SUPER_ADMIN) {
-                log.info("Updating existing admin account role to SUPER_ADMIN: {}", adminEmail);
-                existingUser.updateRole(Role.SUPER_ADMIN);
-                userRepository.save(existingUser);
-                log.info("Admin account role updated to SUPER_ADMIN.");
-            } else {
-                log.info("Admin account already exists with SUPER_ADMIN role: {}", adminEmail);
-            }
+            log.info("Super admin already exists: admin@admin.com (비밀번호 유지)");
         }
     }
 }

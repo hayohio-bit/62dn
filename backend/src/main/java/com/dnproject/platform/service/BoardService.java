@@ -1,74 +1,155 @@
 package com.dnproject.platform.service;
 
 import com.dnproject.platform.domain.Board;
+import com.dnproject.platform.domain.Comment;
 import com.dnproject.platform.domain.User;
 import com.dnproject.platform.domain.constant.BoardType;
+import com.dnproject.platform.domain.constant.Role;
 import com.dnproject.platform.dto.request.BoardCreateRequest;
+import com.dnproject.platform.dto.request.CommentCreateRequest;
 import com.dnproject.platform.dto.response.BoardResponse;
+import com.dnproject.platform.dto.response.CommentResponse;
+import com.dnproject.platform.dto.response.PageResponse;
+import com.dnproject.platform.exception.NotFoundException;
 import com.dnproject.platform.repository.BoardRepository;
+import com.dnproject.platform.repository.ShelterRepository;
 import com.dnproject.platform.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class BoardService {
 
-    private final BoardRepository boardRepository;
-    private final UserRepository userRepository;
+        private final BoardRepository boardRepository;
+        private final UserRepository userRepository;
+        private final ShelterRepository shelterRepository;
 
-    public Page<BoardResponse> getBoards(BoardType type, Pageable pageable) {
-        if (type != null) {
-            return boardRepository.findByType(type, pageable).map(BoardResponse::from);
-        }
-        return boardRepository.findAll(pageable).map(BoardResponse::from);
-    }
-
-    @Transactional
-    public BoardResponse getBoard(Long id) {
-        Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다. ID: " + id));
-        board.incrementViews();
-        return BoardResponse.from(board);
-    }
-
-    @Transactional
-    public BoardResponse createBoard(BoardCreateRequest request, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
-
-        Board board = request.toEntity(user);
-        Board saved = boardRepository.save(board);
-        return BoardResponse.from(saved);
-    }
-
-    @Transactional
-    public BoardResponse updateBoard(Long id, BoardCreateRequest request, Long userId) {
-        Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다. ID: " + id));
-
-        if (!board.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("자신의 게시글만 수정할 수 있습니다.");
+        @Transactional(readOnly = true)
+        public PageResponse<BoardResponse> findAll(BoardType type, String keyword, Pageable pageable) {
+                Page<Board> page = boardRepository.findWithSearch(type, keyword, pageable);
+                return PageResponse.<BoardResponse>builder()
+                                .content(page.getContent().stream().map(this::toBoardResponse).toList())
+                                .page(page.getNumber())
+                                .size(page.getSize())
+                                .totalElements(page.getTotalElements())
+                                .totalPages(page.getTotalPages())
+                                .first(page.isFirst())
+                                .last(page.isLast())
+                                .build();
         }
 
-        board.update(request.getTitle(), request.getContent(), false); // isPinned는 일단 false로 고정 또는 request에 추가
-        return BoardResponse.from(board);
-    }
-
-    @Transactional
-    public void deleteBoard(Long id, Long userId) {
-        Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다. ID: " + id));
-
-        if (!board.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("자신의 게시글만 삭제할 수 있습니다.");
+        @Transactional
+        public BoardResponse findById(Long id, boolean increaseViewCount) {
+                Board board = boardRepository.findById(id)
+                                .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다."));
+                if (increaseViewCount) {
+                        board.setViews(board.getViews() + 1);
+                        boardRepository.save(board);
+                }
+                return toBoardResponse(board);
         }
 
-        boardRepository.delete(board);
-    }
+        @Transactional
+        public BoardResponse create(Long userId, BoardCreateRequest request) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+                if (request.getType() == BoardType.NOTICE || request.getType() == BoardType.FAQ) {
+                        if (user.getRole() != Role.SUPER_ADMIN) {
+                                throw new com.dnproject.platform.exception.CustomException(
+                                                "공지사항·FAQ 게시판에는 시스템 관리자만 글을 작성할 수 있습니다.",
+                                                org.springframework.http.HttpStatus.FORBIDDEN, "FORBIDDEN");
+                        }
+                }
+                Board board = Board.builder()
+                                .user(user)
+                                .shelter(request.getShelterId() != null
+                                                ? shelterRepository.findById(request.getShelterId()).orElse(null)
+                                                : null)
+                                .type(request.getType())
+                                .title(request.getTitle())
+                                .content(request.getContent())
+                                .views(0)
+                                .isPinned(false)
+                                .build();
+                board = boardRepository.save(board);
+                return toBoardResponse(board);
+        }
+
+        @Transactional
+        public BoardResponse update(Long id, Long userId, BoardCreateRequest request) {
+                Board board = boardRepository.findById(id)
+                                .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다."));
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+                boolean isNoticeOrFaq = request.getType() == BoardType.NOTICE || request.getType() == BoardType.FAQ
+                                || board.getType() == BoardType.NOTICE || board.getType() == BoardType.FAQ;
+                if (isNoticeOrFaq && user.getRole() != Role.SUPER_ADMIN) {
+                        throw new com.dnproject.platform.exception.CustomException(
+                                        "공지사항·FAQ 게시판 글은 시스템 관리자만 수정할 수 있습니다.",
+                                        org.springframework.http.HttpStatus.FORBIDDEN, "FORBIDDEN");
+                }
+                if (!board.getUser().getId().equals(userId)) {
+                        throw new com.dnproject.platform.exception.CustomException("본인의 글만 수정할 수 있습니다.",
+                                        org.springframework.http.HttpStatus.FORBIDDEN, "FORBIDDEN");
+                }
+                board.setType(request.getType());
+                board.setTitle(request.getTitle());
+                board.setContent(request.getContent());
+                if (request.getShelterId() != null) {
+                        board.setShelter(shelterRepository.findById(request.getShelterId()).orElse(null));
+                }
+                board = boardRepository.save(board);
+                return toBoardResponse(board);
+        }
+
+        @Transactional
+        public void delete(Long id, Long userId) {
+                Board board = boardRepository.findById(id)
+                                .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다."));
+                if (!board.getUser().getId().equals(userId)) {
+                        throw new com.dnproject.platform.exception.CustomException("본인의 글만 삭제할 수 있습니다.",
+                                        org.springframework.http.HttpStatus.FORBIDDEN, "FORBIDDEN");
+                }
+                boardRepository.delete(board);
+        }
+
+        @Transactional
+        public BoardResponse setPinned(Long id, boolean pinned) {
+                Board board = boardRepository.findById(id)
+                                .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다."));
+                board.setIsPinned(pinned);
+                board = boardRepository.save(board);
+                return toBoardResponse(board);
+        }
+
+        @Transactional
+        public void deleteByAdmin(Long id) {
+                Board board = boardRepository.findById(id)
+                                .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다."));
+                boardRepository.delete(board);
+        }
+
+        private BoardResponse toBoardResponse(Board b) {
+                String userName = b.getUser() != null ? b.getUser().getName() : null;
+                Long shelterId = b.getShelter() != null ? b.getShelter().getId() : null;
+                return BoardResponse.builder()
+                                .id(b.getId())
+                                .userId(b.getUser() != null ? b.getUser().getId() : null)
+                                .userName(userName)
+                                .shelterId(shelterId)
+                                .type(b.getType())
+                                .title(b.getTitle())
+                                .content(b.getContent())
+                                .views(b.getViews())
+                                .isPinned(b.getIsPinned())
+                                .createdAt(b.getCreatedAt())
+                                .build();
+        }
+
 }

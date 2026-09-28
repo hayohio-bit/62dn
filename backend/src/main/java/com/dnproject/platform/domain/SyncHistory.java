@@ -1,22 +1,22 @@
 package com.dnproject.platform.domain;
 
-/*
-*  공공데이터 수집 일지
-*  자동으로 데이터 가져옴, 버튼을 눌러 강제로 가져옴 ->
-*  과정 성공? 몇 마리 추가? 왜 실패? 등등 기록해두는 엔티티
-* */
 import com.dnproject.platform.domain.constant.SyncTriggerType;
+import com.dnproject.platform.domain.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
+/**
+ * 공공데이터 유기동물 동기화 실행 이력 (자동/수동, 추가·수정·삭제·보정 건수)
+ */
 @Entity
 @Table(name = "sync_history", indexes = {
-        @Index(name = "idx_sync_history_run_at", columnList = "created_at")
+        @Index(name = "idx_sync_history_created", columnList = "created_at")
 })
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class SyncHistory extends BaseTimeEntity {
@@ -26,18 +26,34 @@ public class SyncHistory extends BaseTimeEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "trigger_type", nullable = false, length = 20)
     private SyncTriggerType triggerType;
 
-    private Integer totalCount;
-    private Integer successCount;
-    private Integer addedCount;
-    private Integer updatedCount;
-    private Integer deletedCount;
-    private Integer correctedCount;
+    @Column(name = "added_count", nullable = false)
+    @Builder.Default
+    private int addedCount = 0;
 
+    @Column(name = "updated_count", nullable = false)
+    @Builder.Default
+    private int updatedCount = 0;
+
+    @Column(name = "deleted_count", nullable = false)
+    @Builder.Default
+    private int deletedCount = 0;
+
+    /** 만료→입양 보정 건수 */
+    @Column(name = "corrected_count", nullable = false)
+    @Builder.Default
+    private int correctedCount = 0;
+
+    @Column(name = "error_message", length = 1000)
     private String errorMessage;
-    private Integer daysParam;
-    private String speciesFilter;
 
-    private String status;
+    /** 수동 실행 시 적용한 days (선택) */
+    @Column(name = "days_param")
+    private Integer daysParam;
+
+    /** 수동 실행 시 종 필터 (ALL, DOG, CAT 등) */
+    @Column(name = "species_filter", length = 20)
+    private String speciesFilter;
 }

@@ -1,33 +1,33 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { authApi } from '@/api/auth';
-import { useAuthStore } from '@/store/authStore';
-import type { SignupRequest } from '@/types/dto';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { authApi } from "@/api/auth";
+import { useAuthStore } from "@/store/authStore";
+import type { SignupRequest } from "@/types/dto";
 
 export default function SignupPage() {
   const navigate = useNavigate();
   const loginStore = useAuthStore((s) => s.login);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
     try {
       const payload: SignupRequest = { email, password, name, phone };
       if (address.trim()) payload.address = address;
       const res = await authApi.signup(payload);
       const data = res.data?.data ?? res.data;
-      const signupOk = data && (data.id !== undefined && data.id !== null);
+      const signupOk = data && data.id !== undefined && data.id !== null;
       if (!signupOk) {
-        setError('가입 후 로그인해 주세요.');
+        setError("가입 후 로그인해 주세요.");
         return;
       }
       // 회원가입 성공 후 자동 로그인
@@ -39,22 +39,30 @@ export default function SignupPage() {
         if (accessToken && user) {
           loginStore({
             accessToken,
-            refreshToken: loginPayload?.refreshToken ?? '',
+            refreshToken: loginPayload?.refreshToken ?? "",
             expiresIn: loginPayload?.expiresIn ?? 3600,
             user,
           });
-          navigate('/', { replace: true });
+          navigate("/", { replace: true });
           return;
         }
       } catch (loginErr: unknown) {
-        const loginMsg = (loginErr as { response?: { data?: { message?: string } } })?.response?.data?.message;
-        setError(loginMsg ?? '로그인에 실패했습니다. 위 이메일/비밀번호로 로그인 페이지에서 다시 시도해 주세요.');
+        const loginMsg = (
+          loginErr as { response?: { data?: { message?: string } } }
+        )?.response?.data?.message;
+        setError(
+          loginMsg ??
+            "로그인에 실패했습니다. 위 이메일/비밀번호로 로그인 페이지에서 다시 시도해 주세요.",
+        );
         return;
       }
-      setError('로그인 응답 형식이 올바르지 않습니다. 로그인 페이지에서 다시 시도해 주세요.');
+      setError(
+        "로그인 응답 형식이 올바르지 않습니다. 로그인 페이지에서 다시 시도해 주세요.",
+      );
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? '회원가입에 실패했습니다.');
+      const msg = (err as { response?: { data?: { message?: string } } })
+        ?.response?.data?.message;
+      setError(msg ?? "회원가입에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -70,7 +78,9 @@ export default function SignupPage() {
       >
         <div className="toss-auth-head">
           <h1 className="toss-auth-title">회원가입</h1>
-          <p className="toss-auth-desc">62댕냥이와 함께 따뜻한 가족을 만나보세요</p>
+          <p className="toss-auth-desc">
+            62댕냥이와 함께 따뜻한 가족을 만나보세요
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="toss-auth-card">
@@ -160,11 +170,11 @@ export default function SignupPage() {
           </div>
 
           <button type="submit" disabled={loading} className="toss-auth-submit">
-            {loading ? '가입 중...' : '회원가입'}
+            {loading ? "가입 중..." : "회원가입"}
           </button>
 
           <p className="toss-auth-foot">
-            이미 계정이 있으신가요?{' '}
+            이미 계정이 있으신가요?{" "}
             <Link to="/login" className="toss-auth-link">
               로그인
             </Link>

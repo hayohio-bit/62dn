@@ -1,2 +1,2 @@
-rootProject.name = 'dn-project'
+rootProject.name = 'platform'
 include 'backend'

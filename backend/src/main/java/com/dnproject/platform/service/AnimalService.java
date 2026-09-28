@@ -1,135 +1,139 @@
 package com.dnproject.platform.service;
 
 import com.dnproject.platform.domain.Animal;
-import com.dnproject.platform.domain.Preference;
 import com.dnproject.platform.domain.Shelter;
 import com.dnproject.platform.domain.constant.AnimalStatus;
 import com.dnproject.platform.domain.constant.Size;
 import com.dnproject.platform.domain.constant.Species;
-import com.dnproject.platform.dto.request.AnimalCreateRequest;
-import com.dnproject.platform.dto.response.AnimalResponse;
-import com.dnproject.platform.repository.AnimalRepository;
-import com.dnproject.platform.repository.PreferenceRepository;
-import com.dnproject.platform.repository.ShelterRepository;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 
-import jakarta.persistence.EntityNotFoundException;
+import com.dnproject.platform.dto.response.AnimalResponse;
+import com.dnproject.platform.dto.response.PageResponse;
+import com.dnproject.platform.exception.NotFoundException;
+import com.dnproject.platform.dto.response.PreferenceResponse;
+import com.dnproject.platform.repository.AnimalRepository;
+import com.dnproject.platform.repository.ShelterRepository;
+import com.dnproject.platform.service.PreferenceService;
+import com.dnproject.platform.mapper.AnimalMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class AnimalService {
 
     private final AnimalRepository animalRepository;
     private final ShelterRepository shelterRepository;
-    private final PreferenceRepository preferenceRepository;
+    private final AnimalSyncService animalSyncService;
+    private final PreferenceService preferenceService;
+    private final AnimalMapper animalMapper;
+    private final com.dnproject.platform.repository.FavoriteRepository favoriteRepository;
+    private final com.dnproject.platform.repository.AnimalImageRepository animalImageRepository;
 
-    public Page<AnimalResponse> getAnimals(AnimalStatus status, String speciesStr, String sizeStr, String region,
+    @Transactional(readOnly = true)
+    public PageResponse<AnimalResponse> findAll(Species species, AnimalStatus status, Size size, String region,
             String sigungu, String search, Pageable pageable) {
-        Species species = null;
-        if (speciesStr != null && !speciesStr.isEmpty()) {
-            try {
-                species = Species.valueOf(speciesStr.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                // Ignore
-            }
-        }
-
-        Size size = null;
-        if (sizeStr != null && !sizeStr.isEmpty()) {
-            try {
-                size = Size.valueOf(sizeStr.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                // Ignore
-            }
-        }
-
-        if (pageable.getSort().getOrderFor("random") != null) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                    Sort.by("createdAt").descending());
-        }
-
-        return animalRepository.findAnimals(status, species, size, region, sigungu, search, pageable)
-                .map(AnimalResponse::from);
+        String regionParam = (region != null && !region.isBlank()) ? region.trim() : null;
+        String sigunguParam = (sigungu != null && !sigungu.isBlank()) ? sigungu.trim() : null;
+        String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
+        Page<Animal> page = animalRepository.findWithFilters(species, status, size, regionParam, sigunguParam,
+                searchParam, pageable);
+        return animalMapper.toPageResponse(page);
     }
 
-    public AnimalResponse getAnimal(Long id) {
+    @Transactional(readOnly = true)
+    public AnimalResponse findById(Long id) {
         Animal animal = animalRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("동물을 찾을 수 없습니다. ID: " + id));
-        return AnimalResponse.from(animal);
+                .orElseThrow(() -> new NotFoundException("동물을 찾을 수 없습니다. id=" + id));
+        return animalMapper.toResponse(animal);
     }
 
-    @Transactional
-    public AnimalResponse createAnimal(AnimalCreateRequest request) {
-        Shelter shelter = shelterRepository.findById(request.getShelterId())
-                .orElseThrow(() -> new EntityNotFoundException("보호소를 찾을 수 없습니다. ID: " + request.getShelterId()));
+    /**
+     * 안락사 D-Day 임박 동물 조회 (렌딩 페이지용)
+     */
+    @Transactional(readOnly = true)
+    public List<AnimalResponse> findUrgentAnimals(int limit) {
+        LocalDate today = LocalDate.now();
+        LocalDate maxDate = today.plusYears(1);
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(0, limit);
 
-        Animal animal = request.toEntity(shelter);
-        Animal saved = animalRepository.save(animal);
-        return AnimalResponse.from(saved);
+        return animalRepository.findUrgentAnimals(AnimalStatus.PROTECTED, today, maxDate, pageable)
+                .getContent()
+                .stream()
+                .map(animalMapper::toResponse)
+                .toList();
     }
 
-    @Transactional
-    public AnimalResponse updateAnimal(Long id, AnimalCreateRequest request) {
-        Animal animal = animalRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("동물을 찾을 수 없습니다. ID: " + id));
-
-        // Update fields
-        animal.setName(request.getName());
-        animal.setSpecies(request.getSpecies());
-        animal.setBreed(request.getBreed());
-        animal.setAge(request.getAge());
-        animal.setGender(request.getGender());
-        animal.setSize(request.getSize());
-        animal.setWeight(request.getWeight());
-        animal.setDescription(request.getDescription());
-        animal.setTemperament(request.getTemperament());
-        animal.setHealthStatus(request.getHealthStatus());
-        animal.setNeutered(request.getNeutered());
-        animal.setVaccinated(request.getVaccinated());
-        animal.setImageUrl(request.getImageUrl());
-
-        return AnimalResponse.from(animal);
+    /**
+     * 공공데이터포털 유기동물 API → DB 동기화
+     * 
+     * @param days          최근 N일 데이터
+     * @param maxPages      최대 페이지 수 (null이면 전부)
+     * @param speciesFilter DOG, CAT 또는 null(전체)
+     */
+    public AnimalSyncService.SyncResult syncFromPublicApiWithStatus(int days, Integer maxPages, String speciesFilter) {
+        return animalSyncService.syncFromPublicApi(days, maxPages, speciesFilter);
     }
 
-    @Transactional
-    public void deleteAnimal(Long id) {
-        if (!animalRepository.existsById(id)) {
-            throw new EntityNotFoundException("동물을 찾을 수 없습니다. ID: " + id);
+    /**
+     * 사용자 선호도에 맞는 동물 목록 (종류·나이 범위·크기 필터)
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<AnimalResponse> findRecommended(Long userId, Pageable pageable) {
+        PreferenceResponse pref = preferenceService.getByUserId(userId);
+        if (pref == null) {
+            return PageResponse.<AnimalResponse>builder()
+                    .content(List.of())
+                    .page(pageable.getPageNumber())
+                    .size(pageable.getPageSize())
+                    .totalElements(0L)
+                    .totalPages(0)
+                    .first(true)
+                    .last(true)
+                    .build();
         }
-        animalRepository.deleteById(id);
+        Species species = pref.getSpecies();
+        Integer minAge = pref.getMinAge();
+        Integer maxAge = pref.getMaxAge();
+        Size size = pref.getSize();
+        List<String> regions = (pref.getRegions() != null && !pref.getRegions().isEmpty())
+                ? pref.getRegions().stream().map(String::trim).filter(s -> !s.isBlank()).toList()
+                : null;
+        List<AnimalStatus> statuses = List.of(AnimalStatus.PROTECTED);
+        Page<Animal> page = animalRepository.findRecommended(statuses, species, minAge, maxAge, size, regions,
+                pageable);
+        return animalMapper.toPageResponse(page);
     }
 
-    public Page<AnimalResponse> getAnimalsByShelter(Long shelterId, Pageable pageable) {
-        return animalRepository.findByShelterId(shelterId, pageable)
-                .map(AnimalResponse::from);
-    }
+    /**
+     * 기존 DB에 쌓인 ADOPTED, status=NULL 및 공고 만료 동물 일괄 정리.
+     * 
+     * @return [adoptedDeleted, nullDeleted, expiredDeleted]
+     */
+    @Transactional
+    public int[] cleanupInvalidStatus() {
+        List<Animal> adoptedAnimals = animalRepository.findAllByStatus(AnimalStatus.ADOPTED);
+        List<Animal> nullAnimals = animalRepository.findAllByStatusIsNull();
+        List<Animal> expiredAnimals = animalRepository.findAllByStatusAndNoticeEndDateBefore(AnimalStatus.PROTECTED,
+                LocalDate.now());
 
-    public Page<AnimalResponse> getRecommendations(Long userId, Pageable pageable) {
-        Preference preference = preferenceRepository.findByUserId(userId).orElse(null);
+        List<Animal> toDelete = new java.util.ArrayList<>();
+        toDelete.addAll(adoptedAnimals);
+        toDelete.addAll(nullAnimals);
+        toDelete.addAll(expiredAnimals);
 
-        if (preference == null) {
-            if (pageable.getSort().getOrderFor("random") != null) {
-                pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                        Sort.by("createdAt").descending());
-            }
-            // 선호도 없으면 최신 동물 추천
-            return animalRepository.findAnimals(AnimalStatus.PROTECTED, null, null, null, null, null, pageable)
-                    .map(AnimalResponse::from);
+        if (!toDelete.isEmpty()) {
+            favoriteRepository.deleteByAnimalIn(toDelete);
+            animalImageRepository.deleteByAnimalIn(toDelete);
+            animalRepository.deleteAllInBatch(toDelete);
         }
 
-        return animalRepository.findRecommendedAnimals(
-                preference.getSpecies(),
-                preference.getSize(),
-                preference.getMinAge(),
-                preference.getMaxAge(),
-                pageable)
-                .map(AnimalResponse::from);
+        return new int[] { adoptedAnimals.size(), nullAnimals.size(), expiredAnimals.size() };
     }
+
 }

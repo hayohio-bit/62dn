@@ -1,36 +1,26 @@
 package com.dnproject.platform.dto.response;
 
-import com.dnproject.platform.domain.Shelter;
 import com.dnproject.platform.domain.constant.VerificationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Getter
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ShelterResponse {
-    private long id;
+
+    private Long id;
     private String name;
     private String address;
     private String phone;
     private String email;
-    private String managerName;
-    private String status;
-    private LocalDateTime verifiedAt;
-
-    public static ShelterResponse from(Shelter shelter) {
-        return ShelterResponse.builder()
-                .id(shelter.getId())
-                .name(shelter.getName())
-                .address(shelter.getAddress())
-                .phone(shelter.getPhone())
-                .email(shelter.getEmail())
-                .managerName(shelter.getManagerName())
-                .status(shelter.getVerificationStatus().getDescription())
-                .verifiedAt(shelter.getVerifiedAt())
-                .build();
-    }
+    private String businessRegistrationNumber;
+    private String businessRegistrationFile;
+    private VerificationStatus verificationStatus;
+    private Instant createdAt;
 }

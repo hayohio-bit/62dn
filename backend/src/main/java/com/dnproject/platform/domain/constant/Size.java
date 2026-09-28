@@ -1,14 +1,10 @@
 package com.dnproject.platform.domain.constant;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-@Getter
-@RequiredArgsConstructor
+/**
+ * 동물/선호 크기 (소형/중형/대형)
+ */
 public enum Size {
-    SMALL("소형"),
-    MEDIUM("중형"),
-    LARGE("대형");
-
-    private final String description;
+    SMALL,
+    MEDIUM,
+    LARGE
 }

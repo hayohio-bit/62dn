@@ -1,26 +1,19 @@
 package com.dnproject.platform.dto.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class TokenResponse {
+
     private String accessToken;
     private String refreshToken;
-    private Long expiresIn;
+    private String tokenType;
+    private long expiresIn;
     private UserResponse user;
-
-    public static TokenResponse of(
-            String accessToken,
-            String refreshToken,
-            Long expiresIn,
-            UserResponse user) {
-        return TokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .expiresIn(expiresIn)
-                .user(user)
-                .build();
-    }
 }

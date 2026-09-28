@@ -1,9 +1,14 @@
-import { motion, type Variants } from 'framer-motion';
-import type { ReactNode } from 'react';
+import { motion, type Variants } from "framer-motion";
+import type { ReactNode } from "react";
 
 const appleEase: [number, number, number, number] = [0.25, 0.1, 0.25, 1.0];
 
-export type AnimatedSectionAnimation = 'fadeUp' | 'fadeIn' | 'slideLeft' | 'slideRight' | 'scale';
+export type AnimatedSectionAnimation =
+  | "fadeUp"
+  | "fadeIn"
+  | "slideLeft"
+  | "slideRight"
+  | "scale";
 
 interface AnimatedSectionProps {
   children: ReactNode;
@@ -37,9 +42,9 @@ const animations: Record<AnimatedSectionAnimation, Variants> = {
 
 export default function AnimatedSection({
   children,
-  className = '',
+  className = "",
   delay = 0,
-  animation = 'fadeUp',
+  animation = "fadeUp",
 }: AnimatedSectionProps) {
   return (
     <motion.div
@@ -47,16 +52,14 @@ export default function AnimatedSection({
       variants={animations[animation]}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-64px' }}
+      viewport={{ once: true, margin: "-64px" }}
       transition={{
         duration: 0.7,
         delay,
         ease: appleEase,
       }}
-      style={{ touchAction: 'pan-y' }}
     >
       {children}
     </motion.div>
   );
 }
-

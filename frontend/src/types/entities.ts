@@ -3,7 +3,7 @@
  * 스프링 부트 JPA Entity와 일치
  */
 
-export type Role = 'USER' | 'SHELTER_ADMIN' | 'SUPER_ADMIN';
+export type Role = "USER" | "SUPER_ADMIN";
 
 export interface User {
   id: number;
@@ -28,10 +28,10 @@ export interface Preference {
   updatedAt?: string;
 }
 
-export type Species = 'DOG' | 'CAT';
-export type Gender = 'MALE' | 'FEMALE';
-export type Size = 'SMALL' | 'MEDIUM' | 'LARGE';
-export type AnimalStatus = 'PROTECTED' | 'ADOPTED' | 'FOSTERING';
+export type Species = "DOG" | "CAT";
+export type Gender = "MALE" | "FEMALE";
+export type Size = "SMALL" | "MEDIUM" | "LARGE";
+export type AnimalStatus = "PROTECTED" | "FOSTERING";
 
 export interface Animal {
   id: number;
@@ -61,106 +61,15 @@ export interface Animal {
   size: Size;
   neutered: boolean;
   status: AnimalStatus;
+  noticeStartDate?: string;
+  noticeEndDate?: string;
+  daysUntilExpiry?: number;
   imageUrl?: string;
   description?: string;
   createdAt: string;
 }
 
-export type AdoptionType = 'ADOPTION' | 'FOSTERING';
-export type AdoptionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
-
-export interface Adoption {
-  id: number;
-  userId: number;
-  animalId: number;
-  applicantName?: string;
-  animalName?: string;
-  animal?: Animal;
-  type: AdoptionType;
-  status: AdoptionStatus;
-  reason: string;
-  experience: string;
-  livingEnv?: string;
-  familyAgreement: boolean;
-  createdAt: string;
-  processedAt?: string;
-}
-
-export type RecruitmentStatus = 'RECRUITING' | 'CLOSED' | 'OPEN' | 'COMPLETED';
-
-export interface VolunteerRecruitment {
-  id: number;
-  shelterId: number;
-  shelterName?: string;
-  title: string;
-  content: string;
-  maxApplicants: number;
-  currentApplicants: number;
-  deadline: string;
-  status: RecruitmentStatus;
-  createdAt: string;
-}
-
-export type VolunteerStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
-
-export interface Volunteer {
-  id: number;
-  recruitmentId: number;
-  recruitmentTitle?: string;
-  recruitment?: VolunteerRecruitment;
-  userId: number;
-  applicantName: string;
-  applicantPhone?: string;
-  applicantEmail?: string;
-  activityRegion?: string;
-  activityField: string;
-  startDate: string;
-  endDate: string;
-  /** 신청 인원 (몇 명이 함께 봉사할지) */
-  participantCount?: number;
-  /** 신청 내용 (하고 싶은 말, 메모) */
-  message?: string;
-  status: VolunteerStatus;
-  createdAt: string;
-}
-
-export type RequestStatus = 'OPEN' | 'CLOSED' | 'COMPLETED';
-
-export interface DonationRequest {
-  id: number;
-  shelterId: number;
-  shelterName?: string;
-  title: string;
-  content: string;
-  itemCategory: string;
-  targetQuantity: number;
-  currentQuantity: number;
-  deadline: string;
-  status: RequestStatus;
-  createdAt: string;
-}
-
-export type DonationStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
-
-export interface Donation {
-  id: number;
-  requestId: number;
-  requestTitle?: string;
-  request?: DonationRequest;
-  userId: number;
-  donorName?: string;
-  donorPhone?: string;
-  donorEmail?: string;
-  shelterName?: string;
-  itemName?: string;
-  quantity?: number;
-  deliveryMethod?: string;
-  trackingNumber?: string;
-  status: DonationStatus;
-  createdAt: string;
-}
-
-export type BoardType = 'NOTICE' | 'FAQ' | 'FREE' | 'VOLUNTEER' | 'DONATION';
+export type BoardType = "NOTICE" | "FAQ" | "FREE";
 
 export interface Board {
   id: number;
@@ -190,16 +99,18 @@ export interface Shelter {
   name: string;
   address: string;
   phone: string;
-  managerId: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: "PENDING" | "APPROVED" | "REJECTED";
   createdAt: string;
 }
 
-export interface Notification {
+export interface PublicShelterResponse {
   id: number;
-  type: string;
-  message: string;
-  isRead: boolean;
-  relatedUrl?: string;
-  createdAt: string;
+  name: string;
+  address: string;
+  regionSido?: string;
+  regionSigungu?: string;
+  latitude?: number;
+  longitude?: number;
+  phone?: string;
+  email?: string;
 }

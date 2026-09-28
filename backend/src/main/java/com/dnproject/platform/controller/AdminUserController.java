@@ -1,58 +1,62 @@
 package com.dnproject.platform.controller;
 
 import com.dnproject.platform.domain.constant.Role;
-import com.dnproject.platform.dto.response.AdminUserResponse;
 import com.dnproject.platform.dto.response.ApiResponse;
 import com.dnproject.platform.dto.response.PageResponse;
-import com.dnproject.platform.service.AdminUserService;
+import com.dnproject.platform.dto.response.UserResponse;
+import com.dnproject.platform.repository.UserRepository;
+import com.dnproject.platform.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.List;
 
+/**
+ * 시스템 관리자 전용 - 회원 목록 조회
+ */
+@Tag(name = "Admin - User", description = "관리자 회원 API")
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
 public class AdminUserController {
 
-    private final AdminUserService adminUserService;
+        private final UserRepository userRepository;
+        private final AuthService authService;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<AdminUserResponse>>> getUsers(Pageable pageable) {
-        Page<AdminUserResponse> response = adminUserService.getUsers(pageable);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
-    }
+        @Operation(summary = "회원 목록 조회 (페이지, 역할 필터)")
+        @GetMapping
+        public ApiResponse<PageResponse<UserResponse>> list(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size,
+                        @RequestParam(required = false) Role role) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+                var userPage = role != null
+                                ? userRepository.findByRoleOrderByCreatedAtDesc(role, pageable)
+                                : userRepository.findAll(pageable);
+                List<UserResponse> content = userPage.getContent().stream()
+                                .map(authService::toUserResponse)
+                                .toList();
+                PageResponse<UserResponse> data = PageResponse.<UserResponse>builder()
+                                .content(content)
+                                .page(userPage.getNumber())
+                                .size(userPage.getSize())
+                                .totalElements(userPage.getTotalElements())
+                                .totalPages(userPage.getTotalPages())
+                                .first(userPage.isFirst())
+                                .last(userPage.isLast())
+                                .build();
+                return ApiResponse.success("조회 성공", data);
+        }
 
-    @PatchMapping("/{id}/role")
-    public ResponseEntity<ApiResponse<Void>> updateUserRole(
-            @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
-        Role role = Role.valueOf(body.get("role"));
-        adminUserService.updateUserRole(id, role);
-        return ResponseEntity.ok(ApiResponse.success("사용자 권한이 수정되었습니다.", null));
-    }
-
-    @PutMapping("/{id}/role")
-    public ResponseEntity<ApiResponse<Void>> updateUserRolePut(
-            @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
-        Role role = Role.valueOf(body.get("role"));
-        adminUserService.updateUserRole(id, role);
-        return ResponseEntity.ok(ApiResponse.success("사용자 권한이 수정되었습니다.", null));
-    }
-
-    @PatchMapping("/{id}/suspend")
-    public ResponseEntity<ApiResponse<Void>> suspendUser(@PathVariable Long id) {
-        adminUserService.suspendUser(id, true);
-        return ResponseEntity.ok(ApiResponse.success("해당 계정이 정지되었습니다.", null));
-    }
-
-    @PatchMapping("/{id}/unsuspend")
-    public ResponseEntity<ApiResponse<Void>> unsuspendUser(@PathVariable Long id) {
-        adminUserService.suspendUser(id, false);
-        return ResponseEntity.ok(ApiResponse.success("해당 계정의 정지가 해제되었습니다.", null));
-    }
+        @Operation(summary = "회원 강제 탈퇴 (슈퍼관리자)")
+        @DeleteMapping("/{userId}")
+        public ApiResponse<Void> deleteUser(@PathVariable Long userId) {
+                userRepository.deleteById(userId);
+                return ApiResponse.success("회원이 성공적으로 탈퇴 처리되었습니다.", null);
+        }
 }

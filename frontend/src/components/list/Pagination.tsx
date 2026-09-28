@@ -20,7 +20,7 @@ export default function Pagination({
   onPageChange,
   onSizeChange,
   sizeOptions = [10, 15, 20, 30],
-  className = '',
+  className = "",
 }: PaginationProps) {
   const start = totalElements === 0 ? 0 : page * size + 1;
   const end = Math.min((page + 1) * size, totalElements);
@@ -33,7 +33,8 @@ export default function Pagination({
       if (totalPages > 5) pages.push(-1, totalPages - 1);
     } else if (page >= totalPages - 3) {
       pages.push(0, -1);
-      for (let i = totalPages - 5; i < totalPages; i++) if (i >= 0) pages.push(i);
+      for (let i = totalPages - 5; i < totalPages; i++)
+        if (i >= 0) pages.push(i);
     } else {
       pages.push(0, -1, page - 1, page, page + 1, -1, totalPages - 1);
     }
@@ -48,7 +49,9 @@ export default function Pagination({
         </span>
         {onSizeChange && (
           <div className="list-pagination-size">
-            <label htmlFor="list-size" className="sr-only">페이지당 개수</label>
+            <label htmlFor="list-size" className="sr-only">
+              페이지당 개수
+            </label>
             <select
               id="list-size"
               className="list-pagination-select"
@@ -56,7 +59,9 @@ export default function Pagination({
               onChange={(e) => onSizeChange(Number(e.target.value))}
             >
               {sizeOptions.map((n) => (
-                <option key={n} value={n}>{n}개씩</option>
+                <option key={n} value={n}>
+                  {n}개씩
+                </option>
               ))}
             </select>
           </div>
@@ -70,26 +75,35 @@ export default function Pagination({
           onClick={() => onPageChange(page - 1)}
           aria-label="이전 페이지"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
         <div className="list-pagination-numbers">
           {showPages.map((p, i) =>
             p === -1 ? (
-              <span key={`ellipsis-${i}`} className="list-pagination-ellipsis">…</span>
+              <span key={`ellipsis-${i}`} className="list-pagination-ellipsis">
+                …
+              </span>
             ) : (
               <button
                 key={p}
                 type="button"
-                className={`list-pagination-num ${p === page ? 'is-active' : ''}`}
+                className={`list-pagination-num ${p === page ? "is-active" : ""}`}
                 onClick={() => onPageChange(p)}
                 aria-label={`${p + 1}페이지`}
-                aria-current={p === page ? 'page' : undefined}
+                aria-current={p === page ? "page" : undefined}
               >
                 {p + 1}
               </button>
-            )
+            ),
           )}
         </div>
         <button
@@ -99,7 +113,14 @@ export default function Pagination({
           onClick={() => onPageChange(page + 1)}
           aria-label="다음 페이지"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M9 18l6-6-6-6" />
           </svg>
         </button>

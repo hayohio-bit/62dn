@@ -4,41 +4,39 @@
  * .env에 VITE_MAP_API_KEY (카카오 JavaScript 키) 설정 필요
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-const KAKAO_SCRIPT_URL = '//dapi.kakao.com/v2/maps/sdk.js';
+const KAKAO_SCRIPT_URL = "//dapi.kakao.com/v2/maps/sdk.js";
 const APP_KEY = import.meta.env.VITE_MAP_API_KEY;
 
 declare global {
   interface Window {
     kakao?: {
       maps: {
-        Map: new (container: HTMLElement, options: { center: KakaoLatLng; level: number }) => KakaoMapInstance;
-        LatLng: new (lat: number, lng: number) => KakaoLatLng;
-        Marker: new (options: { position: KakaoLatLng }) => KakaoMarker;
-        event: { addListener: (target: KakaoMapInstance | KakaoMarker, type: string, handler: () => void) => void };
+        Map: new (
+          container: HTMLElement,
+          options: { center: any; level: number },
+        ) => any;
+        LatLng: new (lat: number, lng: number) => any;
+        Marker: new (options: { position: any }) => any;
+        event: {
+          addListener: (target: any, type: string, handler: () => void) => void;
+        };
         services: {
           Geocoder: new () => {
-            addressSearch: (address: string, callback: (result: { x: string; y: string }[], status: string) => void) => void;
+            addressSearch: (
+              address: string,
+              callback: (
+                result: { x: string; y: string }[],
+                status: string,
+              ) => void,
+            ) => void;
           };
           Status: { OK: string };
         };
-        load: (callback: () => void) => void;
       };
     };
   }
-}
-
-interface KakaoLatLng {
-  getLat(): number;
-  getLng(): number;
-}
-interface KakaoMapInstance {
-  setCenter(latlng: KakaoLatLng): void;
-  setLevel(level: number): void;
-}
-interface KakaoMarker {
-  setMap(map: KakaoMapInstance | null): void;
 }
 
 export interface KakaoMapProps {
@@ -56,9 +54,11 @@ export interface KakaoMapProps {
 function loadKakaoScript(): Promise<void> {
   if (window.kakao?.maps?.services) return Promise.resolve();
   return new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[src*="dapi.kakao.com"][src*="maps/sdk"]');
+    const existing = document.querySelector(
+      'script[src*="dapi.kakao.com"][src*="maps/sdk"]',
+    );
     if (existing) {
-      const kakao = window.kakao;
+      const kakao = (window as any).kakao;
       if (kakao?.maps?.load) {
         kakao.maps.load(() => resolve());
       } else if (kakao?.maps?.services) {
@@ -68,13 +68,13 @@ function loadKakaoScript(): Promise<void> {
       }
       return;
     }
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = `https:${KAKAO_SCRIPT_URL}?appkey=${APP_KEY}&libraries=services&autoload=false`;
     script.async = true;
     script.onload = () => {
-      const kakao = window.kakao;
+      const kakao = (window as any).kakao;
       if (!kakao?.maps) {
-        reject(new Error('Kakao Maps SDK not available'));
+        reject(new Error("Kakao Maps SDK not available"));
         return;
       }
       if (kakao.maps.load) {
@@ -83,7 +83,8 @@ function loadKakaoScript(): Promise<void> {
         resolve();
       }
     };
-    script.onerror = () => reject(new Error('Failed to load Kakao Maps script'));
+    script.onerror = () =>
+      reject(new Error("Failed to load Kakao Maps script"));
     document.head.appendChild(script);
   });
 }
@@ -93,20 +94,20 @@ export default function KakaoMap({
   latitude,
   longitude,
   height = 280,
-  className = '',
+  className = "",
 }: KakaoMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<KakaoMapInstance | null>(null);
+  const mapRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!APP_KEY || APP_KEY === 'your_map_api_key_here') {
-      setError('지도 API 키가 설정되지 않았습니다.');
+    if (!APP_KEY || APP_KEY === "your_map_api_key_here") {
+      setError("지도 API 키가 설정되지 않았습니다.");
       return;
     }
     const hasCoords = latitude != null && longitude != null;
     if (!hasCoords && (!address || !address.trim())) {
-      setError('표시할 주소가 없습니다.');
+      setError("표시할 주소가 없습니다.");
       return;
     }
 
@@ -114,9 +115,11 @@ export default function KakaoMap({
     loadKakaoScript()
       .then(() => {
         if (cancelled || !containerRef.current) return;
-        const kakao = window.kakao;
+        const kakao = (window as any).kakao;
         if (!kakao?.maps?.services?.Geocoder) {
-          setError('지도 서비스(Geocoder)를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.');
+          setError(
+            "지도 서비스(Geocoder)를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.",
+          );
           return;
         }
         const geocoder = new kakao.maps.services.Geocoder();
@@ -137,20 +140,23 @@ export default function KakaoMap({
           showMap(latitude!, longitude!);
           return;
         }
-        geocoder.addressSearch(address!.trim(), (result: { x: string; y: string }[], status: string) => {
-          if (cancelled) return;
-          const arr = Array.isArray(result) ? result : [];
-          if (status === kakao.maps.services.Status.OK && arr[0]) {
-            const lat = parseFloat(arr[0].y);
-            const lng = parseFloat(arr[0].x);
-            showMap(lat, lng);
-          } else {
-            setError('주소를 찾을 수 없습니다.');
-          }
-        });
+        geocoder.addressSearch(
+          address!.trim(),
+          (result: unknown, status: unknown) => {
+            if (cancelled) return;
+            const arr = Array.isArray(result) ? result : [];
+            if (status === kakao.maps.services.Status.OK && arr[0]) {
+              const lat = parseFloat(arr[0].y);
+              const lng = parseFloat(arr[0].x);
+              showMap(lat, lng);
+            } else {
+              setError("주소를 찾을 수 없습니다.");
+            }
+          },
+        );
       })
       .catch((e) => {
-        if (!cancelled) setError(e?.message || '지도를 불러올 수 없습니다.');
+        if (!cancelled) setError(e?.message || "지도를 불러올 수 없습니다.");
       });
 
     return () => {
@@ -163,7 +169,7 @@ export default function KakaoMap({
     return (
       <div
         className={`flex items-center justify-center bg-gray-100 text-gray-500 rounded-xl ${className}`}
-        style={{ height: typeof height === 'number' ? `${height}px` : height }}
+        style={{ height: typeof height === "number" ? `${height}px` : height }}
       >
         {error}
       </div>
@@ -174,7 +180,7 @@ export default function KakaoMap({
     <div
       ref={containerRef}
       className={`rounded-xl overflow-hidden bg-gray-100 ${className}`}
-      style={{ height: typeof height === 'number' ? `${height}px` : height }}
+      style={{ height: typeof height === "number" ? `${height}px` : height }}
       aria-label="보호소 위치 지도"
     />
   );

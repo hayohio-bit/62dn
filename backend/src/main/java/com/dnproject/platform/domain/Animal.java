@@ -1,115 +1,108 @@
 package com.dnproject.platform.domain;
 
 import com.dnproject.platform.domain.constant.AnimalStatus;
+import com.dnproject.platform.domain.constant.Gender;
 import com.dnproject.platform.domain.constant.Size;
 import com.dnproject.platform.domain.constant.Species;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import com.dnproject.platform.domain.common.BaseTimeEntity;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 유기동물 엔티티 - 공공 API 동기화 대상
- * 관계: Shelter(1), Adoptions(N), AnimalImages(N), AnimalFavorites(N)
- * auditing: BaseTimeEntity 상속으로 createdAt/updatedAt 자동 관리
- */
 @Entity
 @Table(name = "animals", indexes = {
-        @Index(name = "idx_animal_species", columnList = "species"),
+        @Index(name = "idx_animals_species", columnList = "species"),
         @Index(name = "idx_animals_status", columnList = "status"),
         @Index(name = "idx_animals_shelter", columnList = "shelter_id"),
         @Index(name = "idx_animals_public_api_id", columnList = "public_api_animal_id")
 })
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Animal extends BaseTimeEntity { // auditing 상속
+@Builder
+public class Animal extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // PK, 자동 증가
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY) // 보호소 소속, 지연 로딩
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shelter_id", nullable = false)
-    private Shelter shelter; // FK: shelter_id
+    private Shelter shelter;
 
-    @Column(length = 50)
-    private String publicApiAnimalId; // 공공 API 고유 ID, 동기화 키
+    @Column(name = "public_api_animal_id", length = 50)
+    private String publicApiAnimalId;
 
-    @Column(length = 100)
-    private String orgName; // 보호기관명
-
-    @Column(length = 50)
-    private String chargeName; // 담당자명
-
-    @Column(length = 30)
-    private String chargePhone; // 담당자 연락처
+    /** 관할기관 (공공 API orgNm) */
+    @Column(name = "org_name", length = 100)
+    private String orgName;
+    /** 담당자 (공공 API chargeNm) */
+    @Column(name = "charge_name", length = 50)
+    private String chargeName;
+    /** 담당자 연락처 (공공 API officetel) */
+    @Column(name = "charge_phone", length = 30)
+    private String chargePhone;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 10, nullable = false)
-    private Species species; // 종류: DOG, CAT
+    @Column(nullable = false, length = 10)
+    private Species species;
 
     @Column(length = 50)
-    private String breed; // 품종
+    private String breed;
 
     @Column(length = 50)
-    private String name; // 동물명
+    private String name;
 
-    private Integer age; // 나이 (개월)
-
-    @Column(length = 10)
-    private String gender; // 성별: M, F
+    private Integer age;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
-    private Size size; // 크기: S, M, L
+    private Gender gender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private Size size;
 
     @Column(precision = 5, scale = 2)
-    private BigDecimal weight; // 무게 (kg)
+    private BigDecimal weight;
 
     @Column(columnDefinition = "TEXT")
-    private String description; // 상세 설명
+    private String description;
 
     @Column(length = 100)
-    private String temperament; // 성격 (AI 매칭 키워드: 활발, 온순 등)
+    private String temperament;
 
-    @Column(length = 255)
-    private String healthStatus; // 건강상태
+    @Column(name = "health_status", length = 255)
+    private String healthStatus;
 
+    @Column(nullable = false)
     @Builder.Default
-    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean neutered = false; // 중성화 여부
+    private Boolean neutered = false;
 
+    @Column(nullable = false)
     @Builder.Default
-    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean vaccinated = false; // 예방접종 여부
+    private Boolean vaccinated = false;
 
-    @Column(length = 500)
-    private String imageUrl; // 대표 이미지 URL (S3)
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
 
-    @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
-    private AnimalStatus status = AnimalStatus.PROTECTED; // 상태: PROTECTED, ADOPTED 등
-
-    private LocalDate registerDate; // 접수일
-
-    // 1:N 관계: 입양 신청
+    @Column(nullable = false, length = 20)
     @Builder.Default
-    @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Adoption> adoptions = new ArrayList<>();
+    private AnimalStatus status = AnimalStatus.PROTECTED;
 
-    // 1:N 관계: 동물 이미지
-    @Builder.Default
-    @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AnimalImage> images = new ArrayList<>();
+    @Column(name = "register_date")
+    private LocalDate registerDate;
 
-    // 1:N 관계: 즐겨찾기
-    @Builder.Default
-    @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AnimalFavorite> favorites = new ArrayList<>();
+    @Column(name = "notice_start_date")
+    private LocalDate noticeStartDate;
+
+    @Column(name = "notice_end_date")
+    private LocalDate noticeEndDate;
+
 }

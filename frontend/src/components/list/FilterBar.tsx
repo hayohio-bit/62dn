@@ -21,13 +21,22 @@ export interface FilterBarProps {
   className?: string;
 }
 
-export default function FilterBar({ groups, onReset, className = '' }: FilterBarProps) {
+export default function FilterBar({
+  groups,
+  onReset,
+  className = "",
+}: FilterBarProps) {
   return (
-    <div className={`list-filter-bar list-filter-bar--dropdown ${className}`.trim()}>
+    <div
+      className={`list-filter-bar list-filter-bar--dropdown ${className}`.trim()}
+    >
       <div className="list-filter-groups">
         {groups.map((group) => (
           <div key={group.label} className="list-filter-group">
-            <label htmlFor={`filter-${group.label}`} className="list-filter-group-label">
+            <label
+              htmlFor={`filter-${group.label}`}
+              className="list-filter-group-label"
+            >
               {group.label}
             </label>
             <select
@@ -38,7 +47,10 @@ export default function FilterBar({ groups, onReset, className = '' }: FilterBar
               aria-label={group.label}
             >
               {group.options.map((opt) => (
-                <option key={opt.value || `all-${group.label}`} value={opt.value}>
+                <option
+                  key={opt.value || `all-${group.label}`}
+                  value={opt.value}
+                >
                   {opt.label}
                 </option>
               ))}

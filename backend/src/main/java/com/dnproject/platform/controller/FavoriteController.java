@@ -1,74 +1,71 @@
 package com.dnproject.platform.controller;
 
+import com.dnproject.platform.dto.response.AnimalResponse;
 import com.dnproject.platform.dto.response.ApiResponse;
-import com.dnproject.platform.dto.response.FavoriteResponse;
+import com.dnproject.platform.dto.response.PageResponse;
+import com.dnproject.platform.exception.UnauthorizedException;
 import com.dnproject.platform.service.FavoriteService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Favorite", description = "즐겨찾기(찜) API")
 @RestController
 @RequestMapping("/api/favorites")
 @RequiredArgsConstructor
 public class FavoriteController {
 
     private final FavoriteService favoriteService;
-    private final com.dnproject.platform.repository.UserRepository userRepository;
 
+    @Operation(summary = "찜 추가")
     @PostMapping("/{animalId}")
-    public ResponseEntity<ApiResponse<FavoriteResponse>> addFavorite(
-            @PathVariable Long animalId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
-        FavoriteResponse response = favoriteService.addFavorite(userId, animalId);
-        return ResponseEntity.ok(ApiResponse.success("찜 목록에 추가되었습니다.", response));
-    }
-
-    @DeleteMapping("/{animalId}")
-    public ResponseEntity<ApiResponse<Void>> removeFavorite(
-            @PathVariable Long animalId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
-        favoriteService.removeFavorite(userId, animalId);
-        return ResponseEntity.ok(ApiResponse.success("찜 목록에서 삭제되었습니다.", null));
-    }
-
-    @PostMapping("/animal/{animalId}")
-    public ResponseEntity<ApiResponse<FavoriteResponse>> toggleFavorite(
-            @PathVariable Long animalId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
-        FavoriteResponse response = favoriteService.toggleFavorite(userId, animalId);
-        String message = response == null ? "찜 목록에서 삭제되었습니다." : "찜 목록에 추가되었습니다.";
-        return ResponseEntity.ok(ApiResponse.success(message, response));
-    }
-
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<FavoriteResponse>>> getMyFavorites(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
-        List<FavoriteResponse> responses = favoriteService.getMyFavorites(userId);
-        return ResponseEntity.ok(ApiResponse.success(responses));
-    }
-
-    @GetMapping("/ids")
-    public ResponseEntity<ApiResponse<List<Long>>> getMyFavoriteIds(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
-        List<Long> ids = favoriteService.getMyFavoriteAnimalIds(userId);
-        return ResponseEntity.ok(ApiResponse.success(ids));
-    }
-
-    private Long getUserId(UserDetails userDetails) {
-        if (userDetails == null) {
-            return 1L;
+    public ApiResponse<Void> add(HttpServletRequest request, @PathVariable Long animalId) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            throw new UnauthorizedException("인증이 필요합니다.");
         }
-        return userRepository.findByEmail(userDetails.getUsername())
-                .map(user -> user.getId())
-                .orElse(1L);
+        favoriteService.add(userId, animalId);
+        return ApiResponse.success("찜에 추가되었습니다.", null);
+    }
+
+    @Operation(summary = "찜 해제")
+    @DeleteMapping("/{animalId}")
+    public ApiResponse<Void> remove(HttpServletRequest request, @PathVariable Long animalId) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            throw new UnauthorizedException("인증이 필요합니다.");
+        }
+        favoriteService.remove(userId, animalId);
+        return ApiResponse.success("찜이 해제되었습니다.", null);
+    }
+
+    @Operation(summary = "내 찜 목록")
+    @GetMapping
+    public ApiResponse<PageResponse<AnimalResponse>> getMyList(
+            HttpServletRequest request,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            throw new UnauthorizedException("인증이 필요합니다.");
+        }
+        PageResponse<AnimalResponse> data = favoriteService.getMyList(userId, page, size);
+        return ApiResponse.success("조회 성공", data);
+    }
+
+    @Operation(summary = "내 찜한 동물 ID 목록 (카드 하트 표시용)")
+    @GetMapping("/ids")
+    public ApiResponse<List<Long>> getMyFavoriteIds(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            throw new UnauthorizedException("인증이 필요합니다.");
+        }
+        List<Long> ids = favoriteService.getMyFavoriteAnimalIds(userId);
+        return ApiResponse.success("조회 성공", ids);
     }
 }

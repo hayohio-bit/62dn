@@ -1,18 +1,17 @@
 package com.dnproject.platform.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
+
+import com.dnproject.platform.domain.common.BaseTimeEntity;
 
 @Entity
 @Table(name = "animal_images", indexes = {
         @Index(name = "idx_animal_images_animal", columnList = "animal_id")
 })
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class AnimalImage extends BaseTimeEntity {
@@ -25,14 +24,11 @@ public class AnimalImage extends BaseTimeEntity {
     @JoinColumn(name = "animal_id", nullable = false)
     private Animal animal;
 
-    @Column(nullable = false, length = 500)
-    private String imageUrl;  // S3 URL
+    @Column(name = "image_url", nullable = false, length = 500)
+    private String imageUrl;
 
-    @Column(name = "is_main", columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean isMain = false;  // 대표 이미지 여부 (하나만 true)
+    @Column(name = "is_main", nullable = false)
+    @Builder.Default
+    private Boolean isMain = false;
 
-    // 비즈니스 메서드
-    public void setAsMainImage() {
-        this.isMain = true;
-    }
 }

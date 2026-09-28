@@ -1,16 +1,13 @@
 package com.dnproject.platform.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class FindEmailRequest {
-
-    @NotBlank(message = "이름을 입력해주세요.")
+    @NotBlank(message = "이름을 입력해 주세요.")
     private String name;
 
-    @NotBlank(message = "핸드폰 번호를 입력해주세요.")
+    @NotBlank(message = "전화번호를 입력해 주세요.")
     private String phone;
 }

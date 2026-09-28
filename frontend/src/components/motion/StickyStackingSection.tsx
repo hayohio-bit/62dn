@@ -1,12 +1,12 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState, type ReactNode } from "react";
+import { motion } from "framer-motion";
 
 interface StickyStackingSectionProps {
   children: ReactNode;
   zIndex: number;
   className?: string;
   /**
-   * fixed header 아래로 붙도록 offset(px)
+   * fixed header 아래로 붙도록 offset(px). 미지정 시 CSS var(--header-height) 사용
    */
   topOffsetPx?: number;
 }
@@ -20,51 +20,40 @@ interface StickyStackingSectionProps {
 export default function StickyStackingSection({
   children,
   zIndex,
-  className = '',
-  topOffsetPx = 56, // toss header height(3.5rem)
+  className = "",
+  topOffsetPx, // 기본값은 CSS var(--header-height) 사용
 }: StickyStackingSectionProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   const style = {
     zIndex,
-    top: `${topOffsetPx}px`,
-    // CSS에서 스택 높이/여백 계산에 사용
-    ['--landing-stack-top' as string]: `${topOffsetPx}px`,
-  } as React.CSSProperties;
+    top: topOffsetPx != null ? `${topOffsetPx}px` : "var(--header-height)",
+    ["--landing-stack-top" as any]:
+      topOffsetPx != null ? `${topOffsetPx}px` : "var(--header-height)",
+  } as const;
 
   return (
     <motion.div
-      className={`sticky w-full max-w-full overflow-x-hidden touch-pan-y ${className}`}
-      style={{ ...style, touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
-      initial={isMobile ? { y: 16, opacity: 0.96 } : { y: 72, opacity: 0.92 }}
+      className={`relative w-full max-w-full touch-pan-y ${className}`}
+      style={{ ...style, touchAction: "pan-y" }}
+      initial={{ y: isMobile ? 0 : 72, opacity: isMobile ? 1 : 0.92 }}
       whileInView={{ y: 0, opacity: 1 }}
-      viewport={{ once: true, amount: isMobile ? 0.05 : 0.08 }}
-      transition={
-        isMobile
-          ? {
-              type: 'tween',
-              duration: 0.35,
-              ease: 'easeOut',
-            }
-          : {
-              type: 'spring',
-              stiffness: 110,
-              damping: 22,
-              mass: 0.55,
-            }
-      }
+      viewport={{ once: true, amount: 0.08 }}
+      transition={{
+        type: "spring",
+        stiffness: 110,
+        damping: 22,
+        mass: 0.55,
+      }}
     >
-      <div className="landing-stack-stage" style={{ touchAction: 'pan-y' }}>
-        {children}
-      </div>
+      <div className="landing-stack-stage">{children}</div>
     </motion.div>
   );
 }
-

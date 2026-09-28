@@ -2,235 +2,537 @@ package com.dnproject.platform.service;
 
 import com.dnproject.platform.domain.Animal;
 import com.dnproject.platform.domain.Shelter;
-import com.dnproject.platform.domain.SyncHistory;
-import com.dnproject.platform.domain.constant.AnimalStatus;
-import com.dnproject.platform.dto.response.SyncResultResponse;
-import com.dnproject.platform.domain.constant.Size;
-import com.dnproject.platform.domain.constant.Species;
-import com.dnproject.platform.domain.constant.SyncTriggerType;
+import com.dnproject.platform.domain.constant.*;
 import com.dnproject.platform.dto.publicapi.AnimalItem;
 import com.dnproject.platform.repository.AnimalRepository;
 import com.dnproject.platform.repository.ShelterRepository;
-import com.dnproject.platform.repository.SyncHistoryRepository;
+import com.dnproject.platform.util.AddressRegionParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-@Slf4j
+/**
+ * 공공데이터포털 유기동물 API → DB 동기화
+ */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AnimalSyncService {
+
+    private static final String DOG_CODE = "417000";
+    private static final String CAT_CODE = "422400";
+    private static final DateTimeFormatter API_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
+    /** animal.go.kr 이미지 뷰어 (형식: ?f=/files/shelter/YYYY/MM/파일명) */
+    private static final String IMAGE_VIEW_BASE = "https://www.animal.go.kr/front/fileMng/imageView.do?f=";
+
+    /** 품종코드 → 품종명 캐시 (getKindList 결과) */
+    private final Map<String, String> kindCodeToName = new ConcurrentHashMap<>();
+
+    private static final java.util.Set<String> observedProcessStates = java.util.concurrent.ConcurrentHashMap
+            .newKeySet();
 
     private final PublicApiService publicApiService;
     private final AnimalRepository animalRepository;
     private final ShelterRepository shelterRepository;
-    private final SyncHistoryRepository syncHistoryRepository;
+    private final PlatformTransactionManager transactionManager;
 
-    public SyncResultResponse syncFromPublicApi(Integer days, Integer maxPages, String species) {
-        String bgnde = LocalDate.now().minusDays(days == null ? 7 : days)
-                .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String endde = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String upkind = "417000".equals(species) ? "417000" : ("422400".equals(species) ? "422400" : ""); // 개(417000),
-                                                                                                          // 고양이(422400)
+    private TransactionTemplate requiresNewTransactionTemplate;
 
-        return syncAnimals(bgnde, endde, upkind, days, species);
+    @PostConstruct
+    public void init() {
+        this.requiresNewTransactionTemplate = new TransactionTemplate(transactionManager);
+        this.requiresNewTransactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
-    public SyncResultResponse syncAnimals(String bgnde, String endde, String upkind, Integer daysParam,
-            String speciesFilter) {
-        log.info("Starting animal synchronization: {} to {}, kind: {}", bgnde, endde, upkind);
+    /** 신규 추가용 기간 (7일) - 종료된 동물 삭제 누락 방지 */
+    private static final int NEW_DAYS = 7;
 
-        List<AnimalItem> items = publicApiService.getAnimalList(bgnde, endde, upkind, null, null, null, 1, 1000);
+    /** addedCount: 신규 추가, updatedCount: 기존 수정, removedCount: 입양·만료 삭제 */
+    public record SyncResult(int addedCount, int updatedCount, int removedCount) {
+        public int syncedCount() {
+            return addedCount + updatedCount;
+        }
+    }
 
-        int addedCount = 0;
-        int updatedCount = 0;
-        int successCount = 0;
-        int totalCount = items.size();
+    /**
+     * N일치 변경분만 동기화 (증분 동기화).
+     * - API의 bgnde/endde는 변경일(수정일) 기준
+     * - N일 내 신규 등록 또는 상태 변경된 동물만 API가 반환
+     * - full upsert로 모든 필드 갱신
+     * - 입양·안락사·자연사·반환 등 보호 종료 동물은 DB에서 삭제
+     */
+    public SyncResult syncFromPublicApi(int days, Integer maxPages, String speciesFilter) {
+        ensureKindMapLoaded();
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(days);
 
-        for (AnimalItem item : items) {
-            try {
-                // Filter: Only Dog and Cat
-                String kindFull = item.getKindFullNm();
-                String upKind = item.getUpKindNm();
-                boolean isDogOrCat = (kindFull != null && (kindFull.contains("개") || kindFull.contains("고양이"))) ||
-                        (upKind != null && (upKind.contains("개") || upKind.contains("고양이")));
+        int added = 0, updated = 0, removed = 0;
+        if (speciesFilter == null || "DOG".equalsIgnoreCase(speciesFilter)) {
+            var c = syncByUpkind(DOG_CODE, startDate, endDate, maxPages);
+            added += c[0];
+            updated += c[1];
+            removed += c[2];
+        }
+        if (speciesFilter == null || "CAT".equalsIgnoreCase(speciesFilter)) {
+            var c = syncByUpkind(CAT_CODE, startDate, endDate, maxPages);
+            added += c[0];
+            updated += c[1];
+            removed += c[2];
+        }
 
-                if (!isDogOrCat) {
+        return new SyncResult(added, updated, removed);
+    }
+
+    /**
+     * 스케줄용: 1일치 변경분 동기화.
+     * state 필터 없이 전체 조회하므로 입양·안락사 등 상태 변경도 자연스럽게 반영됨.
+     */
+    public SyncResult syncDailySchedule() {
+        ensureKindMapLoaded();
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(NEW_DAYS);
+
+        int added = 0, updated = 0, removed = 0;
+        var dog = syncByUpkind(DOG_CODE, startDate, endDate, null);
+        added += dog[0];
+        updated += dog[1];
+        removed += dog[2];
+        var cat = syncByUpkind(CAT_CODE, startDate, endDate, null);
+        added += cat[0];
+        updated += cat[1];
+        removed += cat[2];
+
+        return new SyncResult(added, updated, removed);
+    }
+
+    /**
+     * 경량 정리: API에서 전체 상태 조회 → DB에 있는 동물 중 비보호 상태인 것만 삭제.
+     * insert/update 없이 삭제만 수행하므로 빠르고 실패 위험이 낮음.
+     */
+    public int removeNonProtectedFromApi(int days) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(days);
+        int removed = 0;
+
+        for (String upkind : new String[] { DOG_CODE, CAT_CODE }) {
+            int pageNo = 1;
+            while (true) {
+                List<AnimalItem> items;
+                try {
+                    items = publicApiService.getAbandonedAnimals(
+                            null, null, upkind, null, startDate, endDate, pageNo, 100);
+                } catch (Exception e) {
+                    log.warn("정리용 API 조회 실패 upkind={} page={}: {}", upkind, pageNo, e.getMessage());
+                    break;
+                }
+                if (items == null || items.isEmpty())
+                    break;
+
+                for (AnimalItem item : items) {
+                    if (item.getDesertionNo() == null || item.getDesertionNo().isBlank())
+                        continue;
+                    AnimalStatus status = mapStatus(item.getProcessState());
+                    if (status != null)
+                        continue; // 보호중/임보 → 스킵
+
+                    // 비보호 상태 → DB에 있으면 삭제
+                    animalRepository.findByPublicApiAnimalId(item.getDesertionNo())
+                            .ifPresent(animal -> {
+                                log.info("비보호 동물 삭제: {} (유기번호={}, 상태={})",
+                                        animal.getName(), item.getDesertionNo(), item.getProcessState());
+                                animalRepository.delete(animal);
+                            });
+                    removed++;
+                }
+                if (items.size() < 100)
+                    break;
+                pageNo++;
+            }
+        }
+        return removed;
+    }
+
+    /** 품종코드→품종명 매핑 로드 (동기화 시작 시 1회) */
+    private void ensureKindMapLoaded() {
+        if (!kindCodeToName.isEmpty())
+            return;
+        for (String upkind : new String[] { DOG_CODE, CAT_CODE }) {
+            publicApiService.getKindList(upkind).forEach(k -> {
+                if (k.getKindCd() != null && k.getKNm() != null && !k.getKNm().isBlank()) {
+                    kindCodeToName.put(k.getKindCd().trim(), k.getKNm().trim());
+                }
+            });
+        }
+        log.debug("품종코드 매핑 로드: {}건", kindCodeToName.size());
+    }
+
+    private enum SyncAction {
+        ADDED,
+        UPDATED,
+        REMOVED,
+        SKIPPED
+    }
+
+    /** @return int[3] = { addedCount, updatedCount, removedCount } */
+    private int[] syncByUpkind(String upkind, LocalDate startDate, LocalDate endDate, Integer maxPages) {
+        int pageNo = 1;
+        int numOfRows = 100;
+        int added = 0, updated = 0, removed = 0;
+        // state 필터 없이 전체 조회 → 입양·안락사 등 상태 변경된 동물도 포함
+        while (true) {
+            List<AnimalItem> items = publicApiService.getAbandonedAnimals(
+                    null, null, upkind, null, startDate, endDate, pageNo, numOfRows);
+            if (items == null || items.isEmpty())
+                break;
+            for (AnimalItem item : items) {
+                if (item.getDesertionNo() == null || item.getDesertionNo().isBlank()) {
+                    log.warn("desertionNo 없음, 스킵");
                     continue;
                 }
-
-                // Shelter lookup logic: 1. By Public API ID (careRegNo), 2. By Name (careNm)
-                Shelter shelter = shelterRepository.findByPublicApiShelterId(item.getCareRegNo())
-                        .orElseGet(() -> shelterRepository.findAll().stream()
-                                .filter(s -> s.getName().equals(item.getCareNm()))
-                                .findFirst()
-                                .orElse(null));
-
-                if (shelter == null) {
-                    log.info("Creating new shelter: {}", item.getCareNm());
-                    shelter = Shelter.builder()
-                            .name(item.getCareNm())
-                            .address(item.getCareAddr())
-                            .phone(item.getCareTel())
-                            .managerName(item.getChargeNm() != null ? item.getChargeNm() : "공공담당자")
-                            .managerPhone(item.getOfficetel() != null ? item.getOfficetel() : item.getCareTel())
-                            .email("shelter_"
-                                    + (item.getCareRegNo() != null ? item.getCareRegNo() : System.currentTimeMillis())
-                                    + "@public.api")
-                            .verificationStatus(com.dnproject.platform.domain.constant.VerificationStatus.VERIFIED)
-                            .publicApiShelterId(item.getCareRegNo() != null ? item.getCareRegNo() : item.getCareNm())
-                            .build();
-                    shelter = shelterRepository.save(shelter);
+                try {
+                    SyncAction action = requiresNewTransactionTemplate.execute(status -> upsertAnimal(item));
+                    if (action != null) {
+                        switch (action) {
+                            case ADDED -> added++;
+                            case UPDATED -> updated++;
+                            case REMOVED -> removed++;
+                            case SKIPPED -> {
+                                /* ignore */ }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("동물 upsert 실패 desertionNo={}: {}", item.getDesertionNo(), e.getMessage());
                 }
-
-                Optional<Animal> animalOpt = animalRepository.findByPublicApiAnimalId(item.getDesertionNo());
-                Animal animal;
-                if (animalOpt.isPresent()) {
-                    animal = animalOpt.get();
-                    updatedCount++;
-                } else {
-                    animal = new Animal();
-                    addedCount++;
-                }
-
-                mapItemToEntity(item, animal, shelter);
-                animalRepository.save(animal);
-                successCount++;
-
-            } catch (Exception e) {
-                log.error("Error syncing animal {}: {}", item.getDesertionNo(), e.getMessage());
             }
+            if (items.size() < numOfRows)
+                break;
+            if (maxPages != null && pageNo >= maxPages)
+                break;
+            pageNo++;
+        }
+        return new int[] { added, updated, removed };
+    }
+
+    /** @return ADDED=신규추가, UPDATED=기존수정, REMOVED=보호종료삭제, SKIPPED=무시 */
+    private SyncAction upsertAnimal(AnimalItem item) {
+        AnimalStatus status = mapStatus(item.getProcessState());
+        LocalDate noticeEndDate = parseDate(item.getNoticeEdt());
+        var existing = animalRepository.findByPublicApiAnimalId(item.getDesertionNo());
+
+        // 보호 대상이 아니거나 공고 기한이 이미 지난 경우 → 삭제 또는 무시
+        boolean isExpired = noticeEndDate != null && noticeEndDate.isBefore(LocalDate.now());
+
+        if (status == null || isExpired) {
+            if (existing.isPresent()) {
+                animalRepository.delete(existing.get());
+                return SyncAction.REMOVED;
+            }
+            return SyncAction.SKIPPED;
         }
 
-        SyncHistory history = SyncHistory.builder()
-                .triggerType(SyncTriggerType.MANUAL)
-                .totalCount(totalCount)
-                .successCount(successCount)
-                .addedCount(addedCount)
-                .updatedCount(updatedCount)
-                .deletedCount(0)
-                .correctedCount(0)
-                .daysParam(daysParam)
-                .speciesFilter(speciesFilter)
-                .status("SUCCESS")
+        if (existing.isPresent()) {
+            if (!hasChanges(existing.get(), item)) {
+                return SyncAction.SKIPPED;
+            }
+            updateAnimalFromApi(existing.get(), item);
+            return SyncAction.UPDATED;
+        }
+        createAnimalFromApi(item);
+        return SyncAction.ADDED;
+    }
+
+    private void updateAnimalFromApi(Animal animal, AnimalItem item) {
+        animal.setSpecies(mapSpecies(item));
+        animal.setBreed(extractBreed(item));
+        animal.setName(generateName(item));
+        animal.setImageUrl(resolveImageUrl(item));
+        animal.setStatus(mapStatus(item.getProcessState()));
+        animal.setDescription(buildDescription(item));
+        animal.setOrgName(nullToBlank(item.getOrgNm(), 100));
+        animal.setChargeName(nullToBlank(item.getChargeNm(), 50));
+        animal.setChargePhone(nullToBlank(item.getOfficetel(), 30));
+        animal.setNoticeStartDate(parseDate(item.getNoticeSdt()));
+        animal.setNoticeEndDate(parseDate(item.getNoticeEdt()));
+        animalRepository.save(animal);
+    }
+
+    /** API 데이터와 DB 데이터의 주요 필드를 비교하여 변경 여부 판단 */
+    private boolean hasChanges(Animal animal, AnimalItem item) {
+        if (animal.getSpecies() != mapSpecies(item))
+            return true;
+        if (!java.util.Objects.equals(animal.getBreed(), extractBreed(item)))
+            return true;
+        if (!java.util.Objects.equals(animal.getImageUrl(), resolveImageUrl(item)))
+            return true;
+        if (animal.getStatus() != mapStatus(item.getProcessState()))
+            return true;
+        if (!java.util.Objects.equals(animal.getDescription(), buildDescription(item)))
+            return true;
+        if (!java.util.Objects.equals(animal.getOrgName(), nullToBlank(item.getOrgNm(), 100)))
+            return true;
+        if (!java.util.Objects.equals(animal.getChargeName(), nullToBlank(item.getChargeNm(), 50)))
+            return true;
+        if (!java.util.Objects.equals(animal.getChargePhone(), nullToBlank(item.getOfficetel(), 30)))
+            return true;
+        if (!java.util.Objects.equals(animal.getNoticeStartDate(), parseDate(item.getNoticeSdt())))
+            return true;
+        if (!java.util.Objects.equals(animal.getNoticeEndDate(), parseDate(item.getNoticeEdt())))
+            return true;
+        return false;
+    }
+
+    private void createAnimalFromApi(AnimalItem item) {
+        Shelter shelter = findOrCreateShelter(item);
+        Animal animal = Animal.builder()
+                .publicApiAnimalId(item.getDesertionNo())
+                .shelter(shelter)
+                .species(mapSpecies(item))
+                .breed(extractBreed(item))
+                .name(generateName(item))
+                .age(parseAge(item.getAge()))
+                .gender(mapGender(item.getSexCd()))
+                .size(estimateSize(item.getWeight()))
+                .weight(parseWeight(item.getWeight()))
+                .description(buildDescription(item))
+                .neutered("Y".equalsIgnoreCase(item.getNeuterYn()))
+                .imageUrl(resolveImageUrl(item))
+                .status(mapStatus(item.getProcessState()))
+                .registerDate(parseDate(item.getHappenDt()))
+                .noticeStartDate(parseDate(item.getNoticeSdt()))
+                .noticeEndDate(parseDate(item.getNoticeEdt()))
+                .orgName(nullToBlank(item.getOrgNm(), 100))
+                .chargeName(nullToBlank(item.getChargeNm(), 50))
+                .chargePhone(nullToBlank(item.getOfficetel(), 30))
                 .build();
-
-        syncHistoryRepository.save(history);
-        log.info("Synchronization completed. Total: {}, Added: {}, Updated: {}", totalCount, addedCount, updatedCount);
-
-        return SyncResultResponse.of(addedCount, updatedCount, successCount, daysParam == null ? 0 : daysParam,
-                speciesFilter);
+        animalRepository.save(animal);
     }
 
-    public org.springframework.data.domain.Page<com.dnproject.platform.dto.response.SyncHistoryResponse> getSyncHistory(
-            org.springframework.data.domain.Pageable pageable) {
-        return syncHistoryRepository.findAll(pageable)
-                .map(com.dnproject.platform.dto.response.SyncHistoryResponse::from);
-    }
-
-    private void mapItemToEntity(AnimalItem item, Animal animal, Shelter shelter) {
-        animal.setShelter(shelter);
-        animal.setPublicApiAnimalId(item.getDesertionNo());
-        animal.setOrgName(item.getOrgNm());
-        animal.setChargeName(item.getChargeNm());
-        animal.setChargePhone(item.getOfficetel());
-
-        // Species mapping (Try kindFullNm first, then upKindNm)
-        String kindFull = item.getKindFullNm();
-        if (kindFull != null && !kindFull.isEmpty()) {
-            if (kindFull.contains("개")) {
-                animal.setSpecies(Species.DOG);
-            } else if (kindFull.contains("고양이")) {
-                animal.setSpecies(Species.CAT);
-            } else {
-                animal.setSpecies(Species.ETC);
-            }
-
-            // Breed extraction: "[개] 믹스견" -> "믹스견"
-            String breed = kindFull;
-            if (breed.contains("]")) {
-                breed = breed.substring(breed.indexOf("]") + 1).trim();
-            }
-            animal.setBreed(breed);
-        } else if (item.getUpKindNm() != null) {
-            // Fallback to upKindNm if kindFullNm is missing
-            if (item.getUpKindNm().contains("개")) {
-                animal.setSpecies(Species.DOG);
-            } else if (item.getUpKindNm().contains("고양이")) {
-                animal.setSpecies(Species.CAT);
-            } else {
-                animal.setSpecies(Species.ETC);
-            }
-            animal.setBreed("미상");
+    /**
+     * popfile1 → popfile2 → popfile → filename 순으로 우선.
+     * 실제 API는 popfile1, popfile2에 전체 URL 반환.
+     */
+    private String resolveImageUrl(AnimalItem item) {
+        String raw = null;
+        if (item.getPopfile1() != null && !item.getPopfile1().isBlank())
+            raw = item.getPopfile1();
+        if (raw == null && item.getPopfile2() != null && !item.getPopfile2().isBlank())
+            raw = item.getPopfile2();
+        if (raw == null && item.getPopfile() != null && !item.getPopfile().isBlank())
+            raw = item.getPopfile();
+        if (raw == null && item.getFilename() != null && !item.getFilename().isBlank())
+            raw = item.getFilename();
+        if (raw == null || raw.isBlank())
+            return null;
+        if (raw.startsWith("http://") || raw.startsWith("https://"))
+            return raw;
+        String relPath;
+        if (raw.startsWith("/files/")) {
+            relPath = raw;
+        } else if (raw.startsWith("/")) {
+            relPath = raw.startsWith("/files") ? raw : "/files" + raw;
+        } else if (raw.startsWith("shelter/")) {
+            relPath = "/files/" + raw;
         } else {
-            animal.setSpecies(Species.ETC);
-            animal.setBreed("미상");
+            LocalDate dt = parseDate(item.getHappenDt());
+            String filePart = raw.contains("/") ? raw.substring(raw.lastIndexOf('/') + 1) : raw;
+            if (dt != null) {
+                relPath = String.format("/files/shelter/%d/%02d/%s", dt.getYear(), dt.getMonthValue(), filePart);
+            } else {
+                relPath = "/files/shelter/" + filePart;
+            }
         }
-
-        animal.setGender(item.getSexCd());
-        animal.setAge(extractAge(item.getAge()));
-        animal.setWeight(extractWeight(item.getWeight()));
-        animal.setDescription(item.getSpecialMark());
-        animal.setNeutered("Y".equalsIgnoreCase(item.getNeuterYn()));
-        animal.setImageUrl(item.getPopfile());
-
-        // Status mapping
-        if (item.getProcessState().contains("임시보호")) {
-            animal.setStatus(AnimalStatus.FOSTERING);
-        } else if (item.getProcessState().contains("보호중")) {
-            animal.setStatus(AnimalStatus.PROTECTED);
-        } else if (item.getProcessState().contains("입양")) {
-            animal.setStatus(AnimalStatus.ADOPTED);
-        } else if (item.getProcessState().contains("안락사")) {
-            animal.setStatus(AnimalStatus.EUTHANIZED);
-        } else if (item.getProcessState().contains("자연사")) {
-            animal.setStatus(AnimalStatus.NATURAL_DEATH);
-        } else if (item.getProcessState().contains("반환")) {
-            animal.setStatus(AnimalStatus.RETURNED);
-        } else {
-            animal.setStatus(AnimalStatus.PROTECTED); // Default status
-        }
-
-        if (item.getHappenDt() != null && item.getHappenDt().length() == 8) {
-            animal.setRegisterDate(LocalDate.parse(item.getHappenDt(), DateTimeFormatter.ofPattern("yyyyMMdd")));
-        }
-
-        // Size mapping (rough estimation based on weight)
-        animal.setSize(determineSize(animal.getWeight()));
+        return IMAGE_VIEW_BASE + relPath;
     }
 
-    private Integer extractAge(String ageStr) {
+    /** description: 발견장소 + 특징 조합 (규격에 맞게, TEXT 컬럼이지만 2000자 제한) */
+    private String buildDescription(AnimalItem item) {
+        StringBuilder sb = new StringBuilder();
+        if (item.getHappenPlace() != null && !item.getHappenPlace().isBlank()) {
+            sb.append("[발견장소] ").append(item.getHappenPlace());
+        }
+        if (item.getSpecialMark() != null && !item.getSpecialMark().isBlank()) {
+            if (sb.length() > 0)
+                sb.append("\n\n");
+            sb.append("[특징] ").append(item.getSpecialMark());
+        }
+        if (sb.length() == 0)
+            return null;
+        return sb.length() > 2000 ? sb.substring(0, 2000) : sb.toString();
+    }
+
+    /** null/blank면 null, 아니면 trim 후 maxLen 자르기 (관할기관·담당자·담당자연락처용) */
+    private static String nullToBlank(String s, int maxLen) {
+        if (s == null || s.isBlank())
+            return null;
+        String t = s.trim();
+        return t.length() > maxLen ? t.substring(0, maxLen) : t;
+    }
+
+    private Shelter findOrCreateShelter(AnimalItem item) {
+        String careNm = item.getCareNm();
+        if (careNm == null || careNm.isBlank())
+            careNm = "미상";
+        return shelterRepository.findFirstByName(careNm)
+                .map(s -> {
+                    if (s.getRegionSido() == null && s.getAddress() != null && !s.getAddress().isBlank()) {
+                        String[] r = AddressRegionParser.parse(s.getAddress());
+                        s.setRegionSido(r[0]);
+                        s.setRegionSigungu(r[1]);
+                        shelterRepository.save(s);
+                    }
+                    return s;
+                })
+                .orElseGet(() -> createShelterFromApi(item));
+    }
+
+    private Shelter createShelterFromApi(AnimalItem item) {
+        String name = item.getCareNm() != null && !item.getCareNm().isBlank() ? item.getCareNm() : "미상";
+        String addr = item.getCareAddr() != null ? item.getCareAddr() : "";
+        String tel = item.getCareTel() != null ? item.getCareTel() : "000-0000-0000";
+        String[] region = AddressRegionParser.parse(addr);
+        return shelterRepository.save(Shelter.builder()
+                .name(name)
+                .address(addr)
+                .regionSido(region[0])
+                .regionSigungu(region[1])
+                .phone(tel)
+                .verificationStatus(VerificationStatus.APPROVED)
+                .build());
+    }
+
+    /** upKindCd(축종코드) 우선. 422400=고양이, 417000=개 */
+    private Species mapSpecies(AnimalItem item) {
+        if (CAT_CODE.equals(item.getUpKindCd()))
+            return Species.CAT;
+        if (DOG_CODE.equals(item.getUpKindCd()))
+            return Species.DOG;
+        String full = item.getKindFullNm();
+        if (full != null && (full.contains("고양이") || full.contains("[고양이]")))
+            return Species.CAT;
+        return Species.DOG;
+    }
+
+    /** kindNm(품종명) 우선, 없으면 kindFullNm 파싱, 없으면 kindCd 코드조회 */
+    private String extractBreed(AnimalItem item) {
+        if (item.getKindNm() != null && !item.getKindNm().isBlank()) {
+            String s = item.getKindNm().trim();
+            return s.length() > 50 ? s.substring(0, 50) : s;
+        }
+        String kindCd = item.getKindCd();
+        String full = item.getKindFullNm();
+        String s = full != null ? full.replaceAll("\\[.*?\\]\\s*", "").trim() : (kindCd != null ? kindCd : "");
+        if (s.isEmpty())
+            return "믹스";
+        String name = kindCodeToName.get(s);
+        if (name != null)
+            return name.length() > 50 ? name.substring(0, 50) : name;
+        if (s.matches("\\d{4,}"))
+            return "믹스";
+        return s.length() > 50 ? s.substring(0, 50) : s;
+    }
+
+    private Integer parseAge(String age) {
+        if (age == null || age.isBlank())
+            return null;
         try {
-            // "2023(년생)" -> 2023
-            return Integer.parseInt(ageStr.replaceAll("[^0-9]", ""));
+            String num = age.replaceAll("[^0-9]", "");
+            if (num.length() >= 4) {
+                int year = Integer.parseInt(num.substring(0, 4));
+                return LocalDate.now().getYear() - year;
+            }
+            return Integer.parseInt(num);
         } catch (Exception e) {
             return null;
         }
     }
 
-    private BigDecimal extractWeight(String weightStr) {
+    private Gender mapGender(String sexCd) {
+        if (sexCd == null)
+            return null;
+        return switch (sexCd.toUpperCase()) {
+            case "M" -> Gender.MALE;
+            case "F" -> Gender.FEMALE;
+            default -> null;
+        };
+    }
+
+    /**
+     * 공공 API processState → AnimalStatus 매핑.
+     * 보호중/공고중 → PROTECTED, 임시보호 → FOSTERING,
+     * 입양·안락사·자연사·반환 등 → null (DB에 저장하지 않을 대상)
+     */
+    private AnimalStatus mapStatus(String processState) {
+        if (processState == null)
+            return AnimalStatus.PROTECTED;
+        if (processState.contains("임시보호"))
+            return AnimalStatus.FOSTERING;
+        if (processState.contains("보호") || processState.contains("공고"))
+            return AnimalStatus.PROTECTED;
+        // 입양, 안락사, 자연사, 반환 등 → null (제거 대상)
+        return null;
+    }
+
+    private BigDecimal parseWeight(String weight) {
+        if (weight == null || weight.isBlank())
+            return null;
         try {
-            // "5.2(Kg)" -> 5.2
-            return new BigDecimal(weightStr.replaceAll("[^0-9.]", ""));
+            String num = weight.replaceAll("[^0-9.]", "");
+            if (num.isEmpty())
+                return null;
+            return new BigDecimal(num);
         } catch (Exception e) {
-            return BigDecimal.ZERO;
+            return null;
         }
     }
 
-    private Size determineSize(BigDecimal weight) {
+    private Size estimateSize(String weight) {
         if (weight == null)
             return Size.MEDIUM;
-        if (weight.compareTo(new BigDecimal("5")) <= 0)
-            return Size.SMALL;
-        if (weight.compareTo(new BigDecimal("15")) <= 0)
+        try {
+            String num = weight.replaceAll("[^0-9.]", "");
+            double w = Double.parseDouble(num.isEmpty() ? "0" : num);
+            if (w < 5)
+                return Size.SMALL;
+            if (w < 15)
+                return Size.MEDIUM;
+            return Size.LARGE;
+        } catch (Exception e) {
             return Size.MEDIUM;
-        return Size.LARGE;
+        }
+    }
+
+    private LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.length() < 8)
+            return null;
+        try {
+            return LocalDate.parse(dateStr.substring(0, 8), API_DATE);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** 가명용 이름 풀 (desertionNo 해시로 고정 배정) */
+    private static final String[] PLACEHOLDER_NAMES = {
+            "똘이", "초코", "감자", "콩이", "나비", "링고", "토리", "초롱", "루니", "모카",
+            "달이", "별이", "하늘이", "꼬미", "보리", "찰리", "해피", "코코", "두부", "깜이"
+    };
+
+    private String generateName(AnimalItem item) {
+        String no = item.getDesertionNo();
+        int idx = no != null ? Math.abs(no.hashCode() % PLACEHOLDER_NAMES.length) : 0;
+        String base = PLACEHOLDER_NAMES[idx];
+        return base + "(가명)";
     }
 }

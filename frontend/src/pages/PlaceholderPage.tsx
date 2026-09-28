@@ -1,22 +1,22 @@
-import { Link, useLocation } from 'react-router-dom';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import { Link, useLocation } from "react-router-dom";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 const labels: Record<string, string> = {
-  animals: '입양',
-  volunteers: '봉사',
-  donations: '기부',
-  boards: '게시판',
-  login: '로그인',
-  signup: '회원가입',
-  'admin/login': '관리자 로그인',
-  privacy: '개인정보처리방침',
-  terms: '이용약관',
+  animals: "입양",
+  volunteers: "봉사",
+  donations: "기부",
+  boards: "게시판",
+  login: "로그인",
+  signup: "회원가입",
+  "admin/login": "관리자 로그인",
+  privacy: "개인정보처리방침",
+  terms: "이용약관",
 };
 
 export default function PlaceholderPage() {
-  const pathname = useLocation().pathname.replace(/^\//, '') || 'page';
-  const title = labels[pathname] ?? '페이지';
+  const pathname = useLocation().pathname.replace(/^\//, "") || "page";
+  const title = labels[pathname] ?? "페이지";
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">

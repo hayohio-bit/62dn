@@ -2,18 +2,21 @@ package com.dnproject.platform.dto.request;
 
 import com.dnproject.platform.domain.constant.Size;
 import com.dnproject.platform.domain.constant.Species;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
-@Builder
+import java.util.List;
+
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PreferenceRequest {
+
     private Species species;
     private Integer minAge;
     private Integer maxAge;
     private Size size;
-    private String region;
-    private String temperament;
+    /** 선호 지역 복수 (시·도 단위, 예: ["서울", "경기"]) */
+    private List<String> regions;
 }
