@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { authApi } from "@/api/auth";
 import { useAuthStore } from "@/store/authStore";
@@ -37,8 +37,26 @@ function loadSavedCredentials() {
   }
 }
 
+/**
+ * 로그인 후 돌아갈 경로. 찜하기 버튼 등이 navigate("/login", { state: { from } })로 넘긴 값을 쓴다.
+ * 같은 사이트 안의 경로("/..."로 시작)만 허용하고, "//host"처럼 외부로 해석되는 값은 무시한다.
+ */
+function getSafeRedirectPath(state: unknown): string {
+  const from = (state as { from?: unknown } | null)?.from;
+  if (
+    typeof from === "string" &&
+    from.startsWith("/") &&
+    !from.startsWith("//") &&
+    !from.startsWith("/\\")
+  ) {
+    return from;
+  }
+  return "/";
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const loginStore = useAuthStore((s) => s.login);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -91,7 +109,7 @@ export default function LoginPage() {
           },
           { keepLoggedIn },
         );
-        navigate("/", { replace: true });
+        navigate(getSafeRedirectPath(location.state), { replace: true });
       } else {
         setError("로그인 응답 형식이 올바르지 않습니다.");
       }
