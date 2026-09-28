@@ -1,29 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { useAuthStore } from "@/store/authStore";
 import { authApi } from "@/api/auth";
 
 const navItems = [
-  { to: "/animals", label: "입양" },
-  { to: "/support", label: "기부/봉사" },
+  { to: "/animals", label: "가족 찾기" },
+  { to: "/guide/adoption", label: "입양·임보 안내" },
+  { to: "/support", label: "봉사·기부" },
   { to: "/boards", label: "게시판" },
 ];
 
+export function Wordmark({ className }: { className?: string }) {
+  return (
+    <span className={className}>
+      62<span className="toss-logo-accent">댕냥</span>
+    </span>
+  );
+}
+
 function HamburgerIcon({ open }: { open: boolean }) {
   return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="#191f28"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden
-      style={{ flexShrink: 0 }}
-    >
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
       {open ? (
         <>
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -31,9 +30,8 @@ function HamburgerIcon({ open }: { open: boolean }) {
         </>
       ) : (
         <>
-          <line x1="4" y1="6" x2="20" y2="6" />
-          <line x1="4" y1="12" x2="20" y2="12" />
-          <line x1="4" y1="18" x2="20" y2="18" />
+          <line x1="4" y1="8" x2="20" y2="8" />
+          <line x1="4" y1="16" x2="20" y2="16" />
         </>
       )}
     </svg>
@@ -44,6 +42,7 @@ export default function Header() {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuthStore();
   const [hidden, setHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const lastYRef = useRef(0);
   const tickingRef = useRef(false);
@@ -57,6 +56,7 @@ export default function Header() {
 
   const closeMenu = () => setMenuOpen(false);
 
+  // 아래로 스크롤하면 숨기고, 위로 스크롤하면 다시 보여 준다
   useEffect(() => {
     lastYRef.current = window.scrollY;
 
@@ -67,18 +67,13 @@ export default function Header() {
       window.requestAnimationFrame(() => {
         const y = window.scrollY;
         const delta = y - lastYRef.current;
-
-        const threshold = 8;
-        if (Math.abs(delta) > threshold) {
-          if (delta > 0 && y > 80) setHidden(true);
+        if (Math.abs(delta) > 8) {
+          if (delta > 0 && y > 120) setHidden(true);
           if (delta < 0) setHidden(false);
-          lastYRef.current = y;
-        } else {
-          lastYRef.current = y;
         }
-
+        lastYRef.current = y;
         if (y <= 10) setHidden(false);
-
+        setScrolled(y > 12);
         tickingRef.current = false;
       });
     };
@@ -89,8 +84,7 @@ export default function Header() {
 
   useEffect(() => {
     if (!menuOpen) return;
-    const onEsc = (e: KeyboardEvent) =>
-      e.key === "Escape" && setMenuOpen(false);
+    const onEsc = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
     const onResize = () => window.innerWidth >= 768 && setMenuOpen(false);
     document.body.classList.add("toss-menu-open");
     document.addEventListener("keydown", onEsc);
@@ -103,32 +97,32 @@ export default function Header() {
   }, [menuOpen]);
 
   return (
-    <header className={clsx("toss-header", hidden && "toss-header--hidden")}>
+    <header
+      className={clsx(
+        "toss-header",
+        hidden && !menuOpen && "toss-header--hidden",
+        scrolled && "toss-header--scrolled",
+      )}
+    >
       <div className="toss-header-inner relative">
         <Link to="/" className="toss-logo" aria-label="62댕냥 홈">
-          <img
-            src="/logo-bk.webp"
-            alt="62댕냥"
-            className="toss-logo-img"
-            width={180}
-            height={48}
-          />
+          <Wordmark />
         </Link>
 
-        <nav
-          className="toss-nav hidden md:flex absolute left-1/2 -translate-x-1/2"
-          aria-label="메인 메뉴"
-        >
+        <nav className="toss-nav hidden md:flex" aria-label="메인 메뉴">
           {navItems.map(({ to, label }) => (
-            <Link key={to} to={to} className="toss-nav-link">
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => clsx("toss-nav-link", isActive && "toss-nav-link--active")}
+            >
               {label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
 
-        {/* 데스크톱: 버튼들 / 모바일: 햄버거 */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="hidden md:flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="hidden md:flex items-center gap-1">
             {isAuthenticated ? (
               <>
                 {user?.role === "SUPER_ADMIN" && (
@@ -139,21 +133,17 @@ export default function Header() {
                 <Link to="/mypage" className="toss-btn toss-btn-ghost">
                   마이페이지
                 </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="toss-btn toss-btn-primary"
-                >
+                <button type="button" onClick={handleLogout} className="toss-btn toss-btn-primary ml-1">
                   로그아웃
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="toss-btn toss-btn-ghost hover:!bg-transparent">
+                <Link to="/login" className="toss-btn toss-btn-ghost">
                   로그인
                 </Link>
-                <Link to="/signup" className="landing-btn landing-btn-primary">
-                  회원가입
+                <Link to="/signup" className="toss-btn toss-btn-primary ml-1">
+                  함께하기
                 </Link>
               </>
             )}
@@ -171,31 +161,18 @@ export default function Header() {
         </div>
       </div>
 
-      {/* 모바일 햄버거 메뉴 드로어 - body에 포탈 렌더링으로 z-index/스택 텍스트 이슈 방지 */}
+      {/* 모바일 메뉴 드로어: body에 포탈로 렌더링해 헤더의 쌓임 맥락과 분리한다 */}
       {createPortal(
         <>
           <div
-            className={clsx(
-              "toss-menu-backdrop",
-              menuOpen && "toss-menu-backdrop--open",
-            )}
+            className={clsx("toss-menu-backdrop", menuOpen && "toss-menu-backdrop--open")}
             onClick={closeMenu}
             aria-hidden
           />
-          <div
-            className={clsx(
-              "toss-menu-drawer",
-              menuOpen && "toss-menu-drawer--open",
-            )}
-          >
+          <div className={clsx("toss-menu-drawer", menuOpen && "toss-menu-drawer--open")}>
             <nav className="toss-menu-nav" aria-label="모바일 메뉴">
               {navItems.map(({ to, label }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className="toss-menu-link"
-                  onClick={closeMenu}
-                >
+                <Link key={to} to={to} className="toss-menu-link" onClick={closeMenu}>
                   {label}
                 </Link>
               ))}
@@ -204,44 +181,24 @@ export default function Header() {
               {isAuthenticated ? (
                 <>
                   {user?.role === "SUPER_ADMIN" && (
-                    <Link
-                      to="/admin"
-                      className="toss-menu-link toss-menu-link--admin"
-                      onClick={closeMenu}
-                    >
+                    <Link to="/admin" className="toss-menu-link toss-menu-link--admin" onClick={closeMenu}>
                       관리자
                     </Link>
                   )}
-                  <Link
-                    to="/mypage"
-                    className="toss-menu-link toss-menu-link--primary"
-                    onClick={closeMenu}
-                  >
+                  <Link to="/mypage" className="toss-menu-btn toss-menu-btn--logout" onClick={closeMenu}>
                     마이페이지
                   </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="toss-menu-btn toss-menu-btn--logout"
-                  >
+                  <button type="button" onClick={handleLogout} className="toss-menu-btn toss-menu-btn--logout">
                     로그아웃
                   </button>
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/login"
-                    className="toss-menu-link toss-menu-link--primary"
-                    onClick={closeMenu}
-                  >
+                  <Link to="/login" className="toss-menu-btn toss-menu-btn--logout" onClick={closeMenu}>
                     로그인
                   </Link>
-                  <Link
-                    to="/signup"
-                    className="toss-menu-btn toss-menu-btn--signup"
-                    onClick={closeMenu}
-                  >
-                    회원가입
+                  <Link to="/signup" className="toss-menu-btn toss-menu-btn--signup" onClick={closeMenu}>
+                    함께하기
                   </Link>
                 </>
               )}

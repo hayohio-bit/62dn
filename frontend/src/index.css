@@ -1,8 +1,6 @@
-/* 지마켓산스 웹폰트 */
-@import "./styles/fonts.css";
-/* 토스 스타일 디자인 시스템 (CSS 변수 + 컴포넌트 클래스) */
+/* 공통 디자인 시스템 (CSS 변수 + 컴포넌트 클래스) */
 @import "./styles/toss.css";
-/* 랜딩 페이지 스토리텔링 (감정 연결 → 문제 인식 → 해결 → 행동 유도) */
+/* 랜딩 페이지 */
 @import "./styles/landing.css";
 /* 리스트/게시판 공통 (검색, 필터, 페이지네이션) */
 @import "./styles/list.css";
@@ -13,7 +11,6 @@
 
 html {
   scroll-behavior: smooth;
-  /* 모바일: 세로 스크롤만 허용, 터치가 특정 요소에 잡히지 않도록 */
   touch-action: pan-y;
   overflow: visible;
 }
@@ -23,16 +20,34 @@ body {
   padding-left: env(safe-area-inset-left, 0);
   padding-right: env(safe-area-inset-right, 0);
   padding-bottom: env(safe-area-inset-bottom, 0);
-  font-family: "GmarketSans", var(--toss-font-sans);
+  font-family: var(--toss-font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--toss-black);
-  background-color: var(--toss-white);
+  background-color: var(--dn-cream);
   touch-action: pan-y;
   overflow-x: hidden;
   overflow-y: visible;
+  word-break: keep-all;
+}
+
+::selection {
+  background: rgba(200, 85, 61, 0.25);
 }
 
 #root {
   min-height: 100vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

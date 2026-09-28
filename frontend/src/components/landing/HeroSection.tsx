@@ -1,92 +1,179 @@
-import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import AnimatedSection from "@/components/motion/AnimatedSection";
-import AnimatedText from "@/components/motion/AnimatedText";
+import { Link } from "react-router-dom";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import type { AnimalResponse } from "@/types/dto";
+import { formatDday, genderLabels } from "@/constants/animalLabels";
+import { heroStats } from "@/constants/landingContent";
 
-export default function HeroSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
+interface Props {
+  /** 공고 마감이 가장 가까운 동물 (없으면 카드 대신 안내 문구를 보여 준다) */
+  featured?: AnimalResponse;
+  urgentCount: number;
+}
 
-  // Hero 섹션을 벗어날 때 자연스럽게 투명해지는 패럴랙스 효과
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "center start"],
-  });
+const ease = [0.2, 0.8, 0.2, 1] as const;
 
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+export default function HeroSection({ featured, urgentCount }: Props) {
+  const ref = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const yBack = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -60]);
+  const yFront = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -140]);
+
+  const dday = formatDday(featured?.daysUntilExpiry);
 
   return (
-    <section
-      ref={containerRef}
-      className="relative w-full h-screen flex flex-col justify-center items-center bg-black overflow-hidden"
-    >
-      <motion.div
-        style={{
-          y: useTransform(scrollYProgress, [0, 1], ["0%", "20%"]),
-          opacity,
-        }}
-        className="absolute inset-0 z-0"
-      >
-        <img
-          src="/hero-one.webp"
-          alt="희망의 번식장 구출 - 유기동물"
-          className="object-cover w-full h-full opacity-60"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black" />
-      </motion.div>
+    <section ref={ref} className="relative overflow-hidden pt-[calc(var(--header-height)+2rem)]">
+      {/* 배경 결: 아주 옅은 점 패턴 */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(rgba(34,28,22,.05)_1px,transparent_1px)] [background-size:5px_5px]"
+      />
 
-      <motion.div
-        style={{ opacity, y }}
-        className="flex flex-col items-center justify-center text-center px-4 z-10"
-      >
-        <AnimatedSection animation="fadeUp" delay={0.2}>
-          <p className="text-gray-300 text-lg md:text-xl font-medium mb-4 tracking-wide drop-shadow-md">
-            유기동물 입양 의향
-          </p>
-        </AnimatedSection>
-
-        <AnimatedSection animation="scale" delay={0.4}>
-          <h1 
-            className="text-7xl md:text-9xl font-extrabold text-white tracking-tighter mb-6 relative"
-            style={{ textShadow: "0 4px 20px rgba(0,0,0,0.8)" }}
+      <div className="relative mx-auto grid max-w-[76rem] gap-12 px-6 pb-16 md:grid-cols-12 md:pb-24">
+        <div className="md:col-span-6 md:pt-12">
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease }}
+            className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-cream-50/60 px-4 py-1.5 text-sm text-ink-soft"
           >
-            <AnimatedText text="61.6" stagger={false} />
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2, duration: 1 }}
-              className="text-4xl md:text-6xl text-gray-400 absolute top-2 md:top-4 -right-8 md:-right-12 drop-shadow-md"
-            >
-              %
-            </motion.span>
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-terracotta opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-terracotta" />
+            </span>
+            {urgentCount > 0 ? `공고 마감을 앞둔 아이 ${urgentCount}마리` : "매일 새로운 공고가 올라와요"}
+          </motion.p>
+
+          <h1 className="dn-display mt-7 text-[3.25rem] leading-[1.08] sm:text-[4.25rem] lg:text-[4.75rem]">
+            {["오늘, 한 생명의", "이름을 불러", "주세요."].map((line, i) => (
+              <motion.span
+                key={line}
+                className="block"
+                initial={{ opacity: 0, y: 36 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.9, delay: 0.1 + i * 0.12, ease }}
+              >
+                {i === 1 ? (
+                  <>
+                    이름을 <span className="text-terracotta">불러</span>
+                  </>
+                ) : (
+                  line
+                )}
+              </motion.span>
+            ))}
           </h1>
-        </AnimatedSection>
 
-        <AnimatedSection animation="fadeUp" delay={1.4}>
-          <p className="text-gray-200 text-xl md:text-2xl font-semibold mt-4 drop-shadow-lg">
-            국민 10명 중 6명은
-            <br />
-            따뜻한 마음속 희망을 품고 있습니다.
-          </p>
-        </AnimatedSection>
-      </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5, ease }}
+          >
+            <p className="mt-8 max-w-md text-lg leading-relaxed text-ink-soft">
+              전국 보호소에서 새 가족을 기다리는 아이들을 한곳에서 만나고, 마음이 닿으면 보호소에 바로 연락하세요.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link to="/animals" className="toss-btn toss-btn-accent text-base">
+                아이들 만나러 가기 <span aria-hidden>→</span>
+              </Link>
+              <Link to="/guide/foster" className="toss-btn toss-btn-outline text-base">
+                임시보호 알아보기
+              </Link>
+            </div>
 
-      {/* Scroll Down Indicator */}
-      <motion.div
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.5, duration: 1 }}
-      >
-        <span className="text-sm text-gray-300 mb-2 uppercase tracking-widest font-semibold drop-shadow">
-          Scroll
-        </span>
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-          className="w-[1px] h-12 bg-gray-400"
-        />
-      </motion.div>
+            <dl className="mt-14 grid max-w-lg grid-cols-3 gap-6 border-t border-ink/10 pt-8">
+              {heroStats.map((s) => (
+                <div key={s.label}>
+                  <dt className="sr-only">{s.label}</dt>
+                  <dd className="font-serif text-3xl sm:text-4xl">
+                    {s.value}
+                    <span className="text-xl sm:text-2xl">{s.unit}</span>
+                  </dd>
+                  <dd className="mt-1 text-[0.8125rem] leading-snug text-ink-muted">{s.label}</dd>
+                </div>
+              ))}
+            </dl>
+          </motion.div>
+        </div>
+
+        {/* 사진 콜라주 */}
+        <div className="relative h-[520px] sm:h-[600px] md:col-span-6 md:h-[660px]">
+          <motion.div
+            style={{ y: yBack }}
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.1, ease }}
+            className="absolute right-0 top-0 h-[78%] w-[72%] overflow-hidden rounded-[999px_999px_28px_28px] shadow-lift"
+          >
+            <img
+              src="/images/landing/hero-dog.webp"
+              alt="꽃을 물고 앉아 있는 골든 리트리버"
+              className="h-full w-full object-cover"
+            />
+          </motion.div>
+
+          <motion.div
+            style={{ y: yFront }}
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.25, ease }}
+            className="absolute bottom-0 left-0 h-[46%] w-[44%] overflow-hidden rounded-[1.75rem] ring-8 ring-cream"
+          >
+            <img src="/images/landing/hero-cat.webp" alt="턱시도 고양이" className="h-full w-full object-cover" />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, rotate: -20, scale: 0.6 }}
+            animate={{ opacity: 1, rotate: -8, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.6, ease }}
+            className="absolute left-[6%] top-[8%] grid h-24 w-24 place-items-center rounded-full bg-sage text-center font-serif text-sm leading-tight text-white shadow-card"
+          >
+            <span>
+              매일
+              <br />
+              <b className="text-lg">새 공고</b>
+            </span>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.75, ease }}
+            className="absolute bottom-[14%] right-[2%] w-[17rem]"
+          >
+            {featured ? (
+              <Link
+                to={`/animals/${featured.id}`}
+                className="block rounded-2xl bg-white/90 p-5 shadow-lift backdrop-blur transition hover:-translate-y-1"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-serif text-xl">{featured.name || "이름 없음"}</span>
+                  {dday && (
+                    <span className="rounded-full bg-terracotta px-2.5 py-0.5 text-xs font-bold text-white">{dday}</span>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {[featured.breed, featured.age != null ? `${featured.age}살` : null, genderLabels[featured.gender]]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+                <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-ink-soft">
+                  {featured.description || `${featured.shelterName ?? "보호소"}에서 새 가족을 기다리고 있어요.`}
+                </p>
+                <p className="mt-3 text-xs font-semibold text-terracotta">공고 마감이 가장 가까운 아이 →</p>
+              </Link>
+            ) : (
+              <div className="rounded-2xl bg-white/90 p-5 shadow-lift backdrop-blur">
+                <p className="font-serif text-xl">함께 찾아볼까요?</p>
+                <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                  종류·지역·크기로 새 가족을 기다리는 아이들을 찾아볼 수 있어요.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      </div>
     </section>
   );
 }
