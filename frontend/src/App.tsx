@@ -69,6 +69,9 @@ function App() {
           {/* 약관 */}
           <Route path="/privacy" element={<PlaceholderPage />} />
           <Route path="/terms" element={<PlaceholderPage />} />
+
+          {/* 정의되지 않은 주소: 빈 화면 대신 안내 페이지 표시 */}
+          <Route path="*" element={<PlaceholderPage />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>
