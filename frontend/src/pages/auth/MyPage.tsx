@@ -1,23 +1,118 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import clsx from "clsx";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import Reveal from "@/components/motion/Reveal";
 import { authApi } from "@/api/auth";
 import { preferenceApi } from "@/api/preference";
 import { favoriteApi } from "@/api/favorite";
 import { useAuthStore } from "@/store/authStore";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
+import { NameAvatar } from "@/components/boards/BoardTypeBadge";
+import { ddayTone, formatDday, genderLabels, sizeLabels, speciesLabels } from "@/constants/animalLabels";
 import type { UserResponse } from "@/types/dto";
 import type { Preference, Animal } from "@/types/entities";
+
+const roleLabels: Record<string, string> = {
+  USER: "일반 회원",
+  SUPER_ADMIN: "시스템 관리자",
+};
+
+const ddayToneClass = {
+  urgent: "bg-terracotta text-white",
+  soon: "bg-cream-50 text-terracotta-700",
+  normal: "bg-cream-50/90 text-ink-soft",
+} as const;
+
+function FavoriteCard({ animal }: { animal: Animal }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const dday = formatDday(animal.daysUntilExpiry);
+  const meta = [
+    animal.breed || "품종 미상",
+    animal.age != null ? `${animal.age}살` : null,
+    genderLabels[animal.gender],
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <Link to={`/animals/${animal.id}`} className="group block">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-cream-200">
+        {animal.imageUrl && !imageFailed ? (
+          <img
+            src={animal.imageUrl}
+            alt={`${animal.name} 사진`}
+            loading="lazy"
+            onError={() => setImageFailed(true)}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <AnimalImageFallback />
+        )}
+        {dday && (
+          <span
+            className={clsx(
+              "absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold shadow-sm",
+              ddayToneClass[ddayTone(animal.daysUntilExpiry)],
+            )}
+          >
+            {dday}
+          </span>
+        )}
+      </div>
+      <p className="mt-3 truncate font-serif text-xl text-ink transition-colors group-hover:text-terracotta">
+        {animal.name}
+      </p>
+      <p className="mt-0.5 truncate text-sm text-ink-soft">{meta}</p>
+      {animal.shelterName && <p className="mt-0.5 truncate text-xs text-ink-muted">{animal.shelterName}</p>}
+    </Link>
+  );
+}
+
+function PreferenceSummary({ preference }: { preference: Preference }) {
+  const rows: { label: string; value: string }[] = [];
+  if (preference.species) rows.push({ label: "종류", value: speciesLabels[preference.species] ?? preference.species });
+  if (preference.minAge != null || preference.maxAge != null) {
+    rows.push({ label: "나이", value: `${preference.minAge ?? 0}살 ~ ${preference.maxAge ?? "제한 없음"}${preference.maxAge != null ? "살" : ""}` });
+  }
+  if (preference.size) rows.push({ label: "크기", value: sizeLabels[preference.size] ?? preference.size });
+
+  if (rows.length === 0 && !preference.regions?.length) {
+    return <p className="text-sm text-ink-muted">아직 고른 조건이 없어요.</p>;
+  }
+
+  return (
+    <dl className="space-y-3 text-sm">
+      {rows.map((r) => (
+        <div key={r.label} className="flex gap-4">
+          <dt className="w-10 shrink-0 text-ink-muted">{r.label}</dt>
+          <dd className="text-ink">{r.value}</dd>
+        </div>
+      ))}
+      {preference.regions?.length ? (
+        <div className="flex gap-4">
+          <dt className="w-10 shrink-0 pt-1 text-ink-muted">지역</dt>
+          <dd className="flex flex-wrap gap-1.5">
+            {preference.regions.map((r) => (
+              <span key={r} className="rounded-full bg-sage-50 px-2.5 py-1 text-xs font-medium text-sage-600">
+                {r}
+              </span>
+            ))}
+          </dd>
+        </div>
+      ) : null}
+    </dl>
+  );
+}
 
 export default function MyPage() {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthStore();
   const [me, setMe] = useState<UserResponse | null>(null);
-  const [preference, setPreference] = useState<Preference | null | undefined>(
-    undefined,
-  );
+  const [preference, setPreference] = useState<Preference | null | undefined>(undefined);
   const [favorites, setFavorites] = useState<Animal[]>([]);
+  const [favoriteTotal, setFavoriteTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
   const [editName, setEditName] = useState("");
@@ -28,26 +123,25 @@ export default function MyPage() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate("/login", { replace: true });
+      navigate("/login", { replace: true, state: { from: "/mypage" } });
       return;
     }
     Promise.all([
       authApi.getMe().then((res) => res.data?.data ?? res.data),
       preferenceApi.getMy().catch(() => null),
-      favoriteApi.getMyList(0, 20).catch(() => ({ content: [] })),
+      favoriteApi.getMyList(0, 20).catch(() => ({ content: [], totalElements: 0 })),
     ])
       .then(([userData, prefData, favData]) => {
         if (userData) setMe(userData);
         setPreference(prefData ?? null);
-        setFavorites(
-          Array.isArray(favData) ? favData : (favData?.content ?? []),
-        );
+        const list = Array.isArray(favData) ? favData : (favData?.content ?? []);
+        setFavorites(list);
+        setFavoriteTotal(Array.isArray(favData) ? list.length : (favData?.totalElements ?? list.length));
       })
       .catch((err: unknown) => {
         // 인증 실패(만료·무효 토큰은 서버가 401/403으로 응답)일 때만 로그아웃한다.
         // 네트워크 오류나 서버 오류로 로그인 상태를 지우지 않는다.
-        const status = (err as { response?: { status?: number } })?.response
-          ?.status;
+        const status = (err as { response?: { status?: number } })?.response?.status;
         if (status === 401 || status === 403) {
           logout();
           navigate("/login", { replace: true });
@@ -72,7 +166,8 @@ export default function MyPage() {
     setProfileError(null);
   };
 
-  const saveProfile = async () => {
+  const saveProfile = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!me) return;
     const name = editName?.trim() || undefined;
     const email = editEmail?.trim() || undefined;
@@ -91,220 +186,183 @@ export default function MyPage() {
       if (data) setMe(data);
       setEditingProfile(false);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message;
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setProfileError(msg ?? "정보 수정에 실패했습니다.");
     } finally {
       setProfileSaving(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <p className="text-gray-500">로딩 중...</p>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--toss-gray-100)]">
+    <div className="flex min-h-screen flex-col bg-cream">
       <Header />
-      <main className="flex-1 toss-section">
-        <div className="toss-section-inner">
-          <h1 className="toss-section-title">마이페이지</h1>
+      <main className="flex-1">
+        <Reveal className="dn-page-head">
+          <p className="dn-eyebrow">My page</p>
+          <h1 className="dn-page-title">{me?.name ? `${me.name}님의 공간` : "마이페이지"}</h1>
+          <p className="dn-page-desc">찜한 아이들과 입양 선호 조건을 한곳에서 확인하고 관리하세요.</p>
+        </Reveal>
 
-          {/* 나의 정보 */}
-          <section className="toss-auth-card mb-8">
-            <h2 className="text-lg font-semibold text-[var(--toss-black)] mb-4">
-              나의 정보
-            </h2>
-            {loadError && (
-              <p className="text-sm text-red-600 mb-4">{loadError}</p>
-            )}
-            {me && !editingProfile && (
-              <>
-                <ul className="space-y-2 text-[var(--toss-text-caption)] text-[var(--toss-gray-700)]">
-                  <li>
-                    <span className="font-medium text-[var(--toss-gray-900)]">
-                      이메일
-                    </span>{" "}
-                    {me.email}
-                  </li>
-                  <li>
-                    <span className="font-medium text-[var(--toss-gray-900)]">
+        <div className="mx-auto grid max-w-[76rem] gap-10 px-6 pb-24 lg:grid-cols-12 lg:gap-12">
+          <div className="space-y-6 lg:col-span-4">
+            {/* 나의 정보 */}
+            <section aria-labelledby="mypage-profile" className="rounded-[1.75rem] border border-ink/10 bg-cream-50 p-6 shadow-card md:p-8">
+              <h2 id="mypage-profile" className="sr-only">
+                나의 정보
+              </h2>
+              {loadError && <p className="toss-auth-error">{loadError}</p>}
+              {loading && (
+                <div className="flex animate-pulse items-center gap-4" aria-hidden>
+                  <div className="h-16 w-16 rounded-full bg-ink/10" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-5 w-24 rounded bg-ink/10" />
+                    <div className="h-4 w-40 rounded bg-ink/5" />
+                  </div>
+                </div>
+              )}
+              {me && !editingProfile && (
+                <>
+                  <div className="flex items-center gap-4">
+                    <NameAvatar name={me.name} size="lg" />
+                    <div className="min-w-0">
+                      <p className="truncate font-serif text-2xl text-ink">{me.name}</p>
+                      <p className="truncate text-sm text-ink-muted">{me.email}</p>
+                    </div>
+                  </div>
+                  <div className="mt-6 flex items-center justify-between border-t border-ink/10 pt-5">
+                    <span className="rounded-full border border-ink/15 px-3 py-1 text-xs font-semibold text-ink-soft">
+                      {roleLabels[me.role] ?? me.role}
+                    </span>
+                    <button type="button" onClick={startEditProfile} className="toss-btn toss-btn-ghost !px-3 text-sm">
+                      정보 수정
+                    </button>
+                  </div>
+                </>
+              )}
+              {me && editingProfile && (
+                <form onSubmit={saveProfile}>
+                  <p className="mb-5 font-serif text-xl text-ink">정보 수정</p>
+                  <div className="toss-auth-field">
+                    <label htmlFor="mypage-name" className="toss-auth-label">
                       이름
-                    </span>{" "}
-                    {me.name}
-                  </li>
-                  <li>
-                    <span className="font-medium text-[var(--toss-gray-900)]">
-                      권한
-                    </span>{" "}
-                    {me.role}
-                  </li>
-                </ul>
-                <button
-                  type="button"
-                  onClick={startEditProfile}
-                  className="toss-btn toss-btn-ghost mt-4"
-                >
-                  정보 수정
-                </button>
-              </>
-            )}
-            {me && editingProfile && (
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="mypage-name"
-                    className="block text-sm font-medium text-[var(--toss-gray-700)] mb-1"
-                  >
-                    이름
-                  </label>
-                  <input
-                    id="mypage-name"
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="toss-auth-input w-full"
-                    placeholder="이름"
-                    maxLength={50}
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="mypage-email"
-                    className="block text-sm font-medium text-[var(--toss-gray-700)] mb-1"
-                  >
-                    이메일
-                  </label>
-                  <input
-                    id="mypage-email"
-                    type="email"
-                    value={editEmail}
-                    onChange={(e) => setEditEmail(e.target.value)}
-                    className="toss-auth-input w-full"
-                    placeholder="이메일"
-                    maxLength={100}
-                  />
-                </div>
-                {profileError && (
-                  <p className="text-sm text-red-600">{profileError}</p>
-                )}
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={saveProfile}
-                    disabled={profileSaving}
-                    className="toss-btn toss-btn-primary"
-                  >
-                    {profileSaving ? "저장 중…" : "저장"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={cancelEditProfile}
-                    disabled={profileSaving}
-                    className="toss-btn toss-btn-ghost"
-                  >
-                    취소
-                  </button>
-                </div>
+                    </label>
+                    <input
+                      id="mypage-name"
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="toss-auth-input"
+                      placeholder="이름"
+                      maxLength={50}
+                      autoComplete="name"
+                    />
+                  </div>
+                  <div className="toss-auth-field">
+                    <label htmlFor="mypage-email" className="toss-auth-label">
+                      이메일
+                    </label>
+                    <input
+                      id="mypage-email"
+                      type="email"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      className="toss-auth-input"
+                      placeholder="이메일"
+                      maxLength={100}
+                      autoComplete="email"
+                    />
+                  </div>
+                  {profileError && (
+                    <p className="toss-auth-error" role="alert">
+                      {profileError}
+                    </p>
+                  )}
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={cancelEditProfile}
+                      disabled={profileSaving}
+                      className="toss-btn toss-btn-ghost"
+                    >
+                      취소
+                    </button>
+                    <button type="submit" disabled={profileSaving} className="toss-btn toss-btn-primary disabled:opacity-50">
+                      {profileSaving ? "저장 중…" : "저장"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </section>
+
+            {/* 나의 선호도 */}
+            <section aria-labelledby="mypage-pref" className="rounded-[1.75rem] border border-ink/10 bg-cream-50 p-6 shadow-card md:p-8">
+              <div className="mb-5 flex items-baseline justify-between gap-3">
+                <h2 id="mypage-pref" className="font-serif text-xl text-ink">
+                  입양 선호 조건
+                </h2>
+                <Link to="/mypage/preferences" className="text-sm font-semibold text-terracotta hover:text-terracotta-700">
+                  {preference ? "바꾸기" : "설정하기"} →
+                </Link>
               </div>
-            )}
-          </section>
+              {preference === undefined ? (
+                <div className="animate-pulse space-y-2" aria-hidden>
+                  <div className="h-4 w-32 rounded bg-ink/10" />
+                  <div className="h-4 w-24 rounded bg-ink/5" />
+                </div>
+              ) : preference ? (
+                <PreferenceSummary preference={preference} />
+              ) : (
+                <p className="text-sm leading-relaxed text-ink-muted">
+                  종류·나이·크기·지역을 골라 두면 원하는 아이를 더 빨리 찾을 수 있어요.
+                </p>
+              )}
+            </section>
+          </div>
 
           {/* 즐겨찾기(찜) */}
-          <section className="toss-auth-card mb-8">
-            <h2 className="text-lg font-semibold text-[var(--toss-black)] mb-4">
-              즐겨찾기
-            </h2>
-            {favorites.length === 0 ? (
-              <p className="text-[var(--toss-gray-500)] text-sm">
-                찜한 동물이 없습니다.
-              </p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {favorites.map((a) => (
-                  <Link
-                    key={a.id}
-                    to={`/animals/${a.id}`}
-                    className="block rounded-xl overflow-hidden border border-[var(--toss-gray-100)] hover:border-[var(--toss-blue)] transition-colors"
-                  >
-                    <div
-                      className="aspect-square bg-[var(--toss-gray-100)] relative overflow-hidden"
-                      style={{
-                        backgroundImage: a.imageUrl
-                          ? `url(${JSON.stringify(a.imageUrl)})`
-                          : "none",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }}
-                    >
-                      {!a.imageUrl && <AnimalImageFallback />}
-                    </div>
-                    <div className="p-3">
-                      <p className="font-semibold text-sm text-[var(--toss-gray-900)] truncate">
-                        {a.name}
-                      </p>
-                      <p className="text-xs text-[var(--toss-gray-500)] truncate">
-                        {a.breed ?? "품종미상"} · {a.shelterName ?? ""}
-                      </p>
-                    </div>
-                  </Link>
+          <section aria-labelledby="mypage-fav" className="lg:col-span-8">
+            <div className="flex items-end justify-between gap-4 border-b border-ink/15 pb-5">
+              <h2 id="mypage-fav" className="font-serif text-3xl text-ink">
+                찜한 아이들 {favoriteTotal > 0 && <span className="text-terracotta">{favoriteTotal}</span>}
+              </h2>
+              <Link to="/animals" className="border-b border-ink/30 pb-0.5 text-[0.9375rem] hover:border-ink">
+                아이들 더 보기
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3" aria-hidden>
+                {Array.from({ length: 3 }, (_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="aspect-[4/5] rounded-[1.25rem] bg-ink/10" />
+                    <div className="mt-3 h-5 w-20 rounded bg-ink/10" />
+                  </div>
                 ))}
               </div>
-            )}
-            <Link
-              to="/animals"
-              className="inline-block mt-3 text-sm font-semibold text-[var(--toss-blue)] hover:text-[var(--toss-blue-hover)]"
-            >
-              입양 목록 보기 →
-            </Link>
-          </section>
-
-          {/* 나의 선호도 */}
-          <section className="toss-auth-card mb-8">
-            <h2 className="text-lg font-semibold text-[var(--toss-black)] mb-4">
-              나의 선호도
-            </h2>
-            {preference === undefined ? (
-              <p className="text-[var(--toss-gray-500)] text-sm">
-                불러오는 중...
-              </p>
-            ) : preference ? (
-              <ul className="space-y-1 text-sm text-[var(--toss-gray-700)]">
-                {preference.species && (
-                  <li>
-                    종류: {preference.species === "DOG" ? "강아지" : "고양이"}
-                  </li>
-                )}
-                {(preference.minAge != null || preference.maxAge != null) && (
-                  <li>
-                    나이: {preference.minAge ?? "-"} ~{" "}
-                    {preference.maxAge ?? "-"}세
-                  </li>
-                )}
-                {preference.size && <li>크기: {preference.size}</li>}
-                {preference.regions?.length ? (
-                  <li>지역: {preference.regions.join(", ")}</li>
-                ) : null}
-              </ul>
+            ) : favorites.length === 0 ? (
+              <div className="mt-8 rounded-[1.75rem] border border-dashed border-ink/20 px-6 py-16 text-center">
+                <p className="font-serif text-2xl text-ink">아직 찜한 아이가 없어요</p>
+                <p className="mx-auto mt-3 max-w-sm leading-relaxed text-ink-muted">
+                  공고를 둘러보다 마음이 가는 아이의 하트를 눌러 두면 여기에서 다시 볼 수 있어요.
+                </p>
+                <Link to="/animals" className="toss-btn toss-btn-accent mt-7">
+                  아이들 만나러 가기 <span aria-hidden>→</span>
+                </Link>
+              </div>
             ) : (
-              <p className="text-[var(--toss-gray-500)] text-sm">
-                설정된 선호도가 없습니다.
-              </p>
+              <>
+                <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:gap-x-6">
+                  {favorites.map((a) => (
+                    <li key={a.id}>
+                      <FavoriteCard animal={a} />
+                    </li>
+                  ))}
+                </ul>
+                {favoriteTotal > favorites.length && (
+                  <p className="mt-8 text-sm text-ink-muted">최근 찜한 {favorites.length}마리를 보여 드려요.</p>
+                )}
+              </>
             )}
-            <Link
-              to="/mypage/preferences"
-              className="inline-block mt-3 text-sm font-semibold text-[var(--toss-blue)] hover:text-[var(--toss-blue-hover)]"
-            >
-              선호도 설정하기 →
-            </Link>
           </section>
         </div>
       </main>
