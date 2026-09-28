@@ -2,17 +2,15 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { boardApi } from "@/api";
 import type { Board, Comment } from "@/types/entities";
-import { mockBoards, mockComments } from "@/data/mockBoards";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { useAuthStore } from "@/store/authStore";
 
 const typeLabels: Record<string, string> = {
   NOTICE: "공지사항",
   FAQ: "FAQ",
   FREE: "자유게시판",
 };
-
-import { useAuthStore } from "@/store/authStore";
 
 export default function BoardDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,61 +26,56 @@ export default function BoardDetailPage() {
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editCommentText, setEditCommentText] = useState("");
 
-  // 현재 게시글이 실제 서버 데이터인지 여부
-  const isRealBoard = useRef(false);
-
-  // 조회수 증가 요청 여부 (중복 방지)
-  const viewCountRequested = useRef(false);
+  // 조회수 증가를 요청한 게시글 id (같은 글에 대한 중복 요청 방지, 다른 글로 이동하면 다시 요청)
+  const viewCountedId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      loadData();
-    }
-  }, [id]);
+    if (!id) return;
+    // 다른 글로 이동한 뒤 늦게 도착한 이전 글의 응답은 무시한다.
+    let cancelled = false;
+    const boardId = Number(id);
 
-  // 기존의 두 번째 useEffect(조회수 증가 단독 호출)는 삭제합니다.
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
+    const loadData = async () => {
+      setLoading(true);
       // 1. 조회수 증가 요청 먼저 수행 (서버에서 중복 카운트 방지 쿠키 처리)
-      if (id && !viewCountRequested.current) {
-        viewCountRequested.current = true;
-        await boardApi.increaseViewCount(Number(id)).catch(console.error);
+      if (viewCountedId.current !== id) {
+        viewCountedId.current = id;
+        await boardApi.increaseViewCount(boardId).catch(console.error);
       }
 
-      // 2. 실제 서버 데이터 조회 시도 (방금 증가된 조회수가 반영된 데이터 반환)
+      // 2. 게시글 조회 (방금 증가된 조회수가 반영된 데이터 반환)
+      let data: Board;
       try {
-        const data = await boardApi.getById(Number(id));
-        setBoard(data);
-        isRealBoard.current = true;
-
-        // 실제 댓글 목록 조회
-        const commentsData = await boardApi.getComments(Number(id));
-        setComments(commentsData);
-      } catch (apiErr) {
-        // 2. 실패 시 (404 등) Mock 데이터에서 찾기
-        // console.warn('Server fetch failed, falling back to mock:', apiErr);
-        isRealBoard.current = false;
-
-        const foundBoard = mockBoards.find((b) => b.id === Number(id));
-        if (foundBoard) {
-          setBoard(foundBoard);
-          const boardComments = mockComments[Number(id)] || [];
-          setComments(boardComments);
-        } else {
-          // 둘 다 없으면 에러
-          throw new Error("Geust not found");
-        }
+        data = await boardApi.getById(boardId);
+      } catch (err) {
+        if (cancelled) return;
+        console.error(err);
+        alert("게시글을 찾을 수 없습니다.");
+        navigate("/boards");
+        return;
       }
-    } catch (err) {
-      console.error(err);
-      alert("게시글을 찾을 수 없습니다.");
-      navigate("/boards");
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (cancelled) return;
+      setBoard(data);
+
+      // 3. 댓글 조회 (실패해도 게시글은 표시)
+      try {
+        const commentsData = await boardApi.getComments(boardId);
+        if (!cancelled) setComments(commentsData);
+      } catch (err) {
+        if (!cancelled) {
+          console.error(err);
+          setComments([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, navigate]);
 
   const handleBoardDelete = async () => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
@@ -100,29 +93,12 @@ export default function BoardDetailPage() {
     if (!commentText.trim()) return;
 
     try {
-      if (isRealBoard.current) {
-        setSubmitting(true);
-        await boardApi.addComment(Number(id), { content: commentText });
-        setCommentText("");
-        // 댓글 목록 갱신
-        const updatedComments = await boardApi.getComments(Number(id));
-        setComments(updatedComments);
-      } else {
-        alert(
-          "데모 게시글에는 댓글을 저장할 수 없습니다. (새로고침 시 사라짐)",
-        );
-        // Mock 환경에서의 시물레이션 (옵션)
-        const newComment: Comment = {
-          id: Date.now(),
-          boardId: Number(id),
-          userId: 0,
-          userName: "게스트",
-          content: commentText,
-          createdAt: new Date().toISOString(),
-        };
-        setComments((prev) => [...prev, newComment]);
-        setCommentText("");
-      }
+      setSubmitting(true);
+      await boardApi.addComment(Number(id), { content: commentText });
+      setCommentText("");
+      // 댓글 목록 갱신
+      const updatedComments = await boardApi.getComments(Number(id));
+      setComments(updatedComments);
     } catch (err: any) {
       alert(err.response?.data?.message || "댓글 작성에 실패했습니다.");
     } finally {
@@ -197,14 +173,9 @@ export default function BoardDetailPage() {
                       공지
                     </span>
                   )}
-                  {!isRealBoard.current && (
-                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-500">
-                      Demo
-                    </span>
-                  )}
                 </div>
                 {/* 게시글 수정/삭제 버튼 (본인일 경우) */}
-                {currentUser?.id === board.userId && isRealBoard.current && (
+                {currentUser?.id === board.userId && (
                   <div className="flex gap-2 text-sm">
                     <button
                       onClick={() => navigate(`/boards/${id}/edit`)}
@@ -304,8 +275,7 @@ export default function BoardDetailPage() {
                               </span>
                             </div>
                             {/* 댓글 수정/삭제 버튼 (본인일 경우) */}
-                            {currentUser?.id === comment.userId &&
-                              isRealBoard.current && (
+                            {currentUser?.id === comment.userId && (
                                 <div className="flex gap-2 text-xs">
                                   <button
                                     onClick={() => {
