@@ -57,6 +57,9 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("com.h2database:h2")
+
+    // 로컬 데모 실행용 인메모리 DB (bootRun에만 포함, 실행 jar에는 제외)
+    developmentOnly("com.h2database:h2")
 }
 
 tasks.withType<Test> {

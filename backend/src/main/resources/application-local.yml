@@ -1,0 +1,33 @@
+# 로컬 데모 프로필: MySQL 없이 인메모리 H2로 실행한다.
+# 실행: ./gradlew bootRun --args='--spring.profiles.active=local'
+# 재시작하면 데이터가 초기화되고, LocalDemoDataLoader가 데모 데이터를 다시 넣는다.
+spring:
+  config:
+    # backend/.env 가 있으면 DATA_API_KEY 등을 읽는다 (공공데이터 동기화 시험용, 없어도 실행됨)
+    import: optional:file:./.env[.properties]
+
+  datasource:
+    url: jdbc:h2:mem:dn_platform;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: false
+
+  flyway:
+    enabled: false
+
+# 로컬에서는 공공데이터 자동 동기화 스케줄을 끈다 (관리자 화면에서 수동 실행 가능)
+public-api:
+  sync-enabled: false
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
