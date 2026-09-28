@@ -186,10 +186,18 @@ export default function KakaoMap({
   if (error) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 text-gray-500 rounded-xl ${className}`}
+        className={`flex flex-col items-center justify-center gap-3 rounded-3xl border border-ink/10 bg-cream-200/60 px-6 text-center text-sm text-ink-muted [background-image:radial-gradient(rgba(34,28,22,.06)_1px,transparent_1px)] [background-size:14px_14px] ${className}`}
         style={{ height: typeof height === "number" ? `${height}px` : height }}
+        role="img"
+        aria-label={`보호소 위치 지도를 표시할 수 없습니다: ${error}`}
       >
-        {error}
+        <span className="grid h-11 w-11 place-items-center rounded-full bg-cream-50 text-ink-soft shadow-card" aria-hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" />
+            <circle cx="12" cy="9.5" r="2.5" />
+          </svg>
+        </span>
+        <span aria-hidden>{error}</span>
       </div>
     );
   }
@@ -197,8 +205,9 @@ export default function KakaoMap({
   return (
     <div
       ref={containerRef}
-      className={`rounded-xl overflow-hidden bg-gray-100 ${className}`}
+      className={`overflow-hidden rounded-3xl border border-ink/10 bg-cream-200 ${className}`}
       style={{ height: typeof height === "number" ? `${height}px` : height }}
+      role="region"
       aria-label="보호소 위치 지도"
     />
   );
