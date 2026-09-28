@@ -2,8 +2,13 @@ package com.dnproject.platform.exception;
 
 import com.dnproject.platform.dto.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.query.PathException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
@@ -11,6 +16,10 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -118,6 +127,62 @@ public class GlobalExceptionHandler {
                 "DUPLICATE_DATA",
                 "중복 데이터로 인한 조회 오류가 발생했습니다.");
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        log.debug("Request parameter type mismatch: {}", ex.getName());
+        ErrorResponse body = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "INVALID_PARAMETER",
+                "요청 값의 형식이 올바르지 않습니다: " + ex.getName());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleNotReadable(HttpMessageNotReadableException ex) {
+        log.debug("Unreadable request body: {}", ex.getMessage());
+        ErrorResponse body = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "INVALID_BODY",
+                "요청 본문을 해석할 수 없습니다.");
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    /** 정렬 파라미터에 존재하지 않는 속성을 넣은 경우 (예: sort=foo,asc) */
+    @ExceptionHandler(InvalidDataAccessApiUsageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidDataAccessApiUsage(InvalidDataAccessApiUsageException ex) {
+        // Hibernate는 UnknownPathException 아래에 PathElementException 등을 한 단계 더 감싸므로 원인 사슬 전체를 확인한다.
+        Throwable cause = ex;
+        while (cause != null && !(cause instanceof PathException || cause instanceof PropertyReferenceException)) {
+            cause = cause.getCause();
+        }
+        if (cause != null) {
+            log.debug("Invalid sort property: {}", cause.getMessage());
+            ErrorResponse body = ErrorResponse.of(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "INVALID_SORT",
+                    "정렬 기준이 올바르지 않습니다.");
+            return ResponseEntity.badRequest().body(body);
+        }
+        return handleException(ex);
+    }
+
+    /**
+     * 404(없는 경로), 405(지원하지 않는 메서드), 415(지원하지 않는 Content-Type) 등 Spring MVC 표준 예외.
+     * 이 핸들러가 없으면 아래 Exception 핸들러가 모두 500으로 바꾼다.
+     */
+    @ExceptionHandler({ NoResourceFoundException.class, HttpRequestMethodNotSupportedException.class,
+            HttpMediaTypeNotSupportedException.class })
+    public ResponseEntity<ErrorResponse> handleSpringErrorResponse(Exception ex) {
+        HttpStatusCode status = ((org.springframework.web.ErrorResponse) ex).getStatusCode();
+        HttpStatus resolved = HttpStatus.resolve(status.value());
+        log.debug("Spring MVC error {}: {}", status.value(), ex.getMessage());
+        ErrorResponse body = ErrorResponse.of(
+                status.value(),
+                resolved != null ? resolved.name() : "ERROR",
+                resolved != null ? resolved.getReasonPhrase() : "요청을 처리할 수 없습니다.");
+        return ResponseEntity.status(status).body(body);
     }
 
     @ExceptionHandler(Exception.class)
