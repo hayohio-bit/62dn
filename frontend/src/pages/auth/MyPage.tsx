@@ -24,6 +24,7 @@ export default function MyPage() {
   const [editEmail, setEditEmail] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -42,9 +43,17 @@ export default function MyPage() {
           Array.isArray(favData) ? favData : (favData?.content ?? []),
         );
       })
-      .catch(() => {
-        logout();
-        navigate("/login", { replace: true });
+      .catch((err: unknown) => {
+        // 인증 실패(만료·무효 토큰은 서버가 401/403으로 응답)일 때만 로그아웃한다.
+        // 네트워크 오류나 서버 오류로 로그인 상태를 지우지 않는다.
+        const status = (err as { response?: { status?: number } })?.response
+          ?.status;
+        if (status === 401 || status === 403) {
+          logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+        setLoadError("내 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
       })
       .finally(() => setLoading(false));
   }, [isAuthenticated, navigate, logout]);
@@ -114,6 +123,9 @@ export default function MyPage() {
             <h2 className="text-lg font-semibold text-[var(--toss-black)] mb-4">
               나의 정보
             </h2>
+            {loadError && (
+              <p className="text-sm text-red-600 mb-4">{loadError}</p>
+            )}
             {me && !editingProfile && (
               <>
                 <ul className="space-y-2 text-[var(--toss-text-caption)] text-[var(--toss-gray-700)]">
