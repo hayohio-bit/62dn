@@ -38,18 +38,21 @@ axiosInstance.interceptors.request.use(
   },
 );
 
+// 토큰 없이 호출하는 인증 API. 이 요청의 401은 "토큰 만료"가 아니라 "인증 실패"(잘못된 비밀번호, 소셜 인가 코드 오류 등)이므로
+// 토큰 갱신·강제 로그아웃 대상에서 제외한다. (카카오 로그인 실패 시 갱신 후 같은 인가 코드로 재시도하던 문제 방지)
+const PUBLIC_AUTH_PATH =
+  /\/auth\/(login|signup|google|kakao|refresh|find-email|reset-password)(\?|$)/;
+
 // Response Interceptor: 에러 처리 및 토큰 갱신
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    // 요청 설정이 없는 오류(요청 생성 단계 실패 등)는 재시도할 수 없으므로 그대로 전달
+    if (!originalRequest) return Promise.reject(error);
 
-    // 401 Unauthorized: 토큰 만료 (단, 로그인/가입/구글로그인/리프레시 요청은 제외해서 무한루프 및 에러 왜곡 방지)
-    const isAuthRequest =
-      originalRequest.url.includes("/auth/login") ||
-      originalRequest.url.includes("/auth/google") ||
-      originalRequest.url.includes("/auth/signup") ||
-      originalRequest.url.includes("/auth/refresh");
+    // 401 Unauthorized: 토큰 만료 (단, 인증 API 자체의 실패는 제외해서 무한루프 및 에러 왜곡 방지)
+    const isAuthRequest = PUBLIC_AUTH_PATH.test(originalRequest.url ?? "");
 
     if (
       error.response?.status === 401 &&
@@ -67,8 +70,10 @@ axiosInstance.interceptors.response.use(
           });
 
           const payload = response.data?.data ?? response.data;
-          const accessToken = payload.accessToken;
-          const newRefreshToken = payload.refreshToken;
+          const accessToken = payload?.accessToken;
+          const newRefreshToken = payload?.refreshToken;
+          // 새 액세스 토큰이 없으면 "Bearer undefined"로 재시도하지 않고 갱신 실패로 처리
+          if (!accessToken) throw new Error("토큰 갱신 응답에 accessToken이 없습니다.");
           const storage = localStorage.getItem("refreshToken")
             ? localStorage
             : sessionStorage;
