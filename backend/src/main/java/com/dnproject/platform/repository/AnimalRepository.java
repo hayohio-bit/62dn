@@ -6,6 +6,7 @@ import com.dnproject.platform.domain.constant.Size;
 import com.dnproject.platform.domain.constant.Species;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,6 +29,7 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
          * region/sigungu는 Shelter.regionSido, regionSigungu 기준 정확 매칭. search는
          * 이름·품종·보호소명 LIKE
          */
+        @EntityGraph(attributePaths = "shelter")
         @Query("SELECT a FROM Animal a JOIN a.shelter s WHERE " +
                         "(:species IS NULL OR a.species = :species) " +
                         "AND (:status IS NULL OR a.status = :status) AND (:size IS NULL OR a.size = :size) " +
@@ -58,6 +60,7 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
         long countByStatus(AnimalStatus status);
 
         /** 선호도 기반: 종류·나이 범위·크기·지역(복수)으로 필터링 (입양 가능한 상태만) */
+        @EntityGraph(attributePaths = "shelter")
         @Query("SELECT a FROM Animal a JOIN a.shelter s WHERE a.imageUrl IS NOT NULL AND a.imageUrl != '' " +
                         "AND a.status IN :statuses " +
                         "AND (:species IS NULL OR a.species = :species) " +
@@ -70,6 +73,7 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
                         @Param("size") Size size, @Param("regions") List<String> regions, Pageable pageable);
 
         /** 안락사 D-Day: 마감이 임박한 보호중 동물 (오늘 ~ maxDate) */
+        @EntityGraph(attributePaths = "shelter")
         @Query("SELECT a FROM Animal a JOIN a.shelter s WHERE a.imageUrl IS NOT NULL AND a.imageUrl != '' " +
                         "AND a.status = :status AND a.noticeEndDate >= :today AND a.noticeEndDate <= :maxDate " +
                         "ORDER BY a.noticeEndDate ASC")
