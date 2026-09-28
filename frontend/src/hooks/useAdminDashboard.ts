@@ -1,9 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { adminApi, RoleFilter, SyncHistoryItem } from "@/api/admin";
 import type { UserResponse, BoardResponse } from "@/types/dto";
 import { useAuthStore } from "@/store/authStore";
 
 export type AdminTab = "members" | "boards" | "approvals" | "sync";
+
+type ApiError = { response?: { status?: number; data?: { message?: string } } };
+
+/** 서버 메시지가 있으면 그대로, 403이면 권한 안내, 그 외에는 기본 문구 */
+function listErrorMessage(e: unknown, fallback: string): string {
+  const err = e as ApiError;
+  const serverMessage = err.response?.data?.message;
+  if (serverMessage) return serverMessage;
+  if (err.response?.status === 403) return "권한이 없습니다.";
+  return fallback;
+}
+
+/** 조건이 바뀐 뒤 늦게 도착한 응답을 버리기 위한 확인 함수 (기본값: 항상 유효) */
+type IsCancelled = () => boolean;
+const notCancelled: IsCancelled = () => false;
 
 export function useAdminDashboard() {
   const { user } = useAuthStore();
@@ -36,28 +51,13 @@ export function useAdminDashboard() {
   const [syncHistoryTotalPages, setSyncHistoryTotalPages] = useState(0);
   const [syncHistoryTotalElements, setSyncHistoryTotalElements] = useState(0);
 
-  useEffect(() => {
-    if (user?.role === "SUPER_ADMIN" && activeTab === "members") {
-      loadUsers();
-    }
-  }, [user?.role, activeTab, usersPage, roleFilter]);
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
 
-  useEffect(() => {
-    if (user?.role === "SUPER_ADMIN" && activeTab === "boards") {
-      loadBoards();
-    }
-  }, [user?.role, activeTab, boardsPage, boardTypeFilter]);
-
-  useEffect(() => {
-    if (user?.role === "SUPER_ADMIN" && activeTab === "sync") {
-      loadSyncHistory();
-    }
-  }, [user?.role, activeTab, syncHistoryPage]);
-
-  const loadSyncHistory = async () => {
+  const fetchSyncHistory = useCallback(async (page: number, isCancelled: IsCancelled = notCancelled) => {
     setSyncHistoryLoading(true);
     try {
-      const res = await adminApi.getSyncHistory(syncHistoryPage, 20);
+      const res = await adminApi.getSyncHistory(page, 20);
+      if (isCancelled()) return;
       const payload = res.data?.data ?? res.data;
       if (payload?.content) {
         setSyncHistory(payload.content);
@@ -65,10 +65,17 @@ export function useAdminDashboard() {
         setSyncHistoryTotalElements(payload.totalElements ?? 0);
       }
     } catch {
+      if (isCancelled()) return;
       setSyncHistory([]);
     } finally {
-      setSyncHistoryLoading(false);
+      if (!isCancelled()) setSyncHistoryLoading(false);
     }
+  }, []);
+
+  /** 동기화·정리 실행 후 이력을 첫 페이지부터 다시 조회 */
+  const reloadSyncHistoryFirstPage = () => {
+    setSyncHistoryPage(0);
+    fetchSyncHistory(0);
   };
 
   const handleSyncFromPublicApi = async () => {
@@ -92,14 +99,12 @@ export function useAdminDashboard() {
         if (removed > 0) parts.push(`삭제 ${removed}마리`);
         setSyncResult(`동기화 완료: ${parts.join(", ")}`);
       }
-      setSyncHistoryPage(0);
-      loadSyncHistory();
+      reloadSyncHistoryFirstPage();
       setTimeout(() => setSyncResult(null), 8000);
     } catch (e: unknown) {
-      const msg = (e as any)?.response?.data?.message;
+      const msg = (e as ApiError)?.response?.data?.message;
       setSyncResult(msg ?? "동기화 실패");
-      setSyncHistoryPage(0);
-      loadSyncHistory();
+      reloadSyncHistoryFirstPage();
     } finally {
       setSyncLoading(false);
     }
@@ -124,39 +129,41 @@ export function useAdminDashboard() {
         if (nullDel > 0) parts.push(`NULL ${nullDel}마리 삭제`);
         setCleanupResult(`정리 완료: ${parts.join(", ")} (총 ${totalRemoved}마리)`);
       }
-      setSyncHistoryPage(0);
-      loadSyncHistory();
+      reloadSyncHistoryFirstPage();
       setTimeout(() => setCleanupResult(null), 12000);
     } catch (e: unknown) {
-      const msg = (e as any)?.response?.data?.message;
+      const msg = (e as ApiError)?.response?.data?.message;
       setCleanupResult(msg ?? "정리 실패");
-      setSyncHistoryPage(0);
-      loadSyncHistory();
+      reloadSyncHistoryFirstPage();
     } finally {
       setCleanupLoading(false);
     }
   };
 
-  const loadUsers = async () => {
+  const fetchUsers = useCallback(async (isCancelled: IsCancelled = notCancelled) => {
     setUsersError("");
     setUsersLoading(true);
     try {
       const role = roleFilter === "" ? undefined : (roleFilter as RoleFilter);
       const res = await adminApi.getUsers(usersPage, 20, role);
+      if (isCancelled()) return;
       const data = res.data?.data ?? res.data;
       setUsers(data?.content ?? []);
       setUsersTotalPages(data?.totalPages ?? 0);
       setUsersTotalElements(data?.totalElements ?? 0);
     } catch (e: unknown) {
-      const err = e as any;
-      const msg = (err.response?.data?.message ?? err.response?.status === 403)
-          ? "권한이 없습니다." : "회원 목록을 불러오지 못했습니다.";
-      setUsersError(msg);
+      if (isCancelled()) return;
+      setUsersError(listErrorMessage(e, "회원 목록을 불러오지 못했습니다."));
       setUsers([]);
     } finally {
-      setUsersLoading(false);
+      if (!isCancelled()) setUsersLoading(false);
     }
-  };
+  }, [usersPage, roleFilter]);
+
+  /** 새로고침 버튼용 (클릭 이벤트 인자를 넘기지 않도록 감싼다) */
+  const loadUsers = useCallback(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleDeleteUser = async (userId: number, identifier: string) => {
     if (!window.confirm(`'${identifier}' 회원을 정말로 탈퇴시키겠습니까?\n이 작업은 되돌릴 수 없으며, 작성한 게시글과 신청 내역이 모두 삭제됩니다.`)) {
@@ -174,25 +181,56 @@ export function useAdminDashboard() {
     }
   };
 
-  const loadBoards = async () => {
+  const fetchBoards = useCallback(async (isCancelled: IsCancelled = notCancelled) => {
     setBoardsError("");
     setBoardsLoading(true);
     try {
       const type = boardTypeFilter === "" ? undefined : boardTypeFilter;
       const res = await adminApi.getBoards(boardsPage, 20, type);
+      if (isCancelled()) return;
       const data = res.data?.data ?? res.data;
       setBoards(data?.content ?? []);
       setBoardsTotalPages(data?.totalPages ?? 0);
     } catch (e: unknown) {
-      const err = e as any;
-      const msg = (err.response?.data?.message ?? err.response?.status === 403)
-          ? "권한이 없습니다." : "게시글 목록을 불러오지 못했습니다.";
-      setBoardsError(msg);
+      if (isCancelled()) return;
+      setBoardsError(listErrorMessage(e, "게시글 목록을 불러오지 못했습니다."));
       setBoards([]);
     } finally {
-      setBoardsLoading(false);
+      if (!isCancelled()) setBoardsLoading(false);
     }
-  };
+  }, [boardsPage, boardTypeFilter]);
+
+  /** 새로고침 버튼용 (클릭 이벤트 인자를 넘기지 않도록 감싼다) */
+  const loadBoards = useCallback(() => {
+    fetchBoards();
+  }, [fetchBoards]);
+
+  useEffect(() => {
+    if (!isSuperAdmin || activeTab !== "members") return;
+    let cancelled = false;
+    fetchUsers(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
+  }, [isSuperAdmin, activeTab, fetchUsers]);
+
+  useEffect(() => {
+    if (!isSuperAdmin || activeTab !== "boards") return;
+    let cancelled = false;
+    fetchBoards(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
+  }, [isSuperAdmin, activeTab, fetchBoards]);
+
+  useEffect(() => {
+    if (!isSuperAdmin || activeTab !== "sync") return;
+    let cancelled = false;
+    fetchSyncHistory(syncHistoryPage, () => cancelled);
+    return () => {
+      cancelled = true;
+    };
+  }, [isSuperAdmin, activeTab, syncHistoryPage, fetchSyncHistory]);
 
   const handleSetBoardPinned = async (boardId: number, pinned: boolean) => {
     setBoardActionLoading(boardId);
