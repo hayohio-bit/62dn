@@ -109,12 +109,16 @@ export function useAnimals() {
       setLoading(false);
       return;
     }
+    // 필터·탭을 빠르게 바꾸면 이전 요청의 응답이 늦게 도착해 최신 결과를 덮어쓸 수 있으므로,
+    // effect가 정리된 뒤 도착한 응답은 버린다.
+    let cancelled = false;
     setLoading(true);
     setError(null);
     const load = async () => {
       try {
         if (viewMode === "recommended") {
            const data = (await preferenceApi.getRecommendedAnimals(page, pageSize)) as { content?: Animal[]; totalElements?: number } | null;
+           if (cancelled) return;
            setApiAnimals(data?.content ?? []);
            setApiTotalElements(data?.totalElements ?? 0);
         } else {
@@ -123,12 +127,14 @@ export function useAnimals() {
              status: status || undefined, region: region || undefined, sigungu: sigungu || undefined,
              search: debouncedSearch || undefined, sort,
            });
+           if (cancelled) return;
            const content = data?.content ?? [];
            const total = data?.totalElements ?? content.length;
            setApiAnimals(content);
            setApiTotalElements(total);
         }
       } catch (err: unknown) {
+        if (cancelled) return;
         const ax = err as any;
         const errStatus = ax?.response?.status;
         const serverMessage = ax?.response?.data?.message;
@@ -146,10 +152,13 @@ export function useAnimals() {
         setApiAnimals([]);
         setApiTotalElements(0);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     load();
+    return () => {
+      cancelled = true;
+    };
   }, [viewMode, page, pageSize, species, size, status, region, sigungu, sort, debouncedSearch, isAuthenticated]);
 
   // 검색어가 실제로 바뀐 경우에만 첫 페이지로 이동한다.

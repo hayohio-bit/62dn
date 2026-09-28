@@ -45,33 +45,43 @@ export default function SupportPage() {
   const [selectedShelter, setSelectedShelter] =
     useState<PublicShelterResponse | null>(null);
 
-  const fetchShelters = useCallback(async () => {
-    setLoading(true);
-    try {
-      const qSelectedRegion = regionFilter || undefined;
-      const qKeyword = search.trim() || undefined;
-      const res = await shelterApi.getPublicShelters(
-        qSelectedRegion,
-        qKeyword,
-        page,
-        pageSize,
-      );
-      setShelters(res.content);
-      setTotalPages(res.totalPages || 1);
-      setTotalElements(res.totalElements || 0);
-    } catch (e) {
-      console.error(e);
-      setShelters([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [regionFilter, search, page, pageSize]);
+  // isCancelled: 조건이 바뀐 뒤 늦게 도착한 이전 요청의 응답을 버리기 위한 확인 함수
+  const fetchShelters = useCallback(
+    async (isCancelled: () => boolean) => {
+      setLoading(true);
+      try {
+        const qSelectedRegion = regionFilter || undefined;
+        const qKeyword = search.trim() || undefined;
+        const res = await shelterApi.getPublicShelters(
+          qSelectedRegion,
+          qKeyword,
+          page,
+          pageSize,
+        );
+        if (isCancelled()) return;
+        setShelters(res.content);
+        setTotalPages(res.totalPages || 1);
+        setTotalElements(res.totalElements || 0);
+      } catch (e) {
+        if (isCancelled()) return;
+        console.error(e);
+        setShelters([]);
+      } finally {
+        if (!isCancelled()) setLoading(false);
+      }
+    },
+    [regionFilter, search, page, pageSize],
+  );
 
   useEffect(() => {
+    let cancelled = false;
     const timer = setTimeout(() => {
-      fetchShelters();
+      fetchShelters(() => cancelled);
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [fetchShelters]);
 
   return (

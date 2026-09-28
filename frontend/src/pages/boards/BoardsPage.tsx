@@ -41,6 +41,8 @@ export default function BoardsPage() {
 
   // 서버 데이터 조회
   useEffect(() => {
+    // 조건이 바뀐 뒤 늦게 도착한 이전 요청의 응답은 무시한다.
+    let cancelled = false;
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -51,12 +53,17 @@ export default function BoardsPage() {
           size: pageSize,
           keyword: search || undefined, // 검색어 전달
         });
+        if (cancelled) return;
         setServerBoards(res.content);
         setServerTotalElements(res.totalElements);
       } catch (err) {
+        if (cancelled) return;
         console.error("Failed to fetch boards:", err);
+        // 실패 시 이전 조건의 목록이 새 조건의 결과처럼 남지 않도록 비운다.
+        setServerBoards([]);
+        setServerTotalElements(0);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
@@ -64,7 +71,10 @@ export default function BoardsPage() {
       fetchData();
     }, 300); // 300ms 디바운싱
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [type, page, pageSize, search]);
 
   // 데이터 병합 제거: 오직 서버 데이터만 사용
