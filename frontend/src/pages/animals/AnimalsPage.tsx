@@ -140,10 +140,7 @@ export default function AnimalsPage() {
           totalElements={apiTotalElements}
           size={pageSize}
           onPageChange={setPage}
-          onSizeChange={(s) => {
-            setPageSize(s);
-            setPage(0);
-          }}
+          onSizeChange={setPageSize}
           sizeOptions={PAGE_SIZE_OPTIONS}
         />
       </>
@@ -199,23 +196,23 @@ export default function AnimalsPage() {
                       label: "종류",
                       options: [{ value: "", label: "전체" }, { value: "DOG", label: speciesLabels.DOG }, { value: "CAT", label: speciesLabels.CAT }],
                       value: species,
-                      onChange: (v) => { setSpecies(v as any); setPage(0); },
+                      onChange: (v) => setSpecies(v as "DOG" | "CAT" | ""),
                     },
                     {
                       label: "크기",
                       options: [{ value: "", label: "전체" }, { value: "SMALL", label: sizeLabels.SMALL }, { value: "MEDIUM", label: sizeLabels.MEDIUM }, { value: "LARGE", label: sizeLabels.LARGE }],
                       value: size,
-                      onChange: (v) => { setSize(v as any); setPage(0); },
+                      onChange: (v) => setSize(v as "SMALL" | "MEDIUM" | "LARGE" | ""),
                     },
                     {
                       label: "시/도",
                       options: REGION_SIDO_OPTIONS, value: region,
-                      onChange: (v) => { setRegion(v); setSigungu(""); setPage(0); },
+                      onChange: setRegion,
                     },
                     ...(region ? [{
                       label: "시/군/구",
                       options: SIGUNGU_BY_SIDO[region] ?? [{ value: "", label: "전체" }], value: sigungu,
-                      onChange: (v: string) => { setSigungu(v); setPage(0); },
+                      onChange: setSigungu,
                     }] : []),
                   ]}
                   onReset={resetFilters}

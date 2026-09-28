@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { animalApi, preferenceApi, favoriteApi } from "@/api";
 import { useAuthStore } from "@/store/authStore";
@@ -152,8 +152,14 @@ export function useAnimals() {
     load();
   }, [viewMode, page, pageSize, species, size, status, region, sigungu, sort, debouncedSearch, isAuthenticated]);
 
+  // 검색어가 실제로 바뀐 경우에만 첫 페이지로 이동한다.
+  // setPage는 URL이 바뀔 때마다 새로 만들어지므로, 의존성 변화만으로 실행하면
+  // 검색 중 페이지 이동이 곧바로 0페이지로 되돌아간다.
+  const prevSearchRef = useRef(debouncedSearch);
   useEffect(() => {
-    if (debouncedSearch) setPage(0);
+    if (prevSearchRef.current === debouncedSearch) return;
+    prevSearchRef.current = debouncedSearch;
+    setPage(0);
   }, [debouncedSearch, setPage]);
 
   const handleSavePreference = async (pref: PreferenceRequest) => {
