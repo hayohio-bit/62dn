@@ -3,6 +3,8 @@ package com.dnproject.platform.config;
 import com.dnproject.platform.domain.Animal;
 import com.dnproject.platform.domain.Board;
 import com.dnproject.platform.domain.Comment;
+import com.dnproject.platform.domain.Favorite;
+import com.dnproject.platform.domain.Preference;
 import com.dnproject.platform.domain.Shelter;
 import com.dnproject.platform.domain.User;
 import com.dnproject.platform.domain.constant.AnimalStatus;
@@ -14,6 +16,8 @@ import com.dnproject.platform.domain.constant.VerificationStatus;
 import com.dnproject.platform.repository.AnimalRepository;
 import com.dnproject.platform.repository.BoardRepository;
 import com.dnproject.platform.repository.CommentRepository;
+import com.dnproject.platform.repository.FavoriteRepository;
+import com.dnproject.platform.repository.PreferenceRepository;
 import com.dnproject.platform.repository.ShelterRepository;
 import com.dnproject.platform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +58,8 @@ public class LocalDemoDataLoader implements ApplicationRunner {
     private final AnimalRepository animalRepository;
     private final BoardRepository boardRepository;
     private final CommentRepository commentRepository;
+    private final FavoriteRepository favoriteRepository;
+    private final PreferenceRepository preferenceRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -125,6 +131,19 @@ public class LocalDemoDataLoader implements ApplicationRunner {
         fostering.setStatus(AnimalStatus.FOSTERING);
         animals.add(fostering);
         animalRepository.saveAll(animals);
+
+        // 마이페이지·추천 화면용: 찜 3마리, 선호 조건 (서울·경기, 1~5살 강아지)
+        favoriteRepository.saveAll(List.of(
+                Favorite.builder().user(demoUser).animal(animals.get(0)).build(),
+                Favorite.builder().user(demoUser).animal(animals.get(5)).build(),
+                Favorite.builder().user(demoUser).animal(animals.get(13)).build()));
+        preferenceRepository.save(Preference.builder()
+                .user(demoUser)
+                .species(Species.DOG)
+                .minAge(1)
+                .maxAge(5)
+                .region("서울,경기")
+                .build());
 
         seedComments(demoUser);
         log.info("[local] 데모 데이터 생성: 보호소 {}곳, 동물 {}마리, 데모 회원 {}", shelters.size(), animals.size(), DEMO_USER_EMAIL);
