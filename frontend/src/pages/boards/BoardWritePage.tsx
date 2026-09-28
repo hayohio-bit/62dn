@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
 import { boardApi } from "@/api";
 import { useAuthStore } from "@/store/authStore";
+import { getApiErrorMessage } from "@/lib/apiError";
 import type { BoardCreateRequest } from "@/types/dto";
 import type { BoardType } from "@/types/entities";
 import Header from "@/components/layout/Header";
@@ -82,10 +83,12 @@ export default function BoardWritePage() {
         alert("게시글이 작성되었습니다!");
         navigate(`/boards/${result.id}`);
       }
-    } catch (err: any) {
+    } catch (err) {
       alert(
-        err.response?.data?.message ||
+        getApiErrorMessage(
+          err,
           `게시글 ${isEditMode ? "수정" : "작성"}에 실패했습니다.`,
+        ),
       );
     } finally {
       setSubmitting(false);

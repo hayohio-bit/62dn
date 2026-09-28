@@ -15,13 +15,19 @@ interface PreferenceModalProps {
   onClose: () => void;
 }
 
-const speciesOptions = [
+const speciesOptions: {
+  value: "" | NonNullable<PreferenceRequest["species"]>;
+  label: string;
+}[] = [
   { value: "", label: "상관없음" },
   { value: "DOG", label: "강아지" },
   { value: "CAT", label: "고양이" },
 ];
 
-const sizeOptions = [
+const sizeOptions: {
+  value: "" | NonNullable<PreferenceRequest["size"]>;
+  label: string;
+}[] = [
   { value: "", label: "상관없음" },
   { value: "SMALL", label: "소형" },
   { value: "MEDIUM", label: "중형" },
@@ -87,7 +93,7 @@ export default function PreferenceModal({
                   onClick={() =>
                     setFormData({
                       ...formData,
-                      species: value ? (value as any) : undefined,
+                      species: value || undefined,
                     })
                   }
                 >
@@ -216,7 +222,7 @@ export default function PreferenceModal({
                   onClick={() =>
                     setFormData({
                       ...formData,
-                      size: value ? (value as any) : undefined,
+                      size: value || undefined,
                     })
                   }
                 >

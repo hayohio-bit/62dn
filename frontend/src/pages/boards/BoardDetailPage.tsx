@@ -5,6 +5,7 @@ import type { Board, Comment } from "@/types/entities";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuthStore } from "@/store/authStore";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 const typeLabels: Record<string, string> = {
   NOTICE: "공지사항",
@@ -83,8 +84,8 @@ export default function BoardDetailPage() {
       await boardApi.delete(Number(id));
       alert("게시글이 삭제되었습니다.");
       navigate("/boards");
-    } catch (err: any) {
-      alert(err.response?.data?.message || "게시글 삭제에 실패했습니다.");
+    } catch (err) {
+      alert(getApiErrorMessage(err, "게시글 삭제에 실패했습니다."));
     }
   };
 
@@ -99,8 +100,8 @@ export default function BoardDetailPage() {
       // 댓글 목록 갱신
       const updatedComments = await boardApi.getComments(Number(id));
       setComments(updatedComments);
-    } catch (err: any) {
-      alert(err.response?.data?.message || "댓글 작성에 실패했습니다.");
+    } catch (err) {
+      alert(getApiErrorMessage(err, "댓글 작성에 실패했습니다."));
     } finally {
       setSubmitting(false);
     }
@@ -115,8 +116,8 @@ export default function BoardDetailPage() {
       // 댓글 목록 갱신
       const updatedComments = await boardApi.getComments(Number(id));
       setComments(updatedComments);
-    } catch (err: any) {
-      alert(err.response?.data?.message || "댓글 수정에 실패했습니다.");
+    } catch (err) {
+      alert(getApiErrorMessage(err, "댓글 수정에 실패했습니다."));
     }
   };
 
@@ -127,8 +128,8 @@ export default function BoardDetailPage() {
       // 댓글 목록 갱신
       const updatedComments = await boardApi.getComments(Number(id));
       setComments(updatedComments);
-    } catch (err: any) {
-      alert(err.response?.data?.message || "댓글 삭제에 실패했습니다.");
+    } catch (err) {
+      alert(getApiErrorMessage(err, "댓글 삭제에 실패했습니다."));
     }
   };
 

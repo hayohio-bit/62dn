@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authApi } from "@/api/auth";
 import { useAuthStore } from "@/store/authStore";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 export default function KakaoCallback() {
   const [searchParams] = useSearchParams();
@@ -31,10 +32,10 @@ export default function KakaoCallback() {
         navigate("/");
       } catch (error: unknown) {
         console.error("카카오 로그인 실패:", error);
-        const errorMessage =
-          error instanceof Error && (error as any).response?.data?.message
-            ? (error as any).response.data.message
-            : "카카오 로그인에 실패했습니다.";
+        const errorMessage = getApiErrorMessage(
+          error,
+          "카카오 로그인에 실패했습니다.",
+        );
         alert(errorMessage);
         navigate("/login");
       }

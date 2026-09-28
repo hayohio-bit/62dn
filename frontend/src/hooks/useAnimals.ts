@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import axios from "axios";
 import { animalApi, preferenceApi, favoriteApi } from "@/api";
 import { useAuthStore } from "@/store/authStore";
 import type { Animal } from "@/types/entities";
@@ -117,7 +118,7 @@ export function useAnimals() {
     const load = async () => {
       try {
         if (viewMode === "recommended") {
-           const data = (await preferenceApi.getRecommendedAnimals(page, pageSize)) as { content?: Animal[]; totalElements?: number } | null;
+           const data = await preferenceApi.getRecommendedAnimals(page, pageSize);
            if (cancelled) return;
            setApiAnimals(data?.content ?? []);
            setApiTotalElements(data?.totalElements ?? 0);
@@ -135,9 +136,9 @@ export function useAnimals() {
         }
       } catch (err: unknown) {
         if (cancelled) return;
-        const ax = err as any;
-        const errStatus = ax?.response?.status;
-        const serverMessage = ax?.response?.data?.message;
+        const response = axios.isAxiosError<{ message?: string }>(err) ? err.response : undefined;
+        const errStatus = response?.status;
+        const serverMessage = response?.data?.message;
         let message: string;
         if (viewMode === "recommended") {
           message = "추천 목록을 불러오는데 실패했습니다. 로그인 후 선호도를 설정해 주세요.";
