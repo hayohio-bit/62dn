@@ -9,33 +9,39 @@ import { useEffect, useRef, useState } from "react";
 const KAKAO_SCRIPT_URL = "//dapi.kakao.com/v2/maps/sdk.js";
 const APP_KEY = import.meta.env.VITE_MAP_API_KEY;
 
+/** 이 컴포넌트가 사용하는 카카오 지도 SDK의 일부 */
+type KakaoLatLng = object;
+type KakaoMapInstance = object;
+
+interface KakaoMapsSdk {
+  /** autoload=false로 불러온 경우 라이브러리(services 등) 로드를 시작 */
+  load?: (callback: () => void) => void;
+  Map: new (
+    container: HTMLElement,
+    options: { center: KakaoLatLng; level: number },
+  ) => KakaoMapInstance;
+  LatLng: new (lat: number, lng: number) => KakaoLatLng;
+  Marker: new (options: { position: KakaoLatLng }) => {
+    setMap: (map: KakaoMapInstance | null) => void;
+  };
+  event: {
+    addListener: (target: object, type: string, handler: () => void) => void;
+  };
+  /** load() 완료 전에는 없을 수 있다 */
+  services?: {
+    Geocoder: new () => {
+      addressSearch: (
+        address: string,
+        callback: (result: { x: string; y: string }[], status: string) => void,
+      ) => void;
+    };
+    Status: { OK: string };
+  };
+}
+
 declare global {
   interface Window {
-    kakao?: {
-      maps: {
-        Map: new (
-          container: HTMLElement,
-          options: { center: any; level: number },
-        ) => any;
-        LatLng: new (lat: number, lng: number) => any;
-        Marker: new (options: { position: any }) => any;
-        event: {
-          addListener: (target: any, type: string, handler: () => void) => void;
-        };
-        services: {
-          Geocoder: new () => {
-            addressSearch: (
-              address: string,
-              callback: (
-                result: { x: string; y: string }[],
-                status: string,
-              ) => void,
-            ) => void;
-          };
-          Status: { OK: string };
-        };
-      };
-    };
+    kakao?: { maps: KakaoMapsSdk };
   }
 }
 
@@ -51,42 +57,51 @@ export interface KakaoMapProps {
   className?: string;
 }
 
+/**
+ * SDK 로드 요청을 모듈 단위로 한 번만 만든다.
+ * 스크립트가 아직 내려받는 중일 때 지도가 다시 마운트되면(StrictMode의 effect 재실행, 상세 페이지 간 빠른 이동)
+ * 예전 구현은 500ms만 기다린 뒤 성공으로 처리해 "Geocoder를 불러올 수 없습니다" 오류를 표시했다.
+ */
+let kakaoLoadPromise: Promise<void> | null = null;
+
 function loadKakaoScript(): Promise<void> {
   if (window.kakao?.maps?.services) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector(
-      'script[src*="dapi.kakao.com"][src*="maps/sdk"]',
-    );
-    if (existing) {
-      const kakao = (window as any).kakao;
-      if (kakao?.maps?.load) {
-        kakao.maps.load(() => resolve());
-      } else if (kakao?.maps?.services) {
-        resolve();
-      } else {
-        setTimeout(() => resolve(), 500);
-      }
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = `https:${KAKAO_SCRIPT_URL}?appkey=${APP_KEY}&libraries=services&autoload=false`;
-    script.async = true;
-    script.onload = () => {
-      const kakao = (window as any).kakao;
-      if (!kakao?.maps) {
+  if (kakaoLoadPromise) return kakaoLoadPromise;
+
+  kakaoLoadPromise = new Promise<void>((resolve, reject) => {
+    const onSdkReady = () => {
+      const maps = window.kakao?.maps;
+      if (!maps) {
         reject(new Error("Kakao Maps SDK not available"));
         return;
       }
-      if (kakao.maps.load) {
-        kakao.maps.load(() => resolve());
+      if (maps.load) {
+        maps.load(() => resolve());
       } else {
         resolve();
       }
     };
+
+    // 이미 로드가 끝난 스크립트가 있으면 라이브러리 로드만 이어서 진행
+    if (window.kakao?.maps) {
+      onSdkReady();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https:${KAKAO_SCRIPT_URL}?appkey=${APP_KEY}&libraries=services&autoload=false`;
+    script.async = true;
+    script.onload = onSdkReady;
     script.onerror = () =>
       reject(new Error("Failed to load Kakao Maps script"));
     document.head.appendChild(script);
   });
+
+  // 실패하면 다음 마운트에서 다시 시도할 수 있도록 캐시를 비운다.
+  kakaoLoadPromise.catch(() => {
+    kakaoLoadPromise = null;
+  });
+  return kakaoLoadPromise;
 }
 
 export default function KakaoMap({
@@ -97,10 +112,12 @@ export default function KakaoMap({
   className = "",
 }: KakaoMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<KakaoMapInstance | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // 주소·좌표가 바뀌면 이전 오류 표시를 지우고 다시 시도한다.
+    setError(null);
     if (!APP_KEY || APP_KEY === "your_map_api_key_here") {
       setError("지도 API 키가 설정되지 않았습니다.");
       return;
@@ -115,23 +132,24 @@ export default function KakaoMap({
     loadKakaoScript()
       .then(() => {
         if (cancelled || !containerRef.current) return;
-        const kakao = (window as any).kakao;
-        if (!kakao?.maps?.services?.Geocoder) {
+        const maps = window.kakao?.maps;
+        const services = maps?.services;
+        if (!maps || !services?.Geocoder) {
           setError(
             "지도 서비스(Geocoder)를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.",
           );
           return;
         }
-        const geocoder = new kakao.maps.services.Geocoder();
+        const geocoder = new services.Geocoder();
 
         const showMap = (lat: number, lng: number) => {
           if (!containerRef.current) return;
-          const center = new kakao.maps.LatLng(lat, lng);
-          const map = new kakao.maps.Map(containerRef.current, {
+          const center = new maps.LatLng(lat, lng);
+          const map = new maps.Map(containerRef.current, {
             center,
             level: 3,
           });
-          const marker = new kakao.maps.Marker({ position: center });
+          const marker = new maps.Marker({ position: center });
           marker.setMap(map);
           mapRef.current = map;
         };
@@ -145,7 +163,7 @@ export default function KakaoMap({
           (result: unknown, status: unknown) => {
             if (cancelled) return;
             const arr = Array.isArray(result) ? result : [];
-            if (status === kakao.maps.services.Status.OK && arr[0]) {
+            if (status === services.Status.OK && arr[0]) {
               const lat = parseFloat(arr[0].y);
               const lng = parseFloat(arr[0].x);
               showMap(lat, lng);
