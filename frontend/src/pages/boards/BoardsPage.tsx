@@ -16,7 +16,8 @@ const PAGE_SIZE_OPTIONS = [10, 15, 20];
 
 const FILTERS: { value?: BoardType; label: string }[] = [
   { label: "전체" },
-  ...BOARD_TYPES.map((t) => ({ value: t, label: boardTypeTitles[t] })),
+  // 모바일 한 줄에 들어가도록 FAQ는 약어로 표시한다
+  ...BOARD_TYPES.map((t) => ({ value: t, label: t === "FAQ" ? "FAQ" : boardTypeTitles[t] })),
 ];
 
 function SearchIcon() {
