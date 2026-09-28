@@ -92,7 +92,7 @@ public class AuthService {
         } catch (WebClientResponseException e) {
             log.error("Kakao token exchange failed: status={} body={}", e.getStatusCode(),
                     e.getResponseBodyAsString());
-            throw new UnauthorizedException("카카오 토큰 발급에 실패했습니다: " + e.getResponseBodyAsString());
+            throw new UnauthorizedException("카카오 토큰 발급에 실패했습니다.");
         } catch (Exception e) {
             log.error("Kakao token exchange unexpected error", e);
             throw new CustomException("카카오 토큰 발급 중 예상치 못한 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR,
@@ -119,7 +119,7 @@ public class AuthService {
         } catch (WebClientResponseException e) {
             log.error("Kakao user info retrieval failed: status={} body={}", e.getStatusCode(),
                     e.getResponseBodyAsString());
-            throw new UnauthorizedException("카카오 사용자 정보 조회에 실패했습니다: " + e.getResponseBodyAsString());
+            throw new UnauthorizedException("카카오 사용자 정보 조회에 실패했습니다.");
         } catch (Exception e) {
             log.error("Kakao user info retrieval unexpected error", e);
             throw new CustomException("카카오 사용자 정보 조회 중 예상치 못한 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR,
@@ -222,7 +222,7 @@ public class AuthService {
         } catch (WebClientResponseException e) {
             log.error("Google token exchange failed: status={} body={}", e.getStatusCode(),
                     e.getResponseBodyAsString());
-            throw new UnauthorizedException("구글 토큰 발급에 실패했습니다: " + e.getResponseBodyAsString());
+            throw new UnauthorizedException("구글 토큰 발급에 실패했습니다.");
         } catch (Exception e) {
             log.error("Google token exchange unexpected error", e);
             throw new CustomException("구글 토큰 발급 중 예상치 못한 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR,
@@ -249,7 +249,7 @@ public class AuthService {
         } catch (WebClientResponseException e) {
             log.error("Google user info retrieval failed: status={} body={}", e.getStatusCode(),
                     e.getResponseBodyAsString());
-            throw new UnauthorizedException("구글 사용자 정보 조회에 실패했습니다: " + e.getResponseBodyAsString());
+            throw new UnauthorizedException("구글 사용자 정보 조회에 실패했습니다.");
         } catch (Exception e) {
             log.error("Google user info retrieval unexpected error", e);
             throw new CustomException("구글 사용자 정보 조회 중 예상치 못한 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR,
