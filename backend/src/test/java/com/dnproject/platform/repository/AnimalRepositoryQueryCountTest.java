@@ -1,7 +1,9 @@
 package com.dnproject.platform.repository;
 
 import com.dnproject.platform.domain.Animal;
+import com.dnproject.platform.domain.Favorite;
 import com.dnproject.platform.domain.Shelter;
+import com.dnproject.platform.domain.User;
 import com.dnproject.platform.domain.constant.AnimalStatus;
 import com.dnproject.platform.domain.constant.Species;
 import com.dnproject.platform.mapper.AnimalMapper;
@@ -39,6 +41,10 @@ class AnimalRepositoryQueryCountTest {
     private AnimalRepository animalRepository;
     @Autowired
     private ShelterRepository shelterRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private FavoriteRepository favoriteRepository;
     @Autowired
     private EntityManager entityManager;
     @Autowired
@@ -98,6 +104,19 @@ class AnimalRepositoryQueryCountTest {
         Page<Animal> page = animalRepository.findRecommended(List.of(AnimalStatus.PROTECTED), null, null, null,
                 null, null, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
         assertShelterLoadedWithoutExtraQueries(page.getContent(), 2);
+    }
+
+    @Test
+    @DisplayName("찜 목록(findByUser_IdOrderByCreatedAtDesc)은 동물과 보호소를 함께 조회한다")
+    void favoritesFetchAnimalAndShelter() {
+        User user = userRepository.save(User.builder().email("fav@example.test").password("x").name("찜").build());
+        animalRepository.findAll().forEach(a -> favoriteRepository.save(Favorite.builder().user(user).animal(a).build()));
+        entityManager.flush();
+        entityManager.clear();
+        statistics.clear();
+
+        Page<Favorite> page = favoriteRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), PageRequest.of(0, 20));
+        assertShelterLoadedWithoutExtraQueries(page.getContent().stream().map(Favorite::getAnimal).toList(), 2);
     }
 
     @Test
