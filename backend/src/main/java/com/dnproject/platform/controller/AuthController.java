@@ -91,7 +91,8 @@ public class AuthController {
 
     @Operation(summary = "내 정보 수정 (이름, 이메일). 일반/관리자/시스템 관리자 공통")
     @PatchMapping("/me")
-    public ApiResponse<UserResponse> updateMe(HttpServletRequest httpRequest, @RequestBody UpdateMeRequest request) {
+    public ApiResponse<UserResponse> updateMe(HttpServletRequest httpRequest,
+            @Valid @RequestBody UpdateMeRequest request) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         if (userId == null) {
             throw new UnauthorizedException("인증이 필요합니다.");
