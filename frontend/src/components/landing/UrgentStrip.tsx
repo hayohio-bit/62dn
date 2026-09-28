@@ -69,7 +69,7 @@ export default function UrgentStrip({ animals }: Props) {
 
       <div
         ref={trackRef}
-        className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-6 pb-4 [scrollbar-width:none] md:px-[max(1.5rem,calc((100vw_-_76rem)/2_+_1.5rem))] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-6 pb-4 [scrollbar-width:none] scroll-pl-6 md:px-[max(1.5rem,calc((100vw_-_76rem)/2_+_1.5rem))] md:scroll-pl-[max(1.5rem,calc((100vw_-_76rem)/2_+_1.5rem))] [&::-webkit-scrollbar]:hidden"
       >
         {animals.map((a, i) => {
           const dday = formatDday(a.daysUntilExpiry);

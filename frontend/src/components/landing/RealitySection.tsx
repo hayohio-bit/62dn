@@ -6,7 +6,7 @@ import { realityStats } from "@/constants/landingContent";
 /** 화면에 들어오면 0부터 목표 숫자까지 올라간다 */
 function CountUp({ to }: { to: number }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const inView = useInView(ref, { once: true, margin: "-60px 0px" });
   const reduce = useReducedMotion();
   const [value, setValue] = useState(reduce ? to : 0);
 
