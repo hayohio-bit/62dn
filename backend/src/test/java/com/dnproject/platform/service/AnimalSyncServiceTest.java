@@ -5,12 +5,14 @@ import com.dnproject.platform.domain.constant.AnimalStatus;
 import com.dnproject.platform.dto.publicapi.AnimalItem;
 import com.dnproject.platform.repository.AnimalRepository;
 import com.dnproject.platform.repository.ShelterRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -33,8 +35,17 @@ class AnimalSyncServiceTest {
     @Mock
     private ShelterRepository shelterRepository;
 
+    @Mock
+    private PlatformTransactionManager transactionManager;
+
     @InjectMocks
     private AnimalSyncService animalSyncService;
+
+    @BeforeEach
+    void setUp() {
+        // 스프링 컨테이너 밖에서는 @PostConstruct가 호출되지 않으므로 직접 초기화한다.
+        animalSyncService.init();
+    }
 
     @Test
     @DisplayName("DB에 있는 동물이 API에서 '종료' 상태로 넘어오면 DB에서 삭제되어야 한다")
