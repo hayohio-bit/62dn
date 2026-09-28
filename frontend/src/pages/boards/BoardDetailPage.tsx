@@ -1,22 +1,38 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import { boardApi } from "@/api";
 import type { Board, Comment } from "@/types/entities";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuthStore } from "@/store/authStore";
 import { getApiErrorMessage } from "@/lib/apiError";
+import { BoardTypeBadge, NameAvatar, PinnedMark } from "@/components/boards/BoardTypeBadge";
+import { boardTypeTitles, formatBoardDateTime } from "@/components/boards/boardFormat";
 
-const typeLabels: Record<string, string> = {
-  NOTICE: "공지사항",
-  FAQ: "FAQ",
-  FREE: "자유게시판",
-};
+const textareaClass =
+  "w-full resize-y rounded-2xl border border-ink/15 bg-white px-4 py-3 leading-relaxed text-ink placeholder:text-ink-faint transition focus:border-terracotta focus:outline-none focus:ring-4 focus:ring-terracotta/15";
+
+const smallAction =
+  "rounded-full px-3 py-1 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink";
+
+function BackLink() {
+  return (
+    <Link
+      to="/boards"
+      className="inline-flex items-center gap-2 text-sm font-medium text-ink-muted transition-colors hover:text-ink"
+    >
+      <span aria-hidden>←</span> 게시판 목록
+    </Link>
+  );
+}
 
 export default function BoardDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuthStore();
+  const location = useLocation();
+  const reduceMotion = useReducedMotion();
+  const { user: currentUser, isAuthenticated } = useAuthStore();
   const [board, setBoard] = useState<Board | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +113,6 @@ export default function BoardDetailPage() {
       setSubmitting(true);
       await boardApi.addComment(Number(id), { content: commentText });
       setCommentText("");
-      // 댓글 목록 갱신
       const updatedComments = await boardApi.getComments(Number(id));
       setComments(updatedComments);
     } catch (err) {
@@ -113,7 +128,6 @@ export default function BoardDetailPage() {
       await boardApi.updateComment(commentId, editCommentText);
       setEditingCommentId(null);
       setEditCommentText("");
-      // 댓글 목록 갱신
       const updatedComments = await boardApi.getComments(Number(id));
       setComments(updatedComments);
     } catch (err) {
@@ -125,7 +139,6 @@ export default function BoardDetailPage() {
     if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
     try {
       await boardApi.deleteComment(commentId);
-      // 댓글 목록 갱신
       const updatedComments = await boardApi.getComments(Number(id));
       setComments(updatedComments);
     } catch (err) {
@@ -133,181 +146,224 @@ export default function BoardDetailPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !board) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="flex min-h-screen flex-col bg-cream">
         <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <p className="text-gray-600">로딩 중...</p>
+        <main className="flex-1">
+          <div className="mx-auto max-w-3xl animate-pulse px-6 pb-24 pt-[calc(var(--header-height)+3.5rem)]" aria-hidden>
+            <div className="h-4 w-24 rounded bg-ink/10" />
+            <div className="mt-12 h-6 w-16 rounded-full bg-ink/10" />
+            <div className="mt-6 h-12 w-4/5 rounded bg-ink/10" />
+            <div className="mt-8 space-y-3">
+              <div className="h-4 w-full rounded bg-ink/5" />
+              <div className="h-4 w-11/12 rounded bg-ink/5" />
+              <div className="h-4 w-2/3 rounded bg-ink/5" />
+            </div>
+          </div>
+          <p className="sr-only" role="status">
+            게시글을 불러오는 중입니다.
+          </p>
         </main>
         <Footer />
       </div>
     );
   }
 
-  if (!board) return null;
+  const isOwner = currentUser?.id === board.userId;
+  const wasEdited = board.updatedAt && board.updatedAt.slice(0, 16) !== board.createdAt.slice(0, 16);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-cream">
       <Header />
-      <main
-        className="flex-1"
-        style={{ background: "var(--landing-gray-100)", paddingTop: "6.5rem" }}
-      >
-        <section className="landing-section">
-          <div className="landing-inner max-w-4xl">
-            <Link
-              to="/boards"
-              className="text-green-600 hover:underline mb-4 inline-block"
-            >
-              ← 목록으로
-            </Link>
+      <main className="flex-1">
+        <motion.article
+          initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
+          className="mx-auto max-w-3xl px-6 pt-[calc(var(--header-height)+3rem)]"
+        >
+          <BackLink />
 
-            <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex gap-2">
-                  <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
-                    {typeLabels[board.type]}
-                  </span>
-                  {board.isPinned && (
-                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 text-purple-700">
-                      공지
-                    </span>
-                  )}
-                </div>
-                {/* 게시글 수정/삭제 버튼 (본인일 경우) */}
-                {currentUser?.id === board.userId && (
-                  <div className="flex gap-2 text-sm">
-                    <button
-                      onClick={() => navigate(`/boards/${id}/edit`)}
-                      className="text-gray-500 hover:text-blue-600 underline"
-                    >
-                      수정
-                    </button>
-                    <button
-                      onClick={handleBoardDelete}
-                      className="text-gray-500 hover:text-red-600 underline"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                )}
-              </div>
-              <h1 className="text-3xl font-bold mb-4">{board.title}</h1>
-              <div className="flex gap-4 text-sm text-gray-600 mb-6 pb-6 border-b">
-                <span>{board.userName || "익명"}</span>
-                <span>조회 {board.views}</span>
-                <span>{new Date(board.createdAt).toLocaleString()}</span>
-              </div>
-              <div className="prose max-w-none">
-                <p className="whitespace-pre-wrap text-gray-800">
-                  {board.content}
-                </p>
-              </div>
+          <header className="mt-10 md:mt-14">
+            <div className="flex flex-wrap items-center gap-3">
+              <BoardTypeBadge type={board.type} />
+              <span className="text-sm text-ink-muted">{boardTypeTitles[board.type]}</span>
+              {board.isPinned && <PinnedMark />}
             </div>
+            <h1 className="mt-5 break-keep font-serif text-[2rem] leading-tight tracking-[-0.02em] text-ink md:text-[2.75rem]">
+              {board.title}
+            </h1>
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-y border-ink/10 py-5">
+              <div className="flex items-center gap-3">
+                <NameAvatar name={board.userName} />
+                <div>
+                  <p className="font-serif text-lg leading-tight text-ink">{board.userName || "익명"}</p>
+                  <p className="mt-1 text-sm text-ink-muted">
+                    <time dateTime={board.createdAt}>{formatBoardDateTime(board.createdAt)}</time>
+                    {wasEdited && " · 수정됨"}
+                    {" · "}조회 {board.views.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              {isOwner && (
+                <div className="flex gap-1">
+                  <button type="button" onClick={() => navigate(`/boards/${id}/edit`)} className={smallAction}>
+                    수정
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBoardDelete}
+                    className="rounded-full px-3 py-1 text-sm text-ink-muted transition-colors hover:bg-terracotta-50 hover:text-terracotta-700"
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
+            </div>
+          </header>
 
-            {/* 댓글 영역 */}
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-xl font-bold mb-4">댓글 {comments.length}</h2>
+          <div className="whitespace-pre-wrap break-words py-10 text-[1.0625rem] leading-[1.9] text-ink-soft md:py-12 md:text-lg">
+            {board.content}
+          </div>
+        </motion.article>
 
-              {/* 댓글 작성 */}
-              <form onSubmit={handleCommentSubmit} className="mb-6">
+        {/* 댓글 */}
+        <section aria-labelledby="comments-title" className="mx-auto max-w-3xl px-6 pb-24">
+          <div className="rounded-[1.75rem] border border-ink/10 bg-cream-50 p-6 shadow-card md:p-10">
+            <h2 id="comments-title" className="font-serif text-2xl text-ink">
+              댓글 <span className="text-terracotta">{comments.length}</span>
+            </h2>
+
+            {isAuthenticated ? (
+              <form onSubmit={handleCommentSubmit} className="mt-6">
+                <label htmlFor="comment-new" className="sr-only">
+                  댓글 내용
+                </label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-lg p-3"
+                  id="comment-new"
+                  className={textareaClass}
                   rows={3}
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="댓글을 입력하세요..."
+                  placeholder="따뜻한 한마디를 남겨 주세요"
                 />
-                <div className="flex justify-end mt-2">
+                <div className="mt-3 flex justify-end">
                   <button
                     type="submit"
                     disabled={submitting || !commentText.trim()}
-                    className="landing-btn landing-btn-primary disabled:opacity-50"
+                    className="toss-btn toss-btn-primary disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {submitting ? "작성 중..." : "댓글 작성"}
+                    {submitting ? "등록 중..." : "댓글 등록"}
                   </button>
                 </div>
               </form>
+            ) : (
+              <div className="mt-6 flex flex-col items-start gap-4 rounded-2xl border border-dashed border-ink/20 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-ink-soft">댓글은 로그인한 뒤 남길 수 있어요.</p>
+                <Link
+                  to="/login"
+                  state={{ from: location.pathname }}
+                  className="toss-btn toss-btn-outline !py-2.5"
+                >
+                  로그인하기
+                </Link>
+              </div>
+            )}
 
-              {/* 댓글 목록 */}
-              <div className="space-y-4">
-                {comments.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">
-                    첫 댓글을 남겨보세요.
-                  </p>
-                ) : (
-                  comments.map((comment) => (
-                    <div key={comment.id} className="border-b pb-4">
-                      {editingCommentId === comment.id ? (
-                        // 댓글 수정 모드
-                        <div className="mb-2">
-                          <textarea
-                            className="w-full border border-gray-300 rounded-lg p-2 mb-2"
-                            rows={3}
-                            value={editCommentText}
-                            onChange={(e) => setEditCommentText(e.target.value)}
-                          />
-                          <div className="flex gap-2 justify-end text-sm">
-                            <button
-                              onClick={() => handleCommentUpdate(comment.id)}
-                              className="text-blue-600 hover:underline"
-                            >
-                              저장
-                            </button>
-                            <button
-                              onClick={() => setEditingCommentId(null)}
-                              className="text-gray-500 hover:underline"
-                            >
-                              취소
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        // 댓글 일반 모드
-                        <>
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">
-                                {comment.userName || "익명"}
+            {comments.length === 0 ? (
+              <p className="mt-10 text-center text-ink-muted">아직 댓글이 없어요. 첫 댓글을 남겨 보세요.</p>
+            ) : (
+              <ol className="mt-8 border-t border-ink/10">
+                {comments.map((comment) => {
+                  const mine = currentUser?.id === comment.userId;
+                  const editing = editingCommentId === comment.id;
+                  return (
+                    <li key={comment.id} className="flex gap-4 border-b border-ink/10 py-6 last:border-b-0 last:pb-0">
+                      <NameAvatar name={comment.userName} size="sm" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                          <p className="flex flex-wrap items-baseline gap-x-2">
+                            <span className="font-serif text-[1.0625rem] text-ink">{comment.userName || "익명"}</span>
+                            {comment.userId === board.userId && (
+                              <span className="rounded-full bg-sage-50 px-2 py-0.5 text-xs font-semibold text-sage-600">
+                                작성자
                               </span>
-                              <span className="text-sm text-gray-500">
-                                {new Date(comment.createdAt).toLocaleString()}
-                              </span>
+                            )}
+                            <time dateTime={comment.createdAt} className="text-sm text-ink-muted">
+                              {formatBoardDateTime(comment.createdAt)}
+                            </time>
+                          </p>
+                          {mine && !editing && (
+                            <div className="-mr-3 flex">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingCommentId(comment.id);
+                                  setEditCommentText(comment.content);
+                                }}
+                                className={smallAction}
+                              >
+                                수정
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleCommentDelete(comment.id)}
+                                className="rounded-full px-3 py-1 text-sm text-ink-muted transition-colors hover:bg-terracotta-50 hover:text-terracotta-700"
+                              >
+                                삭제
+                              </button>
                             </div>
-                            {/* 댓글 수정/삭제 버튼 (본인일 경우) */}
-                            {currentUser?.id === comment.userId && (
-                                <div className="flex gap-2 text-xs">
-                                  <button
-                                    onClick={() => {
-                                      setEditingCommentId(comment.id);
-                                      setEditCommentText(comment.content);
-                                    }}
-                                    className="text-gray-400 hover:text-blue-600"
-                                  >
-                                    수정
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleCommentDelete(comment.id)
-                                    }
-                                    className="text-gray-400 hover:text-red-600"
-                                  >
-                                    삭제
-                                  </button>
-                                </div>
-                              )}
+                          )}
+                        </div>
+                        {editing ? (
+                          <div className="mt-3">
+                            <label htmlFor={`comment-edit-${comment.id}`} className="sr-only">
+                              댓글 수정
+                            </label>
+                            <textarea
+                              id={`comment-edit-${comment.id}`}
+                              className={textareaClass}
+                              rows={3}
+                              value={editCommentText}
+                              onChange={(e) => setEditCommentText(e.target.value)}
+                              autoFocus
+                            />
+                            <div className="mt-3 flex justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setEditingCommentId(null)}
+                                className="toss-btn toss-btn-ghost"
+                              >
+                                취소
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleCommentUpdate(comment.id)}
+                                disabled={!editCommentText.trim()}
+                                className="toss-btn toss-btn-primary disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                저장
+                              </button>
+                            </div>
                           </div>
-                          <p className="text-gray-700 whitespace-pre-wrap">
+                        ) : (
+                          <p className="mt-2 whitespace-pre-wrap break-words leading-relaxed text-ink-soft">
                             {comment.content}
                           </p>
-                        </>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </div>
+
+          <div className="mt-10 flex justify-center">
+            <Link to="/boards" className="toss-btn toss-btn-outline">
+              목록으로
+            </Link>
           </div>
         </section>
       </main>
