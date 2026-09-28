@@ -39,10 +39,15 @@ cors:
 # 프론트엔드 URL (이메일 내 관리자 로그인 바로가기 링크 등)
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  # 최초 관리자 계정: 두 값이 모두 있고 그 이메일의 회원이 없을 때만 한 번 만든다 (운영은 환경 변수로 지정)
+  admin:
+    bootstrap-email: ${ADMIN_BOOTSTRAP_EMAIL:}
+    bootstrap-password: ${ADMIN_BOOTSTRAP_PASSWORD:}
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:local-dev-only-jwt-secret-not-for-production-use}
+  # 운영에서는 JWT_SECRET 환경 변수가 필수다 (없으면 기동 실패). local/dev 프로필만 기본값을 둔다.
+  secret: ${JWT_SECRET}
   access-token-validity: ${JWT_ACCESS_VALIDITY:86400} # 24 hours (로그인 유지 개선)
   refresh-token-validity: ${JWT_REFRESH_VALIDITY:2592000} # 30 days
 
