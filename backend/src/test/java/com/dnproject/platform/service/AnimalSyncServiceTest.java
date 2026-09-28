@@ -4,7 +4,9 @@ import com.dnproject.platform.domain.Animal;
 import com.dnproject.platform.domain.constant.AnimalStatus;
 import com.dnproject.platform.dto.publicapi.AnimalItem;
 import com.dnproject.platform.exception.PublicApiException;
+import com.dnproject.platform.repository.AnimalImageRepository;
 import com.dnproject.platform.repository.AnimalRepository;
+import com.dnproject.platform.repository.FavoriteRepository;
 import com.dnproject.platform.repository.ShelterRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +37,12 @@ class AnimalSyncServiceTest {
 
     @Mock
     private ShelterRepository shelterRepository;
+
+    @Mock
+    private FavoriteRepository favoriteRepository;
+
+    @Mock
+    private AnimalImageRepository animalImageRepository;
 
     @Mock
     private PlatformTransactionManager transactionManager;

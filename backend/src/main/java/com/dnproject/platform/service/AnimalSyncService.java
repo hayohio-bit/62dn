@@ -5,7 +5,9 @@ import com.dnproject.platform.domain.Shelter;
 import com.dnproject.platform.domain.constant.*;
 import com.dnproject.platform.dto.publicapi.AnimalItem;
 import com.dnproject.platform.exception.PublicApiException;
+import com.dnproject.platform.repository.AnimalImageRepository;
 import com.dnproject.platform.repository.AnimalRepository;
+import com.dnproject.platform.repository.FavoriteRepository;
 import com.dnproject.platform.repository.ShelterRepository;
 import com.dnproject.platform.util.AddressRegionParser;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +49,8 @@ public class AnimalSyncService {
     private final PublicApiService publicApiService;
     private final AnimalRepository animalRepository;
     private final ShelterRepository shelterRepository;
+    private final FavoriteRepository favoriteRepository;
+    private final AnimalImageRepository animalImageRepository;
     private final PlatformTransactionManager transactionManager;
 
     private TransactionTemplate requiresNewTransactionTemplate;
@@ -275,7 +279,7 @@ public class AnimalSyncService {
 
         if (status == null || isExpired) {
             if (existing.isPresent()) {
-                animalRepository.delete(existing.get());
+                deleteAnimal(existing.get());
                 return SyncAction.REMOVED;
             }
             return SyncAction.SKIPPED;
@@ -290,6 +294,17 @@ public class AnimalSyncService {
         }
         createAnimalFromApi(item);
         return SyncAction.ADDED;
+    }
+
+    /**
+     * 동물을 참조하는 찜·이미지를 먼저 지운 뒤 동물을 삭제한다.
+     * DB 외래 키에 ON DELETE CASCADE가 없으면(Hibernate가 만든 스키마 등) 참조 행 때문에 삭제가 실패한다.
+     */
+    private void deleteAnimal(Animal animal) {
+        List<Animal> target = List.of(animal);
+        favoriteRepository.deleteByAnimalIn(target);
+        animalImageRepository.deleteByAnimalIn(target);
+        animalRepository.delete(animal);
     }
 
     private void updateAnimalFromApi(Animal animal, AnimalItem item) {
