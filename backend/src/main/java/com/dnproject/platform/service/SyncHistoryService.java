@@ -25,8 +25,9 @@ public class SyncHistoryService {
                 .triggerType(triggerType)
                 .addedCount(result.addedCount())
                 .updatedCount(result.updatedCount())
-                .deletedCount(0)
-                .correctedCount(result.removedCount())
+                // 동기화는 보호 종료(입양·반환 등) 동물을 삭제하므로 removedCount는 삭제 건수로 기록한다.
+                .deletedCount(result.removedCount())
+                .correctedCount(0)
                 .errorMessage(errorMessage != null && errorMessage.length() > 1000 ? errorMessage.substring(0, 1000)
                         : errorMessage)
                 .daysParam(daysParam)
