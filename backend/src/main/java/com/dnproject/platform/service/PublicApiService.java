@@ -11,15 +11,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.annotation.PostConstruct;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * 공공데이터포털 - 국가동물보호정보시스템 구조동물조회 API 클라이언트 (v2)
@@ -52,7 +56,7 @@ public class PublicApiService {
     @PostConstruct
     void logApiKeyStatus() {
         if (isApiKeyConfigured()) {
-            log.info("공공 API 키 로드됨 (접두사: {})", serviceKey != null && serviceKey.length() >= 8 ? serviceKey.substring(0, 8) + "..." : "?");
+            log.info("공공 API 키 설정됨");
         } else {
             log.warn("공공 API 키 미설정. backend/.env 의 DATA_API_KEY 를 확인하세요.");
         }
@@ -63,6 +67,8 @@ public class PublicApiService {
     private static final String SHELTER_BASE = "https://apis.data.go.kr/1543061/animalShelterSrvc_v2";
     private static final String SHELTER_LIST_PATH = "/shelterInfo_v2";
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    /** URL 쿼리 문자열의 serviceKey 값. 키 원문과 인코딩 형태가 달라도 가리기 위해 사용한다. */
+    private static final Pattern SERVICE_KEY_PARAM = Pattern.compile("(?i)(serviceKey=)[^&\\s\"'<>]+");
 
     /**
      * 유기동물 목록 조회
@@ -100,17 +106,19 @@ public class PublicApiService {
                     .block();
             List<AnimalItem> result = parseAnimalItems(json);
             if (result.isEmpty() && json != null && json.length() < 2000) {
-                log.info("공공 API 유기동물 조회 빈 결과. 응답(앞 1500자): {}", json.substring(0, Math.min(1500, json.length())));
+                log.info("공공 API 유기동물 조회 빈 결과. 응답(앞 1500자): {}", abbreviate(maskServiceKey(json), 1500));
             } else if (result.isEmpty()) {
                 log.info("공공 API 유기동물 조회 빈 결과. upkind={} state={} bgnde={} endde={} pageNo={}", upkind, state,
                         bgnde != null ? bgnde.format(DATE_FORMAT) : "", endde != null ? endde.format(DATE_FORMAT) : "", pageNo);
             }
             return result;
-        } catch (org.springframework.web.reactive.function.client.WebClientResponseException e) {
-            log.error("공공 API 유기동물 조회 실패: {} - 응답본문: {}", e.getMessage(), e.getResponseBodyAsString());
+        } catch (WebClientResponseException e) {
+            // e.getMessage()에는 serviceKey가 포함된 요청 URL이 들어 있으므로 로그에 쓰지 않는다.
+            log.error("공공 API 유기동물 조회 실패 upkind={} pageNo={}: HTTP {} 응답본문(앞 500자): {}", upkind, pageNo,
+                    e.getStatusCode().value(), abbreviate(maskServiceKey(e.getResponseBodyAsString()), 500));
             return Collections.emptyList();
         } catch (Exception e) {
-            log.error("공공 API 유기동물 조회 실패: {}", e.getMessage());
+            log.error("공공 API 유기동물 조회 실패 upkind={} pageNo={}: {}", upkind, pageNo, describeError(e));
             return Collections.emptyList();
         }
     }
@@ -170,7 +178,7 @@ public class PublicApiService {
             String json = webClientBuilder.build().get().uri(uri).retrieve().bodyToMono(String.class).block();
             return parseShelterItems(json);
         } catch (Exception e) {
-            log.error("공공 API 보호소 조회 실패: {}", e.getMessage());
+            log.error("공공 API 보호소 조회 실패: {}", describeError(e));
             return Collections.emptyList();
         }
     }
@@ -213,7 +221,7 @@ public class PublicApiService {
             String json = webClientBuilder.build().get().uri(uri).retrieve().bodyToMono(String.class).block();
             return parseKindItems(json);
         } catch (Exception e) {
-            log.warn("공공 API 품종 조회 실패 upkind={}: {}", upkind, e.getMessage());
+            log.warn("공공 API 품종 조회 실패 upkind={}: {}", upkind, describeError(e));
             return Collections.emptyList();
         }
     }
@@ -240,5 +248,32 @@ public class PublicApiService {
             log.warn("품종 API 응답 파싱 실패: {}", e.getMessage());
             return Collections.emptyList();
         }
+    }
+
+    /** 문자열에서 서비스 키를 가린다. 외부 응답 본문이나 예외 메시지를 로그에 쓸 때 사용한다. */
+    String maskServiceKey(String text) {
+        if (text == null || text.isEmpty()) return text;
+        String masked = text;
+        if (serviceKey != null && !serviceKey.isBlank()) {
+            masked = masked.replace(serviceKey, "****");
+            String encoded = URLEncoder.encode(serviceKey, StandardCharsets.UTF_8);
+            if (!encoded.equals(serviceKey)) {
+                masked = masked.replace(encoded, "****");
+            }
+        }
+        return SERVICE_KEY_PARAM.matcher(masked).replaceAll("$1****");
+    }
+
+    /** 예외를 로그용 문자열로 바꾼다. WebClient 예외 메시지에는 요청 URL(serviceKey 포함)이 들어가므로 상태 코드만 쓴다. */
+    private String describeError(Throwable e) {
+        if (e instanceof WebClientResponseException wre) {
+            return "HTTP " + wre.getStatusCode().value();
+        }
+        return e.getClass().getSimpleName() + ": " + maskServiceKey(e.getMessage());
+    }
+
+    private static String abbreviate(String s, int max) {
+        if (s == null) return null;
+        return s.length() > max ? s.substring(0, max) + "..." : s;
     }
 }
