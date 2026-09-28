@@ -90,6 +90,12 @@ export function useAdminDashboard() {
       const apiKeyOk = data?.apiKeyConfigured !== false;
       if (!apiKeyOk) {
         setSyncResult("API 키가 설정되지 않았습니다. backend/.env 에 DATA_API_KEY 를 확인하세요.");
+      } else if (data?.success === false) {
+        // 일부 호출만 실패한 경우: 반영된 건수와 실패 사유를 함께 보여 준다
+        setSyncResult(
+          `동기화 일부 실패: 추가 ${added}, 수정 ${updated}, 삭제 ${removed}마리 반영. ` +
+            `실패 요청 ${data.failedRequestCount ?? 0}건${data.errorMessage ? ` (${data.errorMessage})` : ""}`
+        );
       } else if (added === 0 && updated === 0 && removed === 0) {
         setSyncResult("동기화 완료: 변경 없음 (신규/수정된 데이터 없음)");
       } else {

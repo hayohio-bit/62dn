@@ -56,6 +56,10 @@ export const adminApi = {
         days: number;
         species: string;
         apiKeyConfigured?: boolean;
+        /** 일부 공공 API 호출이 실패하면 false */
+        success?: boolean;
+        failedRequestCount?: number;
+        errorMessage?: string;
       }>
     >("/admin/animals/sync-from-public-api", null, {
       params,
