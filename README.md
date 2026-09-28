@@ -1,165 +1,118 @@
-# DN Platform - 62댕냥이 매칭 플랫폼
+# 62댕냥 · 유기동물 입양/임시보호 매칭 플랫폼
 
-유기동물 입양/임시보호 매칭, 봉사활동 및 물품 후원 신청 플랫폼
+전국 보호소의 유기동물 공고를 공공데이터로 모아 보여 주고, 입양·임시보호·봉사·후원을 원하는 사람이 보호소에 바로 연락할 수 있도록 돕는 웹 서비스입니다.
+신청과 예약은 보호소와 전화로 진행하며, 이 서비스는 동물과 보호소 정보를 찾기 쉽게 정리하는 역할을 합니다.
+
+## 화면 구성
+
+| 랜딩 | 가족을 기다리는 아이들 (공고 마감 임박순) |
+| --- | --- |
+| <img src="assets/screenshots/landing.webp" alt="랜딩 페이지" width="420"> | <img src="assets/screenshots/landing-urgent.webp" alt="마감 임박 동물 섹션" width="420"> |
+
+| 입양 가능한 동물 목록 | 동물 상세 |
+| --- | --- |
+| <img src="assets/screenshots/animals.webp" alt="동물 목록" width="420"> | <img src="assets/screenshots/animal-detail.webp" alt="동물 상세" width="420"> |
+
+| 봉사·기부 안내 (보호소 검색) | 게시판 |
+| --- | --- |
+| <img src="assets/screenshots/support.webp" alt="봉사·기부 안내" width="420"> | <img src="assets/screenshots/boards.webp" alt="게시판" width="420"> |
+
+| 마이페이지 | 관리자 대시보드 |
+| --- | --- |
+| <img src="assets/screenshots/mypage.webp" alt="마이페이지" width="420"> | <img src="assets/screenshots/admin.webp" alt="관리자 대시보드" width="420"> |
+
+| 모바일 |
+| --- |
+| <img src="assets/screenshots/mobile.webp" alt="모바일 동물 목록" width="220"> |
+
+> 스크린샷은 `local` 프로필의 데모 데이터로 찍었습니다. 동물 사진은 Unsplash 이미지입니다.
+
+## 주요 기능
+
+- 유기동물 목록: 종류·크기·시/도 필터와 이름·품종·보호소 검색, 공고 마감일(D-day) 표시
+- 동물 상세: 보호소·담당자 연락처, 지도, 입양·임보 절차 안내
+- 나를 위한 추천: 회원이 저장한 선호 조건(종류, 나이, 크기, 지역)에 맞는 동물 추천
+- 관심 동물(찜) 저장
+- 봉사·기부 안내: 보호소 검색과 전화 연결 안내
+- 게시판: 공지사항·FAQ·자유게시판, 댓글
+- 회원: 이메일 가입·로그인, 카카오·구글 로그인, 이메일 찾기, 비밀번호 재설정
+- 관리자: 회원 관리, 게시글 고정·삭제, 공공데이터 수동 동기화와 동기화 이력
 
 ## 기술 스택
 
-### Frontend
-- React 18 + TypeScript
-- Vite (빌드 도구)
-- TailwindCSS (스타일링)
-- React Query (서버 상태 관리)
-- Zustand (클라이언트 상태 관리)
-- Axios (HTTP 클라이언트)
+| 영역 | 사용 기술 |
+| --- | --- |
+| Frontend | React 18, TypeScript, Vite 5, TailwindCSS, TanStack Query, Zustand, Axios, Framer Motion |
+| Backend | Java 21, Spring Boot 3.2, Spring Security + JWT, Spring Data JPA, Flyway, springdoc-openapi |
+| DB | MySQL 8 (운영·개발), H2 인메모리 (`local` 데모 프로필) |
+| 외부 연동 | 공공데이터포털 농림축산식품부 구조동물 조회 API, 카카오 지도, 카카오·구글 OAuth |
+| 인프라 | AWS EC2 + RDS, Nginx, GitHub Actions, Terraform |
 
-### Backend
-- Java 21
-- Spring Boot 3.2
-- Spring Security + JWT
-- Spring Data JPA
-- MySQL 8.0
+## 빠른 시작 (MySQL 없이 데모 실행)
 
-### External Services
-- 공공데이터 API (유기동물/보호소 정보)
-- Resend (이메일 발송)
-- Map API (지도)
+요구사항: Java 21, Node.js 20 이상
 
-## 입양 파트와 쇼핑몰 구조 참조
+```bash
+# 1) 백엔드: H2 인메모리 DB와 데모 데이터로 실행 (http://localhost:8080)
+cd backend
+./gradlew bootRun --args='--spring.profiles.active=local'
 
-- **입양(동물 목록·상세·신청)** 은 쇼핑몰 구조에서 일정 부분을 차용합니다 (썸네일 카드, 상세 페이지, “주문” → “입양 신청”).
-- **백엔드**: 프로젝트 루트의 `스프링부트_Gemini.md` (Spring Boot 쇼핑몰) 아키텍처를 참조합니다. Item → Animal, ItemImg → AnimalImage, Order → Adoption 등으로 도메인만 매핑하여 적용.
-- **프론트엔드**: 책/문서는 Thymeleaf 기준이지만, **본 프로젝트는 React**로 구현합니다.
-- 상세 매핑표와 기능 대응은 [docs/입양_쇼핑몰_구조_매핑.md](docs/입양_쇼핑몰_구조_매핑.md)를 참고하세요.
+# 2) 프론트엔드: 다른 터미널에서 실행 (http://localhost:5173, /api 요청은 8080으로 프록시)
+cd frontend
+npm ci
+npm run dev
+```
+
+`local` 프로필은 기동할 때마다 DB를 새로 만들고 보호소 6곳, 동물 20마리, 게시글과 댓글을 넣습니다.
+
+| 계정 | 이메일 | 비밀번호 |
+| --- | --- | --- |
+| 데모 회원 | `demo@62dn.local` | `demo1234!` |
+| 관리자 | `admin@admin.com` | `1234` |
+
+공공데이터 동기화까지 시험하려면 `backend/.env`에 `DATA_API_KEY`(공공데이터포털에서 발급한 인코딩 키)를 넣고, 관리자 대시보드의 "API 수동 동기화" 탭에서 실행합니다.
+
+## 개발 환경 (MySQL)
+
+1. MySQL 8에 `dn_platform` 데이터베이스를 만듭니다. `dev` 프로필은 `ddl-auto: update`로 테이블을 자동 생성합니다.
+2. `backend/.env.example`을 `backend/.env`로 복사해 DB 계정과 API 키를 채웁니다.
+3. `cd backend && ./gradlew bootRun` (기본 프로필 `dev`)
+4. `frontend/.env.example`을 `frontend/.env`로 복사해 카카오 지도·OAuth 키를 채운 뒤 `npm run dev`
+
+API 문서는 백엔드 실행 후 http://localhost:8080/swagger-ui.html 에서 볼 수 있습니다.
 
 ## 프로젝트 구조
 
 ```
-DN_project01/
-├── frontend/              # React 프론트엔드
-│   ├── src/
-│   │   ├── api/          # API 통신 모듈
-│   │   ├── components/   # 재사용 컴포넌트
-│   │   ├── pages/        # 페이지 컴포넌트
-│   │   ├── hooks/        # 커스텀 훅
-│   │   ├── store/        # Zustand 스토어
-│   │   ├── types/        # TypeScript 타입
-│   │   └── utils/        # 유틸리티 함수
-│   └── ...
-│
-├── backend/               # Spring Boot 백엔드
+.
+├── backend/                  Spring Boot API 서버
 │   └── src/main/java/com/dnproject/platform/
-│       ├── config/       # 설정 클래스
-│       ├── security/     # 보안 (JWT)
-│       ├── domain/       # Entity 클래스
-│       ├── repository/   # JPA Repository
-│       ├── service/      # 비즈니스 로직
-│       ├── controller/   # REST Controller
-│       ├── dto/          # DTO 클래스
-│       ├── exception/    # 예외 처리
-│       └── constant/     # 상수, Enum
-│
-├── docs/                  # 문서
-│   ├── API_SPEC.md       # API 명세서
-│   ├── 입양_쇼핑몰_구조_매핑.md  # 입양↔쇼핑몰 도메인·기능 매핑 (백엔드=문서 참조, 프론트=React)
-│   └── schema.sql        # MySQL DDL
-│
-└── .claude/skills/        # Claude Code Skills
+│       ├── config/           보안·CORS·스케줄러·초기 데이터
+│       ├── controller/       REST 컨트롤러
+│       ├── domain/           JPA 엔티티, enum
+│       ├── dto/              요청·응답 DTO, 공공 API 응답 모델
+│       ├── mapper/           엔티티 → 응답 변환
+│       ├── repository/       Spring Data JPA 리포지토리
+│       ├── security/         JWT 필터·발급
+│       └── service/          비즈니스 로직, 공공데이터 동기화
+├── frontend/                 React SPA
+│   └── src/
+│       ├── api/              API 모듈
+│       ├── components/       랜딩·목록·관리자 등 UI 컴포넌트
+│       ├── pages/            라우트별 페이지
+│       ├── store/            Zustand 인증 스토어
+│       └── types/            DTO·엔티티 타입
+├── terraform/                AWS 인프라 정의
+└── .github/workflows/        CI, EC2 배포
 ```
 
-## 시작하기
+## 테스트
 
-### 요구사항
-- Node.js 18+
-- Java 21
-- MySQL 8.0 (로컬 설치)
-
-### 환경 설정
-
-1. **데이터베이스 설정 (MySQL 8.0)**
-
-   로컬에 MySQL 8.0을 설치한 뒤, DB `dn_platform`을 생성하고 백엔드가 접속할 수 있게 합니다.  
-   상세 절차(DB 생성, 테이블 생성, 연결 설정)는 **[docs/DATABASE.md](docs/DATABASE.md)** 를 참고하세요.
-
-   - 개발 환경(`application-dev.yml`)에서는 `spring.jpa.hibernate.ddl-auto: update`로 **자동 생성**됩니다.
-   - 수동 DDL이 필요하면 `docs/schema.sql`을 MySQL에 실행하세요.
-
-2. **Backend 실행**
-   ```bash
-   # 프로젝트 루트(DN_project01)에서 - backend/.env 자동 로드
-   ./scripts/run-backend-dev.sh
-   ```
-   (또는 `cd backend` 후 `./gradlew bootRun --args='--spring.profiles.active=dev'`. DB 비밀번호는 `backend/.env` 또는 `DB_PASSWORD` 환경 변수로 설정.)
-
-3. **Frontend 실행**
-   ```bash
-   cd frontend
-   cp .env.example .env   # 최초 1회, 필요 시 VITE_API_BASE_URL 확인
-   npm install
-   npm run dev
-   ```
-
-4. **연동 확인 (로그인·회원가입부터)**  
-   백엔드와 프론트를 둘 다 켠 뒤, 회원가입 → 로그인 → 마이페이지 → 동물 목록 순으로 확인하려면 **[docs/INTEGRATION_CHECK.md](docs/INTEGRATION_CHECK.md)** 를 참고하세요.
-
-### 환경 변수
-
-**Backend (application-dev.yml 또는 환경변수)**
+```bash
+cd backend && ./gradlew build          # 단위 테스트 포함
+cd frontend && npm run lint && npm run build
 ```
-DB_USERNAME=root
-DB_PASSWORD=root
-JWT_SECRET=your-256-bit-base64-encoded-secret
-RESEND_API_KEY=re_xxxxxxxx
-PUBLIC_API_SERVICE_KEY=your-public-api-key
-```
-
-**Frontend (.env)**
-```
-VITE_API_BASE_URL=http://localhost:8080/api
-VITE_MAP_API_KEY=your-map-api-key
-```
-
-## 주요 기능
-
-### 일반 사용자
-- 유기동물 조회 및 검색
-- 입양·임보 절차 안내 (신청·예약은 보호소 전화)
-- 봉사활동 신청
-- 물품 후원 신청
-- 커뮤니티 게시판
-
-### 보호소 관리자
-- 동물 수동 등록 (공공API 미제공 시)
-- 봉사 모집공고 등록
-- 물품 후원 요청 등록
-- 신청 승인/거절 처리
-
-### 시스템 관리자
-- 회원 관리
-- 보호소 인증 관리
-- 전체 게시판 관리
-
-## API 문서
-
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- API 명세서: [docs/API_SPEC.md](docs/API_SPEC.md)
-
-## 개발 가이드
-
-### Claude Code Skills
-이 프로젝트는 `.claude/skills/` 폴더에 개발 가이드를 포함하고 있습니다:
-
-- `feature-planner.md` - 기능 개발 계획 수립
-- `react-component.md` - React 컴포넌트 생성
-- `spring-entity.md` - JPA Entity 생성
-- `spring-api.md` - REST API 생성
-- `spring-security.md` - 보안 설정
-- `api-module.md` - Frontend API 모듈
-- `zustand-store.md` - 상태 관리
-- `database-schema.md` - 데이터베이스 스키마
-- `email-service.md` - 이메일 서비스
-- `public-api.md` - 공공데이터 API 연동
-- `typescript-types.md` - TypeScript 타입 정의
 
 ## 라이선스
 
-MIT License
+[MIT License](LICENSE)
