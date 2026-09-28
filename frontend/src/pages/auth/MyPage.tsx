@@ -239,7 +239,7 @@ export default function MyPage() {
                       className="aspect-square bg-[var(--toss-gray-100)] relative overflow-hidden"
                       style={{
                         backgroundImage: a.imageUrl
-                          ? `url(${a.imageUrl})`
+                          ? `url(${JSON.stringify(a.imageUrl)})`
                           : "none",
                         backgroundSize: "cover",
                         backgroundPosition: "center",

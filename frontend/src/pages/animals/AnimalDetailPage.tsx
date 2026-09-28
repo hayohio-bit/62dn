@@ -194,7 +194,7 @@ export default function AnimalDetailPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div
                   className={`aspect-square bg-[var(--toss-gray-100)] flex items-center justify-center relative overflow-hidden ${animal.imageUrl ? "cursor-pointer hover:opacity-90 transition-opacity" : ""}`}
-                  style={{ backgroundImage: animal.imageUrl ? `url(${animal.imageUrl})` : "none", backgroundSize: "cover", backgroundPosition: "center" }}
+                  style={{ backgroundImage: animal.imageUrl ? `url(${JSON.stringify(animal.imageUrl)})` : "none", backgroundSize: "cover", backgroundPosition: "center" }}
                   onClick={() => animal.imageUrl && setImageModalOpen(true)}
                   role={animal.imageUrl ? "button" : undefined}
                   tabIndex={animal.imageUrl ? 0 : undefined}

@@ -86,7 +86,7 @@ export default function AnimalsPage() {
               <div
                 className="landing-pet-card-img relative overflow-hidden"
                 style={{
-                  backgroundImage: animal.imageUrl ? `url(${animal.imageUrl})` : "none",
+                  backgroundImage: animal.imageUrl ? `url(${JSON.stringify(animal.imageUrl)})` : "none",
                   backgroundColor: animal.imageUrl ? "transparent" : "#f3f4f6",
                   backgroundSize: "cover",
                   backgroundPosition: "center",
