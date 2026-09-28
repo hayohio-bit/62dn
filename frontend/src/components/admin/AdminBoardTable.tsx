@@ -1,6 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import type { BoardResponse } from "@/types/dto";
+import { BoardTypeBadge } from "@/components/boards/BoardTypeBadge";
+import { formatBoardDate } from "@/components/boards/boardFormat";
 
 interface Props {
   state: {
@@ -22,7 +24,8 @@ interface Props {
 }
 
 export default function AdminBoardTable({ state, actions }: Props) {
-  const { boards, boardsLoading, boardsError, boardsPage, boardsTotalPages, boardTypeFilter, boardActionLoading } = state;
+  const { boards, boardsLoading, boardsError, boardsPage, boardsTotalPages, boardTypeFilter, boardActionLoading } =
+    state;
   const { setBoardTypeFilter, setBoardsPage, loadBoards, handleSetBoardPinned, handleDeleteBoard } = actions;
 
   return (
@@ -44,29 +47,27 @@ export default function AdminBoardTable({ state, actions }: Props) {
             <option value="FREE">자유</option>
           </select>
         </label>
+        <Link to="/boards/write" className="admin-btn admin-btn-primary">
+          새 글 쓰기
+        </Link>
       </div>
       {boardsError && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm border border-red-100 flex items-center justify-between gap-2">
+        <div className="admin-alert" role="alert">
           <span>{boardsError}</span>
-          <button
-            type="button"
-            className="admin-btn admin-btn-sm admin-btn-ghost"
-            onClick={loadBoards}
-          >
+          <button type="button" className="admin-btn admin-btn-sm admin-btn-ghost" onClick={loadBoards}>
             다시 불러오기
           </button>
         </div>
       )}
       {boardsLoading ? (
-        <div className="admin-empty">
-          <p>목록 불러오는 중...</p>
+        <div className="admin-empty" role="status">
+          목록을 불러오는 중입니다.
         </div>
       ) : boards.length === 0 && !boardsError ? (
         <div className="admin-empty">
-          <div className="admin-empty-icon" aria-hidden>📋</div>
-          <p>조회된 게시글이 없습니다. 게시판에서 글을 작성하면 여기에서 관리할 수 있습니다.</p>
-          <p className="mt-2 text-sm">
-            <Link to="/boards" className="admin-foot a">게시판 목록 보기 →</Link>
+          <p className="admin-empty-title">조회된 게시글이 없습니다</p>
+          <p>
+            게시판에서 글을 작성하면 여기에서 관리할 수 있습니다. <Link to="/boards">게시판 보기 →</Link>
           </p>
         </div>
       ) : boards.length === 0 && boardsError ? null : (
@@ -75,45 +76,54 @@ export default function AdminBoardTable({ state, actions }: Props) {
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: "center" }}>ID</th>
-                  <th style={{ textAlign: "center" }}>타입</th>
-                  <th style={{ textAlign: "center" }}>제목</th>
-                  <th style={{ textAlign: "center" }}>작성자</th>
-                  <th style={{ textAlign: "center" }}>고정</th>
-                  <th style={{ textAlign: "center" }}>작성일</th>
-                  <th style={{ textAlign: "center" }}>관리</th>
+                  <th className="hidden md:table-cell">ID</th>
+                  <th className="hidden sm:table-cell">종류</th>
+                  <th>제목</th>
+                  <th className="hidden md:table-cell">작성자</th>
+                  <th className="hidden lg:table-cell">작성일</th>
+                  <th className="!text-right">관리</th>
                 </tr>
               </thead>
               <tbody>
                 {boards.map((b) => (
                   <tr key={b.id}>
-                    <td style={{ textAlign: "center" }}>{b.id}</td>
-                    <td style={{ textAlign: "center" }}>
-                      {b.type === "NOTICE" ? "공지" : b.type === "FAQ" ? "FAQ" : "자유"}
+                    <td className="admin-muted hidden md:table-cell">{b.id}</td>
+                    <td className="hidden sm:table-cell">
+                      <BoardTypeBadge type={b.type} />
                     </td>
-                    <td style={{ textAlign: "left" }}>{b.title}</td>
-                    <td style={{ textAlign: "center" }}>{b.userName ?? "-"}</td>
-                    <td style={{ textAlign: "center" }}>{b.isPinned ? "고정" : "-"}</td>
-                    <td style={{ textAlign: "center" }}>
-                      {b.createdAt ? new Date(b.createdAt).toLocaleDateString("ko-KR") : "-"}
+                    <td className="sm:min-w-[14rem]">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <BoardTypeBadge type={b.type} className="sm:hidden" />
+                        {b.isPinned && <span className="admin-pill admin-pill--accent">고정</span>}
+                      </div>
+                      <Link
+                        to={`/boards/${b.id}`}
+                        className="mt-1 line-clamp-2 font-serif text-base hover:text-terracotta sm:mt-0 sm:line-clamp-1"
+                      >
+                        {b.title}
+                      </Link>
                     </td>
-                    <td style={{ textAlign: "center" }}>
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn-sm admin-btn-ghost"
-                        disabled={boardActionLoading === b.id}
-                        onClick={() => handleSetBoardPinned(b.id, !b.isPinned)}
-                      >
-                        {boardActionLoading === b.id ? "..." : b.isPinned ? "고정 해제" : "고정"}
-                      </button>
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn-sm admin-btn-danger"
-                        disabled={boardActionLoading === b.id}
-                        onClick={() => handleDeleteBoard(b.id)}
-                      >
-                        삭제
-                      </button>
+                    <td className="hidden whitespace-nowrap text-ink-soft md:table-cell">{b.userName ?? "-"}</td>
+                    <td className="admin-muted hidden lg:table-cell">{formatBoardDate(b.createdAt)}</td>
+                    <td className="!text-right">
+                      <div className="admin-btn-group flex-col items-end sm:flex-row sm:justify-end">
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn-sm admin-btn-ghost"
+                          disabled={boardActionLoading === b.id}
+                          onClick={() => handleSetBoardPinned(b.id, !b.isPinned)}
+                        >
+                          {boardActionLoading === b.id ? "..." : b.isPinned ? "고정 해제" : "고정"}
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn-sm admin-btn-danger-ghost"
+                          disabled={boardActionLoading === b.id}
+                          onClick={() => handleDeleteBoard(b.id)}
+                        >
+                          삭제
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -127,7 +137,7 @@ export default function AdminBoardTable({ state, actions }: Props) {
               disabled={boardsPage <= 0}
               onClick={() => setBoardsPage((p) => p - 1)}
             >
-              이전
+              ← 이전
             </button>
             <span className="admin-pagination-info">
               {boardsPage + 1} / {Math.max(1, boardsTotalPages)}
@@ -138,7 +148,7 @@ export default function AdminBoardTable({ state, actions }: Props) {
               disabled={boardsPage >= boardsTotalPages - 1}
               onClick={() => setBoardsPage((p) => p + 1)}
             >
-              다음
+              다음 →
             </button>
           </div>
         </>

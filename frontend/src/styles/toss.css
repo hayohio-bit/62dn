@@ -788,8 +788,8 @@ select.toss-auth-input {
 
 .admin-dashboard main {
   flex: 1;
-  padding-top: calc(var(--header-height) + 2.5rem);
-  padding-bottom: var(--toss-space-16);
+  padding-top: calc(var(--header-height) + 3rem);
+  padding-bottom: 6rem;
 }
 
 .admin-dashboard-inner {
@@ -799,24 +799,97 @@ select.toss-auth-input {
 }
 
 .admin-dashboard-head {
-  margin-bottom: var(--toss-space-8);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .admin-dashboard-title {
   font-family: var(--dn-font-serif);
-  font-size: 2.5rem;
+  font-size: clamp(2.25rem, 4.5vw, 3rem);
   font-weight: 400;
+  line-height: 1.15;
   color: var(--toss-black);
   letter-spacing: -0.02em;
-  margin: 0 0 var(--toss-space-2) 0;
+  margin: 0.75rem 0 0.5rem 0;
 }
 
 .admin-dashboard-desc {
-  font-size: var(--toss-text-caption);
+  font-size: 0.9375rem;
   color: var(--toss-gray-700);
   margin: 0;
 }
 
+/* 요약 수치 카드 */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (min-width: 1024px) {
+  .admin-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+.admin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1.25rem;
+  border-radius: var(--toss-radius-lg);
+  background-color: var(--dn-paper);
+  border: 1px solid var(--dn-line);
+  box-shadow: var(--dn-shadow-card);
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .admin-stat {
+    padding: 1.5rem 1.75rem;
+  }
+}
+
+.admin-stat-label {
+  font-size: 0.8125rem;
+  font-weight: var(--toss-font-semibold);
+  color: var(--toss-gray-500);
+}
+
+.admin-stat-value {
+  font-family: var(--dn-font-serif);
+  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+  line-height: 1.1;
+  color: var(--toss-black);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-stat-unit {
+  margin-left: 0.25rem;
+  font-family: var(--toss-font-sans);
+  font-size: 0.875rem;
+  color: var(--toss-gray-500);
+}
+
+.admin-stat-sub {
+  font-size: 0.8125rem;
+  color: var(--toss-gray-600);
+}
+
+.admin-stat--accent .admin-stat-value {
+  color: var(--toss-blue);
+}
+
+/* 탭: 알약형 세그먼트 */
 .admin-tabs {
   display: inline-flex;
   gap: 0.25rem;
@@ -824,11 +897,13 @@ select.toss-auth-input {
   margin-bottom: var(--toss-space-6);
   background: rgba(34, 28, 22, 0.06);
   border-radius: 999px;
-  flex-wrap: wrap;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .admin-tab {
-  padding: 0.5625rem 1.25rem;
+  padding: 0.5625rem 1rem;
   font-size: var(--toss-text-caption);
   font-weight: var(--toss-font-semibold);
   color: var(--toss-gray-700);
@@ -840,6 +915,12 @@ select.toss-auth-input {
     color 0.2s ease,
     background-color 0.2s ease;
   white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .admin-tab {
+    padding: 0.5625rem 1.25rem;
+  }
 }
 
 .admin-tab:hover {
@@ -860,13 +941,19 @@ select.toss-auth-input {
 }
 
 .admin-card-head {
-  padding: 1.25rem 1.75rem;
+  padding: 1.5rem 1.25rem 1.25rem;
   border-bottom: 1px solid var(--dn-line);
+}
+
+@media (min-width: 640px) {
+  .admin-card-head {
+    padding: 1.75rem 2rem 1.5rem;
+  }
 }
 
 .admin-card-title {
   font-family: var(--dn-font-serif);
-  font-size: 1.375rem;
+  font-size: 1.5rem;
   font-weight: 400;
   color: var(--toss-black);
   margin: 0 0 var(--toss-space-1) 0;
@@ -879,11 +966,87 @@ select.toss-auth-input {
 }
 
 .admin-card-body {
-  padding: 1.5rem 1.75rem;
+  padding: 1.25rem;
 }
 
+@media (min-width: 640px) {
+  .admin-card-body {
+    padding: 1.5rem 2rem 2rem;
+  }
+}
+
+/* 카드 안의 작은 구획 (동기화 작업 등) */
+.admin-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-radius: var(--toss-radius-lg);
+  background: #fff;
+  border: 1px solid var(--dn-line);
+}
+
+.admin-panel-title {
+  font-family: var(--dn-font-serif);
+  font-size: 1.25rem;
+  color: var(--toss-black);
+  margin: 0;
+}
+
+.admin-panel-text {
+  font-size: var(--toss-text-caption);
+  line-height: 1.7;
+  color: var(--toss-gray-700);
+  margin: 0;
+}
+
+.admin-note {
+  padding: 0.75rem 1rem;
+  border-radius: var(--toss-radius);
+  background: var(--dn-cream);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--toss-gray-700);
+}
+
+.admin-note a {
+  color: var(--toss-blue);
+  text-underline-offset: 3px;
+}
+
+.admin-alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: var(--toss-space-4);
+  padding: 0.75rem 1rem;
+  border-radius: var(--toss-radius);
+  background-color: var(--toss-blue-light);
+  border: 1px solid rgba(200, 85, 61, 0.3);
+  font-size: var(--toss-text-caption);
+  color: var(--toss-blue-dark);
+}
+
+.admin-result {
+  font-size: var(--toss-text-caption);
+  font-weight: var(--toss-font-medium);
+  color: #4f5a2f;
+}
+
+/* 표 */
 .admin-table-wrap {
   overflow-x: auto;
+  margin: 0 -1.25rem;
+  padding: 0 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .admin-table-wrap {
+    margin: 0;
+    padding: 0;
+  }
 }
 
 .admin-table {
@@ -894,43 +1057,100 @@ select.toss-auth-input {
 
 .admin-table th,
 .admin-table td {
-  padding: 0.875rem 1rem;
+  padding: 0.875rem 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--dn-line);
+  vertical-align: middle;
 }
 
 .admin-table th {
   font-weight: var(--toss-font-semibold);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
   color: var(--toss-gray-500);
   background-color: transparent;
+  white-space: nowrap;
+}
+
+.admin-table tbody tr {
+  transition: background-color 0.15s ease;
 }
 
 .admin-table tbody tr:hover {
   background-color: rgba(34, 28, 22, 0.03);
 }
 
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .admin-table td {
   color: var(--toss-gray-900);
 }
 
+.admin-table .admin-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-table .admin-muted {
+  color: var(--toss-gray-500);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 1.5rem;
+  padding: 0 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: var(--toss-font-semibold);
+  white-space: nowrap;
+  color: var(--toss-gray-700);
+  box-shadow: inset 0 0 0 1px rgba(34, 28, 22, 0.18);
+}
+
+.admin-pill--ink {
+  color: var(--dn-cream);
+  background: var(--toss-black);
+  box-shadow: none;
+}
+
+.admin-pill--accent {
+  color: var(--toss-blue-dark);
+  background: var(--toss-blue-light);
+  box-shadow: none;
+}
+
+.admin-pill--sage {
+  color: #4f5a2f;
+  background: var(--dn-sage-light);
+  box-shadow: none;
+}
+
+/* 버튼 */
 .admin-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1rem;
+  padding: 0.5625rem 1.125rem;
   font-size: var(--toss-text-caption);
   font-weight: var(--toss-font-semibold);
   border-radius: 999px;
   border: none;
   cursor: pointer;
+  white-space: nowrap;
   transition:
     opacity 0.2s ease,
-    background-color 0.2s ease;
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
 }
 
 .admin-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -955,12 +1175,12 @@ select.toss-auth-input {
 }
 
 .admin-btn-group {
-  display: flex;
+  display: inline-flex;
   gap: var(--toss-space-2);
 }
 
 .admin-btn-sm {
-  padding: 0.3125rem 0.75rem;
+  padding: 0.375rem 0.8125rem;
   font-size: 0.8125rem;
 }
 
@@ -973,10 +1193,24 @@ select.toss-auth-input {
   background-color: var(--toss-blue-hover);
 }
 
+/* 되돌릴 수 없는 작업을 목록 안에서 조용히 보여 주는 외곽선 버튼 */
+.admin-btn-danger-ghost {
+  background-color: transparent;
+  color: var(--toss-blue-dark);
+  box-shadow: inset 0 0 0 1px rgba(200, 85, 61, 0.35);
+}
+
+.admin-btn-danger-ghost:hover:not(:disabled) {
+  background-color: var(--toss-blue-light);
+  box-shadow: inset 0 0 0 1px var(--toss-blue);
+}
+
 .admin-filters {
   margin-bottom: var(--toss-space-4);
   display: flex;
-  gap: var(--toss-space-4);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--toss-space-3) var(--toss-space-4);
   flex-wrap: wrap;
 }
 
@@ -985,20 +1219,34 @@ select.toss-auth-input {
   align-items: center;
   gap: var(--toss-space-2);
   font-size: var(--toss-text-caption);
+  font-weight: var(--toss-font-medium);
   color: var(--toss-gray-700);
 }
 
-.admin-select {
-  padding: 0.5rem 0.875rem;
+.admin-filter-count {
   font-size: var(--toss-text-caption);
-  border: 1px solid var(--toss-gray-300);
+  color: var(--toss-gray-500);
+}
+
+.admin-select {
+  height: 2.5rem;
+  padding: 0 2.25rem 0 1rem;
+  font-size: var(--toss-text-caption);
+  border: 1px solid rgba(34, 28, 22, 0.14);
   border-radius: 999px;
   background-color: #fff;
   color: var(--toss-gray-900);
+  cursor: pointer;
+}
+
+.admin-select:focus {
+  outline: none;
+  border-color: var(--toss-blue);
+  box-shadow: 0 0 0 4px rgba(200, 85, 61, 0.14);
 }
 
 .admin-pagination {
-  margin-top: var(--toss-space-4);
+  margin-top: var(--toss-space-6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1008,19 +1256,27 @@ select.toss-auth-input {
 .admin-pagination-info {
   font-size: var(--toss-text-caption);
   color: var(--toss-gray-600);
+  font-variant-numeric: tabular-nums;
 }
 
 .admin-empty {
-  padding: var(--toss-space-12);
+  padding: 3.5rem 1rem;
   text-align: center;
   color: var(--toss-gray-500);
   font-size: var(--toss-text-caption);
 }
 
-.admin-empty-icon {
-  font-size: 2rem;
-  margin-bottom: var(--toss-space-4);
-  opacity: 0.6;
+.admin-empty-title {
+  font-family: var(--dn-font-serif);
+  font-size: 1.375rem;
+  color: var(--toss-black);
+  margin-bottom: 0.5rem;
+}
+
+.admin-empty a {
+  color: var(--toss-blue);
+  font-weight: var(--toss-font-semibold);
+  text-decoration: none;
 }
 
 .admin-foot {
@@ -1030,11 +1286,11 @@ select.toss-auth-input {
 }
 
 .admin-foot a {
-  color: var(--toss-blue);
+  color: var(--toss-gray-700);
   text-decoration: none;
   font-weight: var(--toss-font-medium);
 }
 
 .admin-foot a:hover {
-  text-decoration: underline;
+  color: var(--toss-black);
 }
