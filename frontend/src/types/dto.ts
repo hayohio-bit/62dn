@@ -8,10 +8,6 @@ import type {
   Board,
   Comment,
   Preference,
-  Species,
-  Gender,
-  Size,
-  AnimalStatus,
   BoardType,
 } from "./entities";
 
@@ -89,7 +85,6 @@ export interface AnimalListRequest {
   species?: "DOG" | "CAT";
   /** 동물 크기 필터 (API param: animalSize, size와 충돌 방지) */
   animalSize?: "SMALL" | "MEDIUM" | "LARGE";
-  age?: number;
   status?: "PROTECTED" | "FOSTERING";
   /** 보호소 주소 기준 지역 필터 (시·도 키워드, 예: 서울, 경기) */
   region?: string;
@@ -97,27 +92,11 @@ export interface AnimalListRequest {
   sigungu?: string;
   /** 이름·품종·보호소명 검색 (서버 검색) */
   search?: string;
-  /** 정렬: random(기본, 많은 아이들이 골고루 노출), createdAt,desc 등 */
+  /** 정렬: "필드,방향" 형식 (서버 기본값 noticeEndDate,asc) */
   sort?: string;
   page?: number;
-  pageSize?: number;
   /** 백엔드 동물 목록 API 페이지 크기 파라미터명 */
   sizeParam?: number;
-}
-
-export interface AnimalCreateRequest {
-  shelterId: number;
-  species: Species;
-  breed?: string;
-  name?: string;
-  age?: number;
-  gender?: Gender;
-  size?: Size;
-  description?: string;
-  imageUrl?: string;
-  neutered?: boolean;
-  vaccinated?: boolean;
-  status?: AnimalStatus;
 }
 
 export type AnimalResponse = Animal;
@@ -156,35 +135,3 @@ export interface PreferenceRequest {
 }
 
 export type PreferenceResponse = Preference;
-
-// ========== Admin - Shelter (관리자 보호소 인증) ==========
-export type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
-
-export interface ShelterResponse {
-  id: number;
-  name: string;
-  address: string;
-  phone: string;
-  email: string | null;
-  businessRegistrationNumber: string | null;
-  businessRegistrationFile: string | null;
-  verificationStatus: VerificationStatus;
-  createdAt: string;
-}
-
-export interface ShelterVerifyRequest {
-  status: "APPROVED" | "REJECTED";
-  rejectReason?: string;
-}
-
-// ========== Notification DTOs ==========
-export interface NotificationResponse {
-  id: number;
-  type: string;
-  message: string;
-  isRead: boolean;
-  relatedUrl?: string;
-  createdAt: string;
-}
-
-export type NotificationListResponse = PageResponse<NotificationResponse>;

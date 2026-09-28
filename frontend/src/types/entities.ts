@@ -94,15 +94,6 @@ export interface Comment {
   createdAt: string;
 }
 
-export interface Shelter {
-  id: number;
-  name: string;
-  address: string;
-  phone: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  createdAt: string;
-}
-
 export interface PublicShelterResponse {
   id: number;
   name: string;

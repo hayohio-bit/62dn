@@ -1,6 +1,6 @@
 /**
  * Animal API 모듈
- * 동물 목록 조회, 상세 조회, 등록(보호소)
+ * 동물 목록 조회, 상세 조회, 긴급 동물 조회
  */
 
 import axiosInstance from "@/lib/axios";
@@ -8,7 +8,6 @@ import type {
   AnimalListRequest,
   AnimalResponse,
   AnimalListResponse,
-  AnimalCreateRequest,
   ApiResponse,
 } from "@/types/dto";
 
@@ -43,17 +42,6 @@ export const animalApi = {
     const response = await axiosInstance.get<ApiResponse<AnimalResponse[]>>(
       "/animals/urgent",
       { params: { limit } }
-    );
-    return response.data.data;
-  },
-
-  /**
-   * 동물 등록 (입양 게시판 수동 등록, 보호소)
-   */
-  create: async (data: AnimalCreateRequest) => {
-    const response = await axiosInstance.post<ApiResponse<AnimalResponse>>(
-      "/animals",
-      data,
     );
     return response.data.data;
   },
