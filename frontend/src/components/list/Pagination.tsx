@@ -1,5 +1,5 @@
 /**
- * 2026 트렌드: 페이지네이션 (이전/다음 + 페이지 번호 + N개씩 보기)
+ * 페이지네이션 (이전/다음 + 페이지 번호 + N개씩 보기)
  */
 interface PaginationProps {
   page: number;
@@ -10,6 +10,8 @@ interface PaginationProps {
   onSizeChange?: (size: number) => void;
   sizeOptions?: number[];
   className?: string;
+  /** 개수 단위 (예: "마리"). 기본값은 "건" */
+  unit?: string;
 }
 
 export default function Pagination({
@@ -21,6 +23,7 @@ export default function Pagination({
   onSizeChange,
   sizeOptions = [10, 15, 20, 30],
   className = "",
+  unit = "건",
 }: PaginationProps) {
   const start = totalElements === 0 ? 0 : page * size + 1;
   const end = Math.min((page + 1) * size, totalElements);
@@ -42,10 +45,11 @@ export default function Pagination({
   })();
 
   return (
-    <div className={`list-pagination ${className}`}>
+    <div className={`list-pagination ${className}`.trim()}>
       <div className="list-pagination-info">
         <span className="list-pagination-range">
-          전체 <strong>{totalElements}</strong>건 중 {start}–{end}
+          전체 <strong>{totalElements}</strong>
+          {unit} 중 {start}–{end}
         </span>
         {onSizeChange && (
           <div className="list-pagination-size">
@@ -75,14 +79,7 @@ export default function Pagination({
           onClick={() => onPageChange(page - 1)}
           aria-label="이전 페이지"
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
@@ -113,14 +110,7 @@ export default function Pagination({
           onClick={() => onPageChange(page + 1)}
           aria-label="다음 페이지"
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M9 18l6-6-6-6" />
           </svg>
         </button>
