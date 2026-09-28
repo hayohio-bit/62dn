@@ -1,5 +1,10 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import AuthLayout from "@/components/auth/AuthLayout";
+
+const steps = [
+  "카카오·구글 계정으로 가입하셨다면 해당 계정으로 로그인해 주세요.",
+  "이메일로 가입하셨다면 가입한 이메일 주소로 아래 주소에 재설정을 요청해 주세요.",
+];
 
 /**
  * 비밀번호 재설정 안내.
@@ -8,40 +13,43 @@ import { motion } from "framer-motion";
  */
 export default function ResetPasswordPage() {
   return (
-    <div className="toss-auth-page">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-        className="toss-auth-wrap"
-      >
-        <div className="toss-auth-head">
-          <h1 className="toss-auth-title">비밀번호 재설정</h1>
-          <p className="toss-auth-desc">
-            본인 확인 절차를 준비하는 동안 온라인 재설정을 제공하지 않습니다
-          </p>
-        </div>
-
-        <div className="toss-auth-card">
-          <p style={{ fontSize: "0.95rem", color: "var(--toss-gray-700)", lineHeight: 1.7, marginBottom: 24 }}>
-            카카오·구글 계정으로 가입하셨다면 해당 계정으로 로그인해 주세요.
-            <br />
-            이메일로 가입하셨다면 가입한 이메일 주소로{" "}
-            <a href="mailto:contact@dnplatform.com" className="toss-auth-link">
-              contact@dnplatform.com
-            </a>
-            에 재설정을 요청해 주세요.
-          </p>
-          <Link to="/login" className="toss-auth-submit" style={{ display: "block", textAlign: "center" }}>
-            로그인으로 돌아가기
+    <AuthLayout
+      eyebrow="Password"
+      title="비밀번호 재설정"
+      description="본인 확인 절차를 준비하는 동안 온라인 재설정을 제공하지 않습니다."
+      image="/success-story-3.webp"
+      imageAlt="새 가족 곁에서 쉬고 있는 반려동물"
+      quote="잠시 멈춰도 괜찮아요. 아이들은 여기서 기다리고 있어요."
+      quoteCaption="62댕냥 계정 찾기"
+      footer={
+        <p>
+          <Link to="/find-email" className="toss-auth-link toss-auth-link--muted">
+            이메일 찾기
           </Link>
-          <p className="toss-auth-foot">
-            <Link to="/find-email" className="toss-auth-link">
-              이메일 찾기
-            </Link>
-          </p>
-        </div>
-      </motion.div>
-    </div>
+        </p>
+      }
+    >
+      <div className="toss-auth-card">
+        <ol className="space-y-5">
+          {steps.map((text, i) => (
+            <li key={text} className="flex gap-4">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-terracotta-50 font-serif text-terracotta-700">
+                {i + 1}
+              </span>
+              <p className="pt-1 leading-relaxed text-ink-soft">{text}</p>
+            </li>
+          ))}
+        </ol>
+        <a
+          href="mailto:contact@dnplatform.com"
+          className="mt-5 block rounded-2xl border border-ink/10 bg-white px-5 py-4 text-center font-serif text-lg text-ink transition-colors hover:border-terracotta hover:text-terracotta"
+        >
+          contact@dnplatform.com
+        </a>
+        <Link to="/login" className="toss-auth-submit">
+          로그인으로 돌아가기
+        </Link>
+      </div>
+    </AuthLayout>
   );
 }

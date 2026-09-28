@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { authApi } from "@/api/auth";
 import { useAuthStore } from "@/store/authStore";
 import { getApiErrorMessage } from "@/lib/apiError";
+import AuthPending from "@/components/auth/AuthPending";
 
 export default function KakaoCallback() {
   const [searchParams] = useSearchParams();
@@ -44,37 +45,5 @@ export default function KakaoCallback() {
     handleKakaoLogin();
   }, [searchParams, navigate, login]);
 
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        gap: "1rem",
-        backgroundColor: "#f9fafb",
-      }}
-    >
-      <div
-        style={{
-          width: "40px",
-          height: "40px",
-          border: "4px solid #f3f3f3",
-          borderTop: "4px solid #3182f6",
-          borderRadius: "50%",
-          animation: "spin 1s linear infinite",
-        }}
-      />
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-      <p style={{ color: "#6b7684", fontSize: "1.25rem", fontWeight: 600 }}>
-        카카오 로그인 처리 중...
-      </p>
-    </div>
-  );
+  return <AuthPending message="카카오 계정으로 로그인하고 있어요" />;
 }

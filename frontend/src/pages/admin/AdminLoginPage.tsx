@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { authApi } from "@/api/auth";
 import { useAuthStore } from "@/store/authStore";
 import type { LoginRequest } from "@/types/dto";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import AuthLayout from "@/components/auth/AuthLayout";
+import PasswordInput from "@/components/auth/PasswordInput";
 
 const ADMIN_ROLES = ["SUPER_ADMIN"];
 
@@ -68,97 +68,77 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="toss-page-with-fixed-header min-h-screen flex flex-col bg-[var(--toss-gray-100)]">
-      <Header />
-      <main className="flex-1 flex items-center justify-center pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-          className="toss-section-inner"
-          style={{ maxWidth: "28rem" }}
-        >
-          <div className="toss-auth-head">
-            <h1 className="toss-auth-title">관리자 로그인</h1>
-            <p className="toss-auth-desc">시스템 관리자 전용 로그인입니다.</p>
-          </div>
+    <AuthLayout
+      eyebrow="Back office"
+      title="관리자 로그인"
+      description="시스템 관리자 전용 로그인입니다."
+      image="/success-story-3.webp"
+      imageAlt="새 가족 곁에서 쉬고 있는 반려동물"
+      quote="보이지 않는 곳에서 공고 하나하나를 지키는 일."
+      quoteCaption="62댕냥 관리자"
+      footer={
+        <p>
+          <Link to="/login" className="toss-auth-link toss-auth-link--muted">
+            ← 일반 회원 로그인
+          </Link>
+        </p>
+      }
+    >
+      <form onSubmit={handleSubmit} className="toss-auth-card">
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="toss-auth-notice"
+            role="status"
+          >
+            {success}
+          </motion.div>
+        )}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="toss-auth-error"
+            role="alert"
+          >
+            {error}
+          </motion.div>
+        )}
 
-          <form onSubmit={handleSubmit} className="toss-auth-card">
-            {success && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="toss-auth-error"
-                style={{
-                  backgroundColor: "var(--toss-blue-light)",
-                  borderColor: "var(--toss-blue)",
-                  color: "var(--toss-blue-dark)",
-                }}
-              >
-                {success}
-              </motion.div>
-            )}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="toss-auth-error"
-              >
-                {error}
-              </motion.div>
-            )}
+        <div className="toss-auth-field">
+          <label htmlFor="admin-login-email" className="toss-auth-label">
+            이메일
+          </label>
+          <input
+            id="admin-login-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="toss-auth-input"
+            placeholder="admin@example.com"
+            autoComplete="email"
+          />
+        </div>
+        <div className="toss-auth-field">
+          <label htmlFor="admin-login-password" className="toss-auth-label">
+            비밀번호
+          </label>
+          <PasswordInput
+            id="admin-login-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="비밀번호"
+            autoComplete="current-password"
+          />
+        </div>
 
-            <div className="toss-auth-field">
-              <label htmlFor="admin-login-email" className="toss-auth-label">
-                이메일
-              </label>
-              <input
-                id="admin-login-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="toss-auth-input"
-                placeholder="you@example.com"
-                autoComplete="email"
-              />
-            </div>
-            <div className="toss-auth-field">
-              <label htmlFor="admin-login-password" className="toss-auth-label">
-                비밀번호
-              </label>
-              <input
-                id="admin-login-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="toss-auth-input"
-                placeholder="비밀번호"
-                autoComplete="current-password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="toss-auth-submit"
-            >
-              {loading ? "로그인 중..." : "로그인"}
-            </button>
-
-            <p className="toss-auth-foot">
-              <Link
-                to="/login"
-                className="toss-auth-link text-sm text-gray-500"
-              >
-                ← 일반 회원 로그인
-              </Link>
-            </p>
-          </form>
-        </motion.div>
-      </main>
-      <Footer />
-    </div>
+        <button type="submit" disabled={loading} className="toss-auth-submit">
+          {loading ? "로그인 중..." : "관리자 로그인"}
+        </button>
+      </form>
+    </AuthLayout>
   );
 }

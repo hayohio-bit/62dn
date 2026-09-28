@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { authApi } from "@/api/auth";
 import { useAuthStore } from "@/store/authStore";
 import type { LoginRequest } from "@/types/dto";
+import AuthLayout from "@/components/auth/AuthLayout";
+import PasswordInput from "@/components/auth/PasswordInput";
 
 const STORAGE_EMAIL = "login_saved_email";
 const STORAGE_REMEMBER_EMAIL = "login_remember_email";
@@ -123,208 +125,141 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="toss-auth-page">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-        className="toss-auth-wrap"
-      >
-        <div className="toss-auth-head">
-          <h1 className="toss-auth-title">로그인</h1>
-          <p className="toss-auth-desc">
-            62댕냥이와 함께 따뜻한 가족을 만나보세요
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="toss-auth-card">
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="toss-auth-error"
-            >
-              {error}
-            </motion.div>
-          )}
-
-          <div className="toss-auth-field">
-            <label htmlFor="login-email" className="toss-auth-label">
-              이메일
-            </label>
-            <input
-              id="login-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="toss-auth-input"
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
-          </div>
-          <div className="toss-auth-field">
-            <label htmlFor="login-password" className="toss-auth-label">
-              비밀번호
-            </label>
-            <input
-              id="login-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="toss-auth-input"
-              placeholder="비밀번호"
-              autoComplete="current-password"
-            />
-          </div>
-
-          <div className="toss-auth-options">
-            <label className="toss-auth-checkbox-row">
-              <input
-                type="checkbox"
-                className="toss-auth-checkbox"
-                checked={rememberEmail}
-                onChange={(e) => setRememberEmail(e.target.checked)}
-              />
-              <span className="toss-auth-checkbox-label">이메일 저장</span>
-            </label>
-            <label className="toss-auth-checkbox-row">
-              <input
-                type="checkbox"
-                className="toss-auth-checkbox"
-                checked={keepLoggedIn}
-                onChange={(e) => setKeepLoggedIn(e.target.checked)}
-              />
-              <span className="toss-auth-checkbox-label">로그인 유지</span>
-            </label>
-          </div>
-
-          <button type="submit" disabled={loading} className="toss-auth-submit">
-            {loading ? "로그인 중..." : "로그인"}
-          </button>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-              alignItems: "center",
-              marginTop: "32px",
-            }}
-          >
-            {/* 구글 로그인 */}
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              style={{
-                width: "100%",
-                maxWidth: "356px",
-                height: "40px",
-                backgroundColor: "#ffffff",
-                borderRadius: "6px",
-                border: "1px solid #dadce0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-                color: "#3c4043",
-                padding: "0 12px",
-              }}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.26c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
-                  fill="#EA4335"
-                />
-              </svg>
-              구글 로그인
-            </button>
-
-            {/* 카카오 로그인 */}
-            <button
-              type="button"
-              onClick={handleKakaoLogin}
-              style={{
-                width: "100%",
-                maxWidth: "356px",
-                height: "40px",
-                backgroundColor: "#FEE500",
-                borderRadius: "6px",
-                border: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-                color: "rgba(0, 0, 0, 0.85)",
-                padding: "0 12px",
-              }}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M9 3C5.13437 3 2 5.34375 2 8.25C2 10.0875 3.25 11.6625 5.125 12.6375L4.40625 15.1875C4.34375 15.4312 4.6125 15.6188 4.81875 15.4688L8.03125 13.35H9C12.8656 13.35 16 11.0062 16 8.1C16 5.19375 12.8656 2.85 9 2.85V3Z"
-                  fill="black"
-                />
-              </svg>
-              카카오 로그인
-            </button>
-          </div>
-
-          <p className="toss-auth-foot">
-            <Link to="/find-email" className="toss-auth-link">
-              이메일 찾기
-            </Link>
-            {" | "}
-            <Link to="/reset-password" className="toss-auth-link">
-              비밀번호 찾기
-            </Link>
-          </p>
-          <p className="toss-auth-foot" style={{ marginTop: 8 }}>
-            계정이 없으신가요?{" "}
+    <AuthLayout
+      eyebrow="Welcome back"
+      title="로그인"
+      description="다시 만나서 반가워요. 찜해 둔 아이들이 기다리고 있어요."
+      image="/images/landing/hero-dog.webp"
+      imageAlt="꽃을 물고 앉아 있는 골든 리트리버"
+      quote="오늘 한 번의 전화가, 한 아이의 이름을 바꿉니다."
+      quoteCaption="62댕냥 · 전국 보호소 공고 모음"
+      footer={
+        <>
+          <p>
+            아직 계정이 없으신가요?{" "}
             <Link to="/signup" className="toss-auth-link">
               회원가입
             </Link>
           </p>
-          <p className="toss-auth-foot" style={{ marginTop: 8 }}>
-            <Link
-              to="/admin/login"
-              className="toss-auth-link"
-              style={{ fontSize: "0.9rem", color: "var(--toss-gray-500)" }}
-            >
-              관리자 로그인 바로가기
+          <p>
+            <Link to="/admin/login" className="toss-auth-link toss-auth-link--muted">
+              관리자 로그인
             </Link>
           </p>
-        </form>
-      </motion.div>
-    </div>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="toss-auth-card">
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="toss-auth-error"
+            role="alert"
+          >
+            {error}
+          </motion.div>
+        )}
+
+        <div className="toss-auth-field">
+          <label htmlFor="login-email" className="toss-auth-label">
+            이메일
+          </label>
+          <input
+            id="login-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="toss-auth-input"
+            placeholder="you@example.com"
+            autoComplete="email"
+          />
+        </div>
+        <div className="toss-auth-field">
+          <label htmlFor="login-password" className="toss-auth-label">
+            비밀번호
+          </label>
+          <PasswordInput
+            id="login-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="비밀번호"
+            autoComplete="current-password"
+          />
+        </div>
+
+        <div className="toss-auth-options">
+          <label className="toss-auth-checkbox-row">
+            <input
+              type="checkbox"
+              className="toss-auth-checkbox"
+              checked={rememberEmail}
+              onChange={(e) => setRememberEmail(e.target.checked)}
+            />
+            <span className="toss-auth-checkbox-label">이메일 저장</span>
+          </label>
+          <label className="toss-auth-checkbox-row">
+            <input
+              type="checkbox"
+              className="toss-auth-checkbox"
+              checked={keepLoggedIn}
+              onChange={(e) => setKeepLoggedIn(e.target.checked)}
+            />
+            <span className="toss-auth-checkbox-label">로그인 유지</span>
+          </label>
+        </div>
+
+        <button type="submit" disabled={loading} className="toss-auth-submit">
+          {loading ? "로그인 중..." : "로그인"}
+        </button>
+
+        <p className="mt-4 text-center text-sm text-ink-muted">
+          <Link to="/find-email" className="toss-auth-link toss-auth-link--muted">
+            이메일 찾기
+          </Link>
+          <span className="mx-2 text-ink-faint" aria-hidden>
+            ·
+          </span>
+          <Link to="/reset-password" className="toss-auth-link toss-auth-link--muted">
+            비밀번호 찾기
+          </Link>
+        </p>
+
+        <div className="toss-auth-divider">또는</div>
+
+        <button type="button" onClick={handleKakaoLogin} className="toss-auth-social toss-auth-social--kakao">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+            <path
+              d="M9 3C5.13437 3 2 5.34375 2 8.25C2 10.0875 3.25 11.6625 5.125 12.6375L4.40625 15.1875C4.34375 15.4312 4.6125 15.6188 4.81875 15.4688L8.03125 13.35H9C12.8656 13.35 16 11.0062 16 8.1C16 5.19375 12.8656 2.85 9 2.85V3Z"
+              fill="black"
+            />
+          </svg>
+          카카오로 계속하기
+        </button>
+        <button type="button" onClick={handleGoogleLogin} className="toss-auth-social toss-auth-social--google">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
+            <path
+              d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+              fill="#4285F4"
+            />
+            <path
+              d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.26c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"
+              fill="#34A853"
+            />
+            <path
+              d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+              fill="#FBBC05"
+            />
+            <path
+              d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
+              fill="#EA4335"
+            />
+          </svg>
+          구글로 계속하기
+        </button>
+      </form>
+    </AuthLayout>
   );
 }

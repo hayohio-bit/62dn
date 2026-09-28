@@ -518,47 +518,33 @@ body.toss-menu-open {
 }
 
 /* ========== 인증 페이지 ========== */
-.toss-auth-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: calc(var(--header-height) + 2rem) var(--toss-space-4) 4rem;
-  background:
-    radial-gradient(60% 50% at 100% 0%, rgba(200, 85, 61, 0.1) 0%, transparent 70%),
-    radial-gradient(50% 50% at 0% 100%, rgba(138, 154, 91, 0.12) 0%, transparent 70%),
-    var(--dn-cream);
-}
-
-.toss-auth-wrap {
-  width: 100%;
-  max-width: 27rem;
-}
-
+/* 레이아웃(사진 패널 + 폼)은 components/auth/AuthLayout.tsx가 담당하고, 여기서는 폼 요소만 정의한다. */
 .toss-auth-head {
-  text-align: center;
   margin-bottom: var(--toss-space-8);
 }
 
 .toss-auth-title {
   font-family: var(--dn-font-serif);
-  font-size: 2.25rem;
+  font-size: clamp(2.25rem, 4vw, 2.75rem);
   font-weight: 400;
+  line-height: 1.15;
   color: var(--toss-black);
   letter-spacing: -0.02em;
-  margin: 0 0 var(--toss-space-2) 0;
+  margin: 0.75rem 0 var(--toss-space-3) 0;
 }
 
 .toss-auth-desc {
   font-size: 0.9375rem;
+  line-height: 1.7;
   color: var(--toss-gray-700);
+  word-break: keep-all;
   margin: 0;
 }
 
 .toss-auth-card {
   border-radius: var(--toss-radius-xl);
   background-color: var(--dn-paper);
-  padding: var(--toss-space-6);
+  padding: 1.5rem;
   box-shadow: var(--dn-shadow-card);
   border: 1px solid var(--dn-line);
 }
@@ -576,11 +562,23 @@ body.toss-menu-open {
   background-color: var(--toss-blue-light);
   border: 1px solid rgba(200, 85, 61, 0.3);
   font-size: var(--toss-text-caption);
+  line-height: 1.6;
   color: var(--toss-blue-dark);
 }
 
+.toss-auth-notice {
+  margin-bottom: var(--toss-space-6);
+  padding: var(--toss-space-3) var(--toss-space-4);
+  border-radius: var(--toss-radius);
+  background-color: var(--dn-sage-light);
+  border: 1px solid rgba(138, 154, 91, 0.35);
+  font-size: var(--toss-text-caption);
+  line-height: 1.6;
+  color: #4f5a2f;
+}
+
 .toss-auth-field {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .toss-auth-label {
@@ -588,7 +586,7 @@ body.toss-menu-open {
   font-size: var(--toss-text-caption);
   font-weight: var(--toss-font-semibold);
   color: var(--toss-gray-900);
-  margin-bottom: var(--toss-space-2);
+  margin: 0 0 var(--toss-space-2) 0.25rem;
 }
 
 .toss-auth-label-optional {
@@ -598,16 +596,21 @@ body.toss-menu-open {
 
 .toss-auth-input {
   width: 100%;
-  padding: 0.8125rem 1rem;
+  height: 3.25rem;
+  padding: 0 1.25rem;
   font-size: 1rem;
   color: var(--toss-black);
   background-color: #fff;
-  border: 1px solid var(--toss-gray-300);
-  border-radius: var(--toss-radius);
+  border: 1px solid rgba(34, 28, 22, 0.14);
+  border-radius: 999px;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
   box-sizing: border-box;
+}
+
+select.toss-auth-input {
+  cursor: pointer;
 }
 
 .toss-auth-input::placeholder {
@@ -615,7 +618,7 @@ body.toss-menu-open {
 }
 
 .toss-auth-input:hover {
-  border-color: var(--toss-gray-500);
+  border-color: rgba(34, 28, 22, 0.32);
 }
 
 .toss-auth-input:focus {
@@ -625,9 +628,13 @@ body.toss-menu-open {
 }
 
 .toss-auth-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-top: var(--toss-space-6);
   width: 100%;
-  padding: 0.9375rem 1rem;
+  height: 3.25rem;
+  padding: 0 1rem;
   font-size: 1rem;
   font-weight: var(--toss-font-semibold);
   color: #fff;
@@ -674,11 +681,21 @@ body.toss-menu-open {
   text-decoration: underline;
 }
 
+.toss-auth-link--muted {
+  font-weight: var(--toss-font-medium);
+  color: var(--toss-gray-600);
+}
+
+.toss-auth-link--muted:hover {
+  color: var(--toss-black);
+}
+
 .toss-auth-options {
-  margin-top: var(--toss-space-4);
+  margin-top: var(--toss-space-2);
   display: flex;
   flex-wrap: wrap;
   gap: var(--toss-space-3) var(--toss-space-6);
+  padding-left: 0.25rem;
 }
 
 .toss-auth-checkbox-row {
@@ -700,6 +717,65 @@ body.toss-menu-open {
   font-size: var(--toss-text-caption);
   color: var(--toss-gray-700);
   cursor: pointer;
+}
+
+/* "또는" 구분선 */
+.toss-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--toss-space-3);
+  margin: 1.75rem 0 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--toss-gray-500);
+}
+
+.toss-auth-divider::before,
+.toss-auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--dn-line);
+}
+
+/* 소셜 로그인 버튼 (브랜드 색은 각 서비스 가이드를 따른다) */
+.toss-auth-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  width: 100%;
+  height: 3.25rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: var(--toss-font-semibold);
+  cursor: pointer;
+  transition:
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+.toss-auth-social + .toss-auth-social {
+  margin-top: 0.625rem;
+}
+
+.toss-auth-social--google {
+  background: #fff;
+  color: #3c4043;
+  border: 1px solid rgba(34, 28, 22, 0.14);
+}
+
+.toss-auth-social--google:hover {
+  box-shadow: inset 0 0 0 1px rgba(34, 28, 22, 0.25);
+}
+
+.toss-auth-social--kakao {
+  background: #fee500;
+  color: rgba(0, 0, 0, 0.85);
+  border: none;
+}
+
+.toss-auth-social--kakao:hover {
+  filter: brightness(0.97);
 }
 
 /* ========== 관리자 대시보드 ========== */
