@@ -6,32 +6,28 @@ import { useAuthStore } from "@/store/authStore";
 import type { LoginRequest } from "@/types/dto";
 
 const STORAGE_EMAIL = "login_saved_email";
-const STORAGE_PASSWORD = "login_saved_password";
 const STORAGE_REMEMBER_EMAIL = "login_remember_email";
-const STORAGE_REMEMBER_PASSWORD = "login_remember_password";
 const STORAGE_KEEP_LOGGED_IN = "login_keep_logged_in";
+// 예전 "비밀번호 저장" 기능이 평문 비밀번호를 남기던 키. 로그인 화면을 열 때 지운다.
+const LEGACY_STORAGE_PASSWORD = "login_saved_password";
+const LEGACY_STORAGE_REMEMBER_PASSWORD = "login_remember_password";
 
 function loadSavedCredentials() {
   try {
+    localStorage.removeItem(LEGACY_STORAGE_PASSWORD);
+    localStorage.removeItem(LEGACY_STORAGE_REMEMBER_PASSWORD);
     const savedEmail = localStorage.getItem(STORAGE_EMAIL);
-    const savedPassword = localStorage.getItem(STORAGE_PASSWORD);
     const rememberEmail = localStorage.getItem(STORAGE_REMEMBER_EMAIL) === "1";
-    const rememberPassword =
-      localStorage.getItem(STORAGE_REMEMBER_PASSWORD) === "1";
     const keepLoggedIn = localStorage.getItem(STORAGE_KEEP_LOGGED_IN) !== "0";
     return {
       email: savedEmail ?? "",
-      password: savedPassword ?? "",
       rememberEmail,
-      rememberPassword,
       keepLoggedIn,
     };
   } catch {
     return {
       email: "",
-      password: "",
       rememberEmail: false,
-      rememberPassword: false,
       keepLoggedIn: true,
     };
   }
@@ -61,7 +57,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberEmail, setRememberEmail] = useState(false);
-  const [rememberPassword, setRememberPassword] = useState(false);
   const [keepLoggedIn, setKeepLoggedIn] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -69,9 +64,7 @@ export default function LoginPage() {
   useEffect(() => {
     const saved = loadSavedCredentials();
     setEmail(saved.email);
-    setPassword(saved.password);
     setRememberEmail(saved.rememberEmail);
-    setRememberPassword(saved.rememberPassword);
     setKeepLoggedIn(saved.keepLoggedIn);
   }, []);
 
@@ -86,13 +79,6 @@ export default function LoginPage() {
       } else {
         localStorage.removeItem(STORAGE_EMAIL);
         localStorage.removeItem(STORAGE_REMEMBER_EMAIL);
-      }
-      if (rememberPassword) {
-        localStorage.setItem(STORAGE_PASSWORD, password);
-        localStorage.setItem(STORAGE_REMEMBER_PASSWORD, "1");
-      } else {
-        localStorage.removeItem(STORAGE_PASSWORD);
-        localStorage.removeItem(STORAGE_REMEMBER_PASSWORD);
       }
       localStorage.setItem(STORAGE_KEEP_LOGGED_IN, keepLoggedIn ? "1" : "0");
 
@@ -202,15 +188,6 @@ export default function LoginPage() {
                 onChange={(e) => setRememberEmail(e.target.checked)}
               />
               <span className="toss-auth-checkbox-label">이메일 저장</span>
-            </label>
-            <label className="toss-auth-checkbox-row">
-              <input
-                type="checkbox"
-                className="toss-auth-checkbox"
-                checked={rememberPassword}
-                onChange={(e) => setRememberPassword(e.target.checked)}
-              />
-              <span className="toss-auth-checkbox-label">비밀번호 저장</span>
             </label>
             <label className="toss-auth-checkbox-row">
               <input
