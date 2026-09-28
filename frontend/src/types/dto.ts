@@ -73,13 +73,6 @@ export interface FindEmailRequest {
   phone: string;
 }
 
-export interface ResetPasswordRequest {
-  email: string;
-  name: string;
-  phone: string;
-  newPassword: string;
-}
-
 // ========== Animal DTOs ==========
 export interface AnimalListRequest {
   species?: "DOG" | "CAT";

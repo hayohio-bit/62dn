@@ -41,7 +41,7 @@ axiosInstance.interceptors.request.use(
 // 토큰 없이 호출하는 인증 API. 이 요청의 401은 "토큰 만료"가 아니라 "인증 실패"(잘못된 비밀번호, 소셜 인가 코드 오류 등)이므로
 // 토큰 갱신·강제 로그아웃 대상에서 제외한다. (카카오 로그인 실패 시 갱신 후 같은 인가 코드로 재시도하던 문제 방지)
 const PUBLIC_AUTH_PATH =
-  /\/auth\/(login|signup|google|kakao|refresh|find-email|reset-password)(\?|$)/;
+  /\/auth\/(login|signup|google|kakao|refresh|find-email)(\?|$)/;
 
 // Response Interceptor: 에러 처리 및 토큰 갱신
 axiosInstance.interceptors.response.use(

@@ -11,7 +11,6 @@ import type {
   UserResponse,
   UpdateMeRequest,
   FindEmailRequest,
-  ResetPasswordRequest,
 } from "@/types/dto";
 
 export const authApi = {
@@ -47,8 +46,4 @@ export const authApi = {
       "/auth/find-email",
       data,
     ),
-
-  /** 비밀번호 재설정 — 이메일+이름+전화번호 확인 후 새 비밀번호 설정 */
-  resetPassword: (data: ResetPasswordRequest) =>
-    axiosInstance.post<ApiResponse<null>>("/auth/reset-password", data),
 };

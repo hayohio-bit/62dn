@@ -71,13 +71,6 @@ public class AuthController {
         return ApiResponse.success("이메일 찾기 성공", Map.of("maskedEmail", maskedEmail));
     }
 
-    @Operation(summary = "비밀번호 재설정")
-    @PostMapping("/reset-password")
-    public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        authService.resetPassword(request.getEmail(), request.getName(), request.getPhone(), request.getNewPassword());
-        return ApiResponse.success("비밀번호가 재설정되었습니다.", null);
-    }
-
     @Operation(summary = "내 정보 조회")
     @GetMapping("/me")
     public ApiResponse<UserResponse> getMe(HttpServletRequest httpRequest) {

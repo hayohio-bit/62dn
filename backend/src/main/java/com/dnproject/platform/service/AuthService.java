@@ -423,29 +423,6 @@ public class AuthService {
     }
 
     /**
-     * 이메일 + 이름 + 전화번호 확인 후 비밀번호 재설정
-     */
-    @Transactional
-    public void resetPassword(String email, String name, String phone, String newPassword) {
-        String trimmedEmail = email != null ? email.trim() : "";
-        String trimmedName = name != null ? name.trim() : "";
-        String trimmedPhone = phone != null ? phone.trim() : "";
-
-        User user = userRepository.findByEmailTrimmed(trimmedEmail)
-                .orElseThrow(() -> new CustomException(
-                        "일치하는 회원 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND, "USER_NOT_FOUND"));
-
-        if (!trimmedName.equals(user.getName()) ||
-                user.getPhone() == null || !trimmedPhone.equals(user.getPhone())) {
-            throw new CustomException(
-                    "이름 또는 전화번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST, "INFO_MISMATCH");
-        }
-
-        user.setPassword(passwordEncoder.encode(newPassword.trim()));
-        userRepository.save(user);
-    }
-
-    /**
      * 이메일 마스킹 (예: test@example.com → te**@example.com)
      */
     private String maskEmail(String email) {

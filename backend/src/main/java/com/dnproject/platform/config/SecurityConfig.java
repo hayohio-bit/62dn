@@ -31,7 +31,6 @@ public class SecurityConfig {
                         "/api/auth/kakao",
                         "/api/auth/refresh",
                         "/api/auth/find-email",
-                        "/api/auth/reset-password",
                         "/api/animals",
                         "/api/animals/**",
                         "/api/boards",
