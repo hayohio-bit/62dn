@@ -237,20 +237,22 @@ export function useAdminDashboard() {
     try {
       await adminApi.setBoardPinned(boardId, pinned);
       setBoards((prev) => prev.map((b) => (b.id === boardId ? { ...b, isPinned: pinned } : b)));
-    } catch {
-      // ignore
+    } catch (e: unknown) {
+      alert(listErrorMessage(e, pinned ? "게시글 고정에 실패했습니다." : "게시글 고정 해제에 실패했습니다."));
     } finally {
       setBoardActionLoading(null);
     }
   };
 
   const handleDeleteBoard = async (boardId: number) => {
+    // 삭제는 되돌릴 수 없으므로 회원 탈퇴·게시글 상세 삭제와 같이 확인을 받는다.
+    if (!window.confirm("이 게시글을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
     setBoardActionLoading(boardId);
     try {
       await adminApi.deleteBoard(boardId);
       setBoards((prev) => prev.filter((b) => b.id !== boardId));
-    } catch {
-      // ignore
+    } catch (e: unknown) {
+      alert(listErrorMessage(e, "게시글 삭제에 실패했습니다."));
     } finally {
       setBoardActionLoading(null);
     }
