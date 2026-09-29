@@ -25,14 +25,7 @@ export default function PlaceholderPage() {
             <p className="dn-eyebrow">{known.eyebrow}</p>
             <h1 className="dn-page-title">{known.title}</h1>
             <p className="dn-page-desc">
-              이 페이지는 준비 중입니다. 궁금한 점은{" "}
-              <a
-                href="mailto:contact@dnplatform.com"
-                className="border-b border-ink/30 text-ink transition-colors hover:border-terracotta hover:text-terracotta"
-              >
-                contact@dnplatform.com
-              </a>
-              으로 문의해 주세요.
+              이 페이지는 준비 중입니다.
             </p>
             <div className="mt-10">
               <Link to="/" className="toss-btn toss-btn-outline">

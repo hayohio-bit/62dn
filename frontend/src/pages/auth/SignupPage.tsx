@@ -79,9 +79,9 @@ export default function SignupPage() {
       title="회원가입"
       description="가입하면 마음에 드는 아이를 찜하고, 선호 조건을 저장해 둘 수 있어요."
       image="/success-story-1.webp"
-      imageAlt="새 가족을 만나 웃고 있는 강아지"
+      imageAlt="바닷가에서 웃고 있는 개"
       quote="숫자로 불리던 아이가, 누군가의 이름이 되는 순간."
-      quoteCaption="62댕냥 입양 후기에서"
+      quoteCaption="62댕냥"
       footer={
         <p>
           이미 계정이 있으신가요?{" "}

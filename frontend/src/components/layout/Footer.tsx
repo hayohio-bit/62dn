@@ -42,12 +42,6 @@ export default function Footer() {
               <br />
               새 가족과 보호소를 이어 드립니다.
             </p>
-            <a
-              href="mailto:contact@dnplatform.com"
-              className="mt-6 inline-block border-b border-cream/30 pb-0.5 text-[0.9375rem] text-cream/80 hover:border-cream hover:text-cream"
-            >
-              contact@dnplatform.com
-            </a>
           </div>
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title}>

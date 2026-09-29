@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
       title="관리자 로그인"
       description="시스템 관리자 전용 로그인입니다."
       image="/success-story-3.webp"
-      imageAlt="새 가족 곁에서 쉬고 있는 반려동물"
+      imageAlt="노란 배경 앞에 선 치즈 고양이"
       quote="보이지 않는 곳에서 공고 하나하나를 지키는 일."
       quoteCaption="62댕냥 관리자"
       footer={
