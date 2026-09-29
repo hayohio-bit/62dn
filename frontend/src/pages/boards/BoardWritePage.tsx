@@ -11,6 +11,7 @@ import Footer from "@/components/layout/Footer";
 import Reveal from "@/components/motion/Reveal";
 import { BoardTypeBadge } from "@/components/boards/BoardTypeBadge";
 import { boardTypeTitles } from "@/components/boards/boardFormat";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 /** 공지/FAQ/자유만 게시판 글쓰기에서 선택 가능 (봉사·물품 제외). 공지·FAQ는 시스템 관리자만 선택 가능 */
 const WRITABLE_TYPES_FOR_ADMIN: BoardType[] = ["NOTICE", "FAQ", "FREE"];
@@ -24,6 +25,7 @@ export default function BoardWritePage() {
   const location = useLocation();
   const { id } = useParams<{ id: string }>(); // 수정 모드일 경우 id 존재
   const isEditMode = Boolean(id);
+  useDocumentTitle(isEditMode ? "글 수정하기" : "새 글 쓰기");
 
   const { user, isAuthenticated } = useAuthStore();
   const isSuperAdmin = user?.role === "SUPER_ADMIN";

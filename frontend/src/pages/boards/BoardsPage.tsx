@@ -11,6 +11,7 @@ import Reveal from "@/components/motion/Reveal";
 import BoardPagination from "@/components/boards/BoardPagination";
 import { BoardTypeBadge, PinnedMark } from "@/components/boards/BoardTypeBadge";
 import { BOARD_TYPES, boardTypeTitles, formatBoardDate, isBoardType } from "@/components/boards/boardFormat";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20];
 
@@ -42,6 +43,7 @@ function BoardRowSkeleton() {
 }
 
 export default function BoardsPage() {
+  useDocumentTitle("게시판");
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [searchParams, setSearchParams] = useSearchParams();

@@ -9,6 +9,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import KakaoMap from "@/components/map/KakaoMap";
 import FavoriteButton from "@/components/animals/FavoriteButton";
+import ShareButton from "@/components/animals/ShareButton";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
 import { CallInquiryTip } from "@/components/guide/GuideCallBlock";
 import Reveal from "@/components/motion/Reveal";
@@ -21,6 +22,7 @@ import {
   speciesLabels,
   statusLabels,
 } from "@/constants/animalLabels";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
@@ -131,6 +133,14 @@ export default function AnimalDetailPage() {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   // 목록에서 들어왔으면 뒤로 가기로 돌아가 필터·페이지·스크롤 위치를 그대로 유지한다
   const cameFromList = (location.state as { fromList?: boolean } | null)?.fromList === true;
+  // 탭 제목 예: "보리 · 믹스견 2살 | 62댕냥"
+  useDocumentTitle(
+    animal
+      ? [animal.name || "이름 없음", [animal.breed, animal.age != null ? `${animal.age}살` : null].filter(Boolean).join(" ")]
+          .filter(Boolean)
+          .join(" · ")
+      : null,
+  );
 
   useEffect(() => {
     if (!id) return;
@@ -273,13 +283,19 @@ export default function AnimalDetailPage() {
                   <p className="dn-eyebrow">{statusLabels[animal.status] ?? "보호 중"}</p>
                   <h1 className="dn-display mt-3 break-words text-5xl md:text-6xl">{name}</h1>
                 </div>
-                <FavoriteButton
-                  animalId={animal.id}
-                  isFavorited={favoriteIds.includes(animal.id)}
-                  onToggle={(added) => toggleFavorite(animal.id, added)}
-                  size="lg"
-                  className="mt-1 border border-ink/10"
-                />
+                <div className="mt-1 flex shrink-0 gap-2">
+                  <ShareButton
+                    title={`${name} | 62댕냥`}
+                    text={`${withJosa(name, "이", "가")} 새 가족을 기다리고 있어요.${dday && !expired ? ` 공고 마감 ${dday}` : ""}`}
+                  />
+                  <FavoriteButton
+                    animalId={animal.id}
+                    isFavorited={favoriteIds.includes(animal.id)}
+                    onToggle={(added) => toggleFavorite(animal.id, added)}
+                    size="lg"
+                    className="border border-ink/10"
+                  />
+                </div>
               </div>
               <p className="mt-3 text-ink-soft">
                 {[animal.breed, animal.age != null ? `${animal.age}살` : null, genderLabels[animal.gender]].filter(Boolean).join(" · ")}

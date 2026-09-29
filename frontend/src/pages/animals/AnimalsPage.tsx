@@ -14,6 +14,7 @@ import { REGION_SIDO_OPTIONS, SIGUNGU_BY_SIDO } from "@/constants/regions";
 import { genderLabels, sizeLabels, speciesLabels } from "@/constants/animalLabels";
 import { useAnimals } from "@/hooks/useAnimals";
 import { useAuthStore } from "@/store/authStore";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const PAGE_SIZE_OPTIONS = [8, 12, 20];
 
@@ -30,6 +31,7 @@ function formatAgeRange(min?: number, max?: number) {
 }
 
 export default function AnimalsPage() {
+  useDocumentTitle("새 가족을 기다리는 아이들");
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const { state, actions } = useAnimals();

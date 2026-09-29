@@ -9,6 +9,7 @@ import Reveal from "@/components/motion/Reveal";
 import { shelterApi } from "@/api";
 import type { PublicShelterResponse } from "@/types/entities";
 import ShelterDetailModal from "@/components/support/ShelterDetailModal";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const PAGE_SIZE_OPTIONS = [6, 12, 24];
 const REGION_OPTIONS = [
@@ -61,6 +62,7 @@ const CAUTIONS = [
 ];
 
 export default function SupportPage() {
+  useDocumentTitle("봉사·기부 보호소 찾기");
   const [search, setSearch] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
   const [page, setPage] = useState(0);

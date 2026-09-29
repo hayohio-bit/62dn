@@ -8,6 +8,7 @@ import { preferenceApi } from "@/api/preference";
 import { useAuthStore } from "@/store/authStore";
 import { REGION_SIDO_OPTIONS } from "@/constants/regions";
 import type { PreferenceRequest } from "@/types/dto";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const SPECIES_OPTIONS: { value: "" | "DOG" | "CAT"; label: string }[] = [
   { value: "", label: "상관없음" },
@@ -83,6 +84,7 @@ function ChoiceGroup<T extends string>({
 }
 
 export default function PreferencePage() {
+  useDocumentTitle("입양 선호 조건");
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const [species, setSpecies] = useState<string>("");

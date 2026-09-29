@@ -12,6 +12,7 @@ import AnimalCard, { AnimalCardSkeletonGrid } from "@/components/animals/AnimalC
 import { speciesLabels } from "@/constants/animalLabels";
 import { useFavoriteIds } from "@/hooks/useFavoriteIds";
 import type { Animal, PublicShelterResponse, Species } from "@/types/entities";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const PAGE_SIZE = 8;
 
@@ -36,6 +37,7 @@ export default function ShelterPage() {
   const [animalsLoading, setAnimalsLoading] = useState(true);
   const [animalsError, setAnimalsError] = useState(false);
   const { favoriteIds, toggle } = useFavoriteIds();
+  useDocumentTitle(shelterState === "notFound" ? "보호소를 찾을 수 없음" : shelter?.name);
 
   useEffect(() => {
     // 다른 보호소로 이동하면 이전 보호소의 필터와 페이지를 이어 쓰지 않는다

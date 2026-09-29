@@ -11,6 +11,7 @@ import type { SyncHistoryItem } from "@/api/admin";
 import AdminUserTable from "@/components/admin/AdminUserTable";
 import AdminBoardTable from "@/components/admin/AdminBoardTable";
 import AdminSyncPanel from "@/components/admin/AdminSyncPanel";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const ADMIN_ROLES = ["SUPER_ADMIN"];
 
@@ -114,6 +115,7 @@ function StatCard({
 const fmt = (n: number | null) => (n == null ? "—" : n.toLocaleString());
 
 export default function AdminDashboardPage() {
+  useDocumentTitle("관리자 대시보드");
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
   const isAdmin = Boolean(isAuthenticated && user && ADMIN_ROLES.includes(user.role));

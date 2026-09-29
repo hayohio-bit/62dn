@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { Wordmark } from "@/components/layout/Header";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 interface AuthLayoutProps {
   eyebrow: string;
@@ -35,6 +36,7 @@ export default function AuthLayout({
   footer,
 }: AuthLayoutProps) {
   const reduce = useReducedMotion();
+  useDocumentTitle(title);
 
   return (
     <div className="min-h-screen bg-cream lg:grid lg:grid-cols-2">

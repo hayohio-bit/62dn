@@ -10,11 +10,13 @@ import FAQSection from "@/components/landing/FAQSection";
 import FinalCTA from "@/components/landing/FinalCTA";
 import { animalApi } from "@/api";
 import type { AnimalResponse } from "@/types/dto";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 /**
  * 랜딩 흐름: 첫인사(히어로) → 마감 임박 아이들 → 함께하는 방법 → 보호소의 현실 → 입양 후기 → FAQ → 행동 유도
  */
 export default function LandingPage() {
+  useDocumentTitle();
   const [urgent, setUrgent] = useState<AnimalResponse[]>([]);
 
   useEffect(() => {

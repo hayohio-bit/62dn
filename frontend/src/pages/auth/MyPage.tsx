@@ -13,6 +13,7 @@ import { NameAvatar } from "@/components/boards/BoardTypeBadge";
 import { ddayTone, formatDday, genderLabels, sizeLabels, speciesLabels } from "@/constants/animalLabels";
 import type { UserResponse } from "@/types/dto";
 import type { Preference, Animal } from "@/types/entities";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const roleLabels: Record<string, string> = {
   USER: "일반 회원",
@@ -107,6 +108,7 @@ function PreferenceSummary({ preference }: { preference: Preference }) {
 }
 
 export default function MyPage() {
+  useDocumentTitle("마이페이지");
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthStore();
   const [me, setMe] = useState<UserResponse | null>(null);

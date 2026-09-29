@@ -11,6 +11,7 @@ import GuideCallBlock from "@/components/guide/GuideCallBlock";
 import Reveal from "@/components/motion/Reveal";
 import { animalApi } from "@/api";
 import type { Animal } from "@/types/entities";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export interface GuideStep {
   title: string;
@@ -35,6 +36,7 @@ const kinds = [
 ] as const;
 
 export default function GuideLayout({ kind, eyebrow, title, desc, notice, steps, children }: GuideLayoutProps) {
+  useDocumentTitle(title);
   const [searchParams] = useSearchParams();
   const animalIdParam = searchParams.get("animalId");
   const [animal, setAnimal] = useState<Animal | null>(null);

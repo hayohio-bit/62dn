@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { BoardTypeBadge, NameAvatar, PinnedMark } from "@/components/boards/BoardTypeBadge";
 import { boardTypeTitles, formatBoardDateTime } from "@/components/boards/boardFormat";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const textareaClass =
   "w-full resize-y rounded-2xl border border-ink/15 bg-white px-4 py-3 leading-relaxed text-ink placeholder:text-ink-faint transition focus:border-terracotta focus:outline-none focus:ring-4 focus:ring-terracotta/15";
@@ -34,6 +35,7 @@ export default function BoardDetailPage() {
   const reduceMotion = useReducedMotion();
   const { user: currentUser, isAuthenticated } = useAuthStore();
   const [board, setBoard] = useState<Board | null>(null);
+  useDocumentTitle(board?.title);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState("");

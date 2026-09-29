@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Reveal from "@/components/motion/Reveal";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 // 이 컴포넌트로 연결된 준비 중 페이지만 둔다. (봉사·기부 신청 페이지는 제거된 기능이므로 제외)
 const pages: Record<string, { title: string; eyebrow: string }> = {
@@ -13,6 +14,7 @@ export default function PlaceholderPage() {
   const pathname = useLocation().pathname.replace(/^\//, "") || "page";
   // 준비 중인 페이지(약관 등)가 아니면 존재하지 않는 주소로 안내한다.
   const known = pages[pathname];
+  useDocumentTitle(known?.title ?? "페이지를 찾을 수 없음");
 
   return (
     <div className="flex min-h-screen flex-col bg-cream">
