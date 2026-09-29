@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import clsx from "clsx";
-import { animalApi, favoriteApi } from "@/api";
-import { useAuthStore } from "@/store/authStore";
+import { animalApi } from "@/api";
+import { useFavoriteIds } from "@/hooks/useFavoriteIds";
 import type { Animal } from "@/types/entities";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -12,6 +12,7 @@ import FavoriteButton from "@/components/animals/FavoriteButton";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
 import { CallInquiryTip } from "@/components/guide/GuideCallBlock";
 import Reveal from "@/components/motion/Reveal";
+import MoreAnimals from "@/components/animals/MoreAnimals";
 import {
   ddayTone,
   formatDday,
@@ -124,10 +125,9 @@ export default function AnimalDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const reduce = useReducedMotion();
-  const { isAuthenticated } = useAuthStore();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
-  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const { favoriteIds, toggle: toggleFavorite } = useFavoriteIds();
   const [imageModalOpen, setImageModalOpen] = useState(false);
   // 목록에서 들어왔으면 뒤로 가기로 돌아가 필터·페이지·스크롤 위치를 그대로 유지한다
   const cameFromList = (location.state as { fromList?: boolean } | null)?.fromList === true;
@@ -155,13 +155,6 @@ export default function AnimalDetailPage() {
     };
   }, [id, navigate]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      favoriteApi.getMyFavoriteIds().then(setFavoriteIds).catch(() => setFavoriteIds([]));
-    } else {
-      setFavoriteIds([]);
-    }
-  }, [isAuthenticated]);
 
   if (loading) {
     return (
@@ -283,7 +276,7 @@ export default function AnimalDetailPage() {
                 <FavoriteButton
                   animalId={animal.id}
                   isFavorited={favoriteIds.includes(animal.id)}
-                  onToggle={(added) => setFavoriteIds((prev) => (added ? [...prev, animal.id] : prev.filter((i) => i !== animal.id)))}
+                  onToggle={(added) => toggleFavorite(animal.id, added)}
                   size="lg"
                   className="mt-1 border border-ink/10"
                 />
@@ -464,6 +457,8 @@ export default function AnimalDetailPage() {
               </div>
             </Reveal>
           )}
+
+          <MoreAnimals animal={animal} favoriteIds={favoriteIds} onFavoriteToggle={toggleFavorite} />
         </div>
       </main>
       <Footer />

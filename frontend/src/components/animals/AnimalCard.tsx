@@ -23,11 +23,14 @@ export default function AnimalCard({
   favorited,
   onFavoriteToggle,
   index,
+  fromList = true,
 }: {
   animal: Animal;
   favorited: boolean;
   onFavoriteToggle: (added: boolean) => void;
   index: number;
+  /** 상세 화면의 "목록으로"가 뒤로 가기로 이 목록에 돌아오게 할지 여부 */
+  fromList?: boolean;
 }) {
   const dday = formatDday(animal.daysUntilExpiry);
   const meta = [
@@ -43,7 +46,7 @@ export default function AnimalCard({
     <Reveal delay={Math.min(index % 4, 3) * 0.06} y={20} className="relative">
       <Link
         to={`/animals/${animal.id}`}
-        state={{ fromList: true }}
+        state={fromList ? { fromList: true } : undefined}
         className="group block rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-terracotta"
       >
         <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-cream-200">
