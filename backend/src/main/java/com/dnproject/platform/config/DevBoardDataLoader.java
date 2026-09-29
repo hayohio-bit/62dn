@@ -17,7 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 개발·데모용 게시판 예시 글. 실제 이용자가 쓴 글이 아니므로 운영(prod)에서는 실행하지 않는다.
+ */
 @Component
+@Profile({ "local", "dev" })
 @Order(2)
 @RequiredArgsConstructor
 @Slf4j
@@ -40,9 +44,9 @@ public class DevBoardDataLoader implements ApplicationRunner {
                 }
                 User author = users.get(0);
 
-                // 1. 공지사항 (ID 2 등 mock 수치 대신 자동 생성 ID 사용)
-                Board notice1 = createBoard(author, BoardType.NOTICE, "[안내] 전국 유기동물 보호소 연락처 및 위치 정보 일제 점검 완료",
-                                "안녕하세요. 62댕냥입니다.\n\n사용자 분들이 보호소에 더 원활히 연락하고 방문하실 수 있도록,\n전국 보호소의 최신 전화번호와 지도(위치) 정보를 업데이트 및 점검 완료하였습니다.",
+                // 1. 공지사항
+                Board notice1 = createBoard(author, BoardType.NOTICE, "[안내] 62댕냥은 보호소 공고를 모아 보여 드려요",
+                                "안녕하세요. 62댕냥입니다.\n\n62댕냥은 농림축산식품부 국가동물보호정보시스템에 올라온 유기동물 공고를 모아 보여 드립니다.\n입양·임시보호·봉사·기부 신청은 각 보호소에 전화로 해 주세요.",
                                 528, true);
 
                 // 2. FAQ
@@ -54,9 +58,6 @@ public class DevBoardDataLoader implements ApplicationRunner {
                                 "A. 보호소마다 현재 가장 시급하게 필요한 물품이 수시로 달라집니다.\n\n물품을 후원하고 싶으신 경우 전화를 걸어 어떤 물품이 필요한지 여쭤보시는 것을 권장합니다.",
                                 892,
                                 false);
-                Board faq3 = createBoard(author, BoardType.FAQ, "Q. 62댕냥은 무슨 뜻인가요?",
-                                "A. 대한민국 유기동물의 62%가 보호소에서 자연사하거나 안락사로 생을 마감한다는 통계 기억하시나요?\n저희 '62댕냥'은 이 비극적인 숫자를 '가족의 품'으로 바꿔보자는 미션을 담고 있습니다.",
-                                1573, false);
 
                 // 3. 봉사인증 (자유게시판으로 통합)
                 Board vol1 = createBoard(author, BoardType.FREE, "이번 주말, 동대문구 보호소 산책 봉사 다녀왔습니다!",
@@ -79,10 +80,10 @@ public class DevBoardDataLoader implements ApplicationRunner {
                                 156,
                                 false);
 
-                boardRepository.saveAll(List.of(notice1, faq1, faq2, faq3, vol1, don1, free1, free2, free3));
+                boardRepository.saveAll(List.of(notice1, faq1, faq2, vol1, don1, free1, free2, free3));
 
                 // 댓글 추가 연동 (필요 시 CommentRepository 추가 주입 가능하지만, 여기서는 핵심 데이터 위주로 게시글 먼저 완성)
-                log.info("게시판 더미 데이터 9건 이관 완료 (NOTICE, FAQ, FREE)");
+                log.info("게시판 예시 글 8건 생성 (NOTICE, FAQ, FREE)");
         }
 
         private Board createBoard(User user, BoardType type, String title, String content, int views,
