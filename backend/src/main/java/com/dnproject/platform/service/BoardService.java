@@ -46,12 +46,11 @@ public class BoardService {
 
         @Transactional
         public BoardResponse findById(Long id, boolean increaseViewCount) {
+                if (increaseViewCount) {
+                        boardRepository.increaseViews(id);
+                }
                 Board board = boardRepository.findById(id)
                                 .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다."));
-                if (increaseViewCount) {
-                        board.setViews(board.getViews() + 1);
-                        boardRepository.save(board);
-                }
                 return toBoardResponse(board);
         }
 
@@ -121,10 +120,11 @@ public class BoardService {
 
         @Transactional
         public BoardResponse setPinned(Long id, boolean pinned) {
+                if (boardRepository.updatePinned(id, pinned) == 0) {
+                        throw new NotFoundException("게시글을 찾을 수 없습니다.");
+                }
                 Board board = boardRepository.findById(id)
                                 .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다."));
-                board.setIsPinned(pinned);
-                board = boardRepository.save(board);
                 return toBoardResponse(board);
         }
 
@@ -149,6 +149,7 @@ public class BoardService {
                                 .views(b.getViews())
                                 .isPinned(b.getIsPinned())
                                 .createdAt(b.getCreatedAt())
+                                .updatedAt(b.getUpdatedAt())
                                 .build();
         }
 

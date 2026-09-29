@@ -24,4 +24,6 @@ public class BoardResponse {
     private Integer views;
     private Boolean isPinned;
     private Instant createdAt;
+    /** 제목·내용·종류를 고친 시각. 조회수·고정 여부 변경으로는 바뀌지 않는다 */
+    private Instant updatedAt;
 }
