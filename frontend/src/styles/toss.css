@@ -123,10 +123,6 @@
   justify-self: start;
 }
 
-.toss-logo-accent {
-  color: var(--toss-blue);
-}
-
 .toss-nav {
   display: flex;
   align-items: center;

@@ -1,10 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="16" fill="#C8553D"/>
-  <g fill="#F5EFE6">
-    <ellipse cx="32" cy="40" rx="11" ry="9"/>
-    <circle cx="19" cy="27" r="5"/>
-    <circle cx="27" cy="19" r="5"/>
-    <circle cx="37" cy="19" r="5"/>
-    <circle cx="45" cy="27" r="5"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#C8553D"/><g transform="translate(6 7) scale(0.8)"><g fill="#F5EFE6" transform="translate(6 0) scale(0.81)"><ellipse cx="11" cy="14" rx="5" ry="6.3" transform="rotate(-24 11 14)"/><ellipse cx="24" cy="5.5" rx="5" ry="6.3" transform="rotate(-8 24 5.5)"/><ellipse cx="40" cy="5.5" rx="5" ry="6.3" transform="rotate(8 40 5.5)"/><ellipse cx="53" cy="14" rx="5" ry="6.3" transform="rotate(24 53 14)"/></g><g transform="translate(5.5 13) scale(0.8)" fill="none" stroke="#F5EFE6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M32 21C29 12 21 9 15.5 11C9.5 13 7.5 20 8.5 27C9.5 34 11 40 12.5 45A10 10 0 0 0 32.5 45A10 10 0 0 0 12.5 45"/><path d="M32 21C35 12 43 9 48.5 11C54.5 13 56.5 20 55.5 27C54.5 34 46 43 35 53L34 54.5L56 54.5"/></g></g></svg>

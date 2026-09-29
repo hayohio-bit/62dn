@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { Wordmark } from "@/components/layout/Header";
+import Wordmark from "@/components/layout/Wordmark";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 interface AuthLayoutProps {
@@ -55,7 +55,7 @@ export default function AuthLayout({
               className="absolute left-8 top-7 font-display text-2xl font-bold text-cream-50"
               aria-label="62댕냥 홈"
             >
-              <Wordmark />
+              <Wordmark tone="dark" />
             </Link>
             <figure className="absolute inset-x-0 bottom-0 p-10 xl:p-14">
               <motion.blockquote

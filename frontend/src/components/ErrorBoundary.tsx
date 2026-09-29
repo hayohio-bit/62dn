@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import Wordmark from "@/components/layout/Wordmark";
 
 interface Props {
   children: ReactNode;
@@ -32,7 +33,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         <div className="flex min-h-screen items-center bg-cream px-6 py-16" role="alert">
           <div className="mx-auto w-full max-w-xl">
             <a href="/" className="toss-logo" aria-label="62댕냥 홈">
-              62<span className="toss-logo-accent">댕냥</span>
+              <Wordmark />
             </a>
             <div className="mt-14">
               <p className="dn-eyebrow">Something went wrong</p>

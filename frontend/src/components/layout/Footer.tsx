@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Wordmark } from "@/components/layout/Header";
+import Wordmark from "@/components/layout/Wordmark";
 
 const columns = [
   {
@@ -35,7 +35,7 @@ export default function Footer() {
         <div className="grid gap-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div>
             <Link to="/" className="toss-footer-brand" aria-label="62댕냥 홈">
-              <Wordmark />
+              <Wordmark tone="dark" />
             </Link>
             <p className="mt-4 max-w-xs text-[0.9375rem] leading-relaxed text-cream/60">
               전국 보호소의 유기동물 공고를 모아 보여 주고,

@@ -4,6 +4,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { useAuthStore } from "@/store/authStore";
 import { authApi } from "@/api/auth";
+import Wordmark from "@/components/layout/Wordmark";
 
 const navItems = [
   { to: "/animals", label: "가족 찾기" },
@@ -11,14 +12,6 @@ const navItems = [
   { to: "/support", label: "봉사·기부" },
   { to: "/boards", label: "게시판" },
 ];
-
-export function Wordmark({ className }: { className?: string }) {
-  return (
-    <span className={className}>
-      62<span className="toss-logo-accent">댕냥</span>
-    </span>
-  );
-}
 
 function HamburgerIcon({ open }: { open: boolean }) {
   return (

@@ -1,4 +1,4 @@
-import { Wordmark } from "@/components/layout/Header";
+import Wordmark from "@/components/layout/Wordmark";
 
 /** 소셜 로그인 콜백처럼 잠시 기다리는 화면 */
 export default function AuthPending({ message }: { message: string }) {
