@@ -80,6 +80,14 @@ class AnimalControllerTest {
     }
 
     @Test
+    @DisplayName("정렬 방향을 적지 않으면 내림차순으로 조회한다")
+    void missingDirectionIsDesc() throws Exception {
+        Sort sort = requestSort("createdAt");
+
+        assertThat(sort.getOrderFor("createdAt").getDirection()).isEqualTo(Sort.Direction.DESC);
+    }
+
+    @Test
     @DisplayName("허용하지 않은 정렬 필드는 기본 정렬로 바꾼다")
     void unknownSortFieldFallsBackToDefault() throws Exception {
         Sort sort = requestSort("shelter.phone,desc");

@@ -77,9 +77,10 @@ public class AnimalController {
     static Sort toListSort(String sort) {
         String[] parts = sort.split(",");
         String field = parts[0].trim();
-        Sort.Direction direction = parts.length > 1 && "desc".equalsIgnoreCase(parts[1].trim())
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
+        // 방향을 적지 않으면 기존 계약대로 내림차순이다
+        Sort.Direction direction = parts.length > 1 && "asc".equalsIgnoreCase(parts[1].trim())
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
         if (!SORTABLE_FIELDS.contains(field)) {
             field = "noticeEndDate";
             direction = Sort.Direction.ASC;
