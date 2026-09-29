@@ -35,12 +35,14 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
                         "(:species IS NULL OR a.species = :species) " +
                         "AND (:status IS NULL OR a.status = :status) AND (:size IS NULL OR a.size = :size) " +
                         "AND (:gender IS NULL OR a.gender = :gender) " +
+                        "AND (:shelterId IS NULL OR s.id = :shelterId) " +
                         "AND (:region IS NULL OR :region = '' OR s.regionSido = :region) " +
                         "AND (:sigungu IS NULL OR :sigungu = '' OR s.regionSigungu = :sigungu) " +
                         "AND (:search IS NULL OR :search = '' OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
                         "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
         Page<Animal> findWithFilters(@Param("species") Species species, @Param("status") AnimalStatus status,
-                        @Param("size") Size size, @Param("gender") Gender gender, @Param("region") String region,
+                        @Param("size") Size size, @Param("gender") Gender gender, @Param("shelterId") Long shelterId,
+                        @Param("region") String region,
                         @Param("sigungu") String sigungu, @Param("search") String search, Pageable pageable);
 
         /** 공공API 유래, 보호중, 등록일이 N일 초과된 동물 (상태 보정 대상) */

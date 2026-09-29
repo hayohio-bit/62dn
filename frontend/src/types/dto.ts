@@ -79,6 +79,8 @@ export interface AnimalListRequest {
   /** 동물 크기 필터 (API param: animalSize, size와 충돌 방지) */
   animalSize?: "SMALL" | "MEDIUM" | "LARGE";
   gender?: "MALE" | "FEMALE";
+  /** 특정 보호소의 동물만 조회 (보호소 페이지, 같은 보호소의 다른 아이들) */
+  shelterId?: number;
   status?: "PROTECTED" | "FOSTERING";
   /** 보호소 주소 기준 지역 필터 (시·도 키워드, 예: 서울, 경기) */
   region?: string;

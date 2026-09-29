@@ -38,11 +38,11 @@ public class AnimalService {
 
     @Transactional(readOnly = true)
     public PageResponse<AnimalResponse> findAll(Species species, AnimalStatus status, Size size, Gender gender,
-            String region, String sigungu, String search, Pageable pageable) {
+            Long shelterId, String region, String sigungu, String search, Pageable pageable) {
         String regionParam = (region != null && !region.isBlank()) ? region.trim() : null;
         String sigunguParam = (sigungu != null && !sigungu.isBlank()) ? sigungu.trim() : null;
         String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
-        Page<Animal> page = animalRepository.findWithFilters(species, status, size, gender, regionParam, sigunguParam,
+        Page<Animal> page = animalRepository.findWithFilters(species, status, size, gender, shelterId, regionParam, sigunguParam,
                 searchParam, pageable);
         return animalMapper.toPageResponse(page);
     }

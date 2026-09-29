@@ -55,6 +55,7 @@ public class AnimalController {
             @RequestParam(required = false) AnimalStatus status,
             @RequestParam(name = "animalSize", required = false) Size animalSize,
             @RequestParam(required = false) Gender gender,
+            @RequestParam(required = false) Long shelterId,
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String sigungu,
             @RequestParam(required = false) String search,
@@ -63,8 +64,8 @@ public class AnimalController {
             @RequestParam(defaultValue = "noticeEndDate,asc") String sort) {
         String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
         Pageable pageable = PageRequest.of(page, sizeParam, toListSort(sort));
-        PageResponse<AnimalResponse> data = animalService.findAll(species, status, animalSize, gender, region,
-                sigungu, searchParam, pageable);
+        PageResponse<AnimalResponse> data = animalService.findAll(species, status, animalSize, gender, shelterId,
+                region, sigungu, searchParam, pageable);
         return ApiResponse.success("조회 성공", data);
     }
 

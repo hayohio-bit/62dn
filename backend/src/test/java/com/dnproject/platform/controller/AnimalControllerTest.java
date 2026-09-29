@@ -45,7 +45,7 @@ class AnimalControllerTest {
     }
 
     private Sort requestSort(String sort) throws Exception {
-        when(animalService.findAll(any(), any(), any(), any(), any(), any(), any(), any()))
+        when(animalService.findAll(any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(PageResponse.<AnimalResponse>builder().content(List.of()).build());
         var request = get("/api/animals");
         if (sort != null) {
@@ -53,7 +53,7 @@ class AnimalControllerTest {
         }
         mockMvc.perform(request).andExpect(status().isOk());
         ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-        verify(animalService).findAll(any(), any(), any(), any(), any(), any(), any(), pageable.capture());
+        verify(animalService).findAll(any(), any(), any(), any(), any(), any(), any(), any(), pageable.capture());
         return pageable.getValue().getSort();
     }
 
@@ -87,14 +87,26 @@ class AnimalControllerTest {
     }
 
     @Test
+    @DisplayName("보호소 id 조건을 서비스에 전달한다")
+    void passesShelterId() throws Exception {
+        when(animalService.findAll(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(PageResponse.<AnimalResponse>builder().content(List.of()).build());
+
+        mockMvc.perform(get("/api/animals").param("shelterId", "3")).andExpect(status().isOk());
+
+        verify(animalService).findAll(isNull(), isNull(), isNull(), isNull(), eq(3L), isNull(), isNull(),
+                isNull(), any());
+    }
+
+    @Test
     @DisplayName("성별 조건을 서비스에 전달한다")
     void passesGender() throws Exception {
-        when(animalService.findAll(any(), any(), any(), any(), any(), any(), any(), any()))
+        when(animalService.findAll(any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(PageResponse.<AnimalResponse>builder().content(List.of()).build());
 
         mockMvc.perform(get("/api/animals").param("gender", "FEMALE")).andExpect(status().isOk());
 
         verify(animalService).findAll(isNull(), isNull(), isNull(), eq(Gender.FEMALE), isNull(), isNull(),
-                isNull(), any());
+                isNull(), isNull(), any());
     }
 }

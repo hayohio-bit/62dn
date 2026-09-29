@@ -384,6 +384,15 @@ export default function AnimalDetailPage() {
                   <h2 className="mt-3 font-serif text-3xl leading-tight text-ink md:text-4xl">
                     {animal.shelterName || "보호소 정보"}
                   </h2>
+                  {animal.shelterId && (
+                    <Link
+                      to={`/shelters/${animal.shelterId}`}
+                      className="group mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-terracotta underline-offset-4 hover:underline"
+                    >
+                      이 보호소의 아이들 모두 보기
+                      <span aria-hidden className="transition group-hover:translate-x-0.5">→</span>
+                    </Link>
+                  )}
                   <dl className="mt-6 border-t border-ink/10 text-[0.9375rem]">
                     {animal.orgName && (
                       <div className="flex gap-4 border-b border-ink/10 py-3.5">

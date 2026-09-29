@@ -35,6 +35,13 @@ public class ShelterService {
         return shelterMapper.toResponse(shelter);
     }
 
+    @Transactional(readOnly = true)
+    public PublicShelterResponse getPublicById(Long shelterId) {
+        return shelterRepository.findById(shelterId)
+                .map(shelterMapper::toPublicResponse)
+                .orElseThrow(() -> new NotFoundException("보호소를 찾을 수 없습니다. id=" + shelterId));
+    }
+
     /**
      * regionSido/regionSigungu가 비어 있는 보호소에 대해 주소를 파싱해 채움.
      * 기존 데이터 보정 및 공공API 동기화 시 이름으로만 찾아 생성된 보호소 보정용.

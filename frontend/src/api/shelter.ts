@@ -20,4 +20,8 @@ export const shelterApi = {
       })
       .then((res) => res.data.data);
   },
+
+  /** 보호소 상세 (보호소 페이지용) */
+  getPublicShelter: (id: number) =>
+    axiosInstance.get<ApiResponse<PublicShelterResponse>>(`/shelters/${id}`).then((res) => res.data.data),
 };

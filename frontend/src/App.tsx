@@ -6,6 +6,7 @@ import LandingPage from "@/pages/landing/LandingPage";
 import AnimalsPage from "@/pages/animals/AnimalsPage";
 import AnimalDetailPage from "@/pages/animals/AnimalDetailPage";
 import SupportPage from "@/pages/support/SupportPage";
+import ShelterPage from "@/pages/shelters/ShelterPage";
 import BoardsPage from "@/pages/boards/BoardsPage";
 import BoardDetailPage from "@/pages/boards/BoardDetailPage";
 import BoardWritePage from "@/pages/boards/BoardWritePage";
@@ -45,6 +46,7 @@ function App() {
 
 
           <Route path="/support" element={<SupportPage />} />
+          <Route path="/shelters/:id" element={<ShelterPage />} />
 
           {/* 게시판 */}
           <Route path="/boards" element={<BoardsPage />} />

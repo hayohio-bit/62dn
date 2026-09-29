@@ -5,6 +5,7 @@
  * - ESC 키 / 오버레이 클릭 시 닫힘, 열릴 때 닫기 버튼으로 초점 이동
  */
 import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import type { PublicShelterResponse } from "@/types/entities";
 
@@ -131,9 +132,16 @@ export default function ShelterDetailModal({ shelter, onClose }: ShelterDetailMo
               </div>
             ))}
           </dl>
-          <p className="py-5 text-sm leading-relaxed text-ink-soft">
+          <p className="pt-5 text-sm leading-relaxed text-ink-soft">
             봉사 일정과 필요한 기부 물품은 보호소마다 달라요. 방문하거나 물품을 보내기 전에 먼저 전화로 확인해 주세요.
           </p>
+          <Link
+            to={`/shelters/${shelter.id}`}
+            className="group mb-5 mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-terracotta underline-offset-4 hover:underline"
+          >
+            이 보호소에서 공고 중인 아이들 보기
+            <span aria-hidden className="transition group-hover:translate-x-0.5">→</span>
+          </Link>
         </div>
 
         {/* 하단 액션 버튼 */}
