@@ -11,6 +11,7 @@ import com.dnproject.platform.repository.FavoriteRepository;
 import com.dnproject.platform.repository.ShelterRepository;
 import com.dnproject.platform.util.AddressRegionParser;
 import com.dnproject.platform.util.KoreanDate;
+import com.dnproject.platform.util.SizeEstimate;
 import com.dnproject.platform.util.TemporaryNames;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -584,17 +585,8 @@ public class AnimalSyncService {
         }
     }
 
-    /** 체중으로 크기를 추정한다. 체중을 모르면 크기도 모름(null)으로 둔다. */
     private Size estimateSize(String weight) {
-        BigDecimal w = parseWeight(weight);
-        if (w == null || w.signum() <= 0)
-            return null;
-        double kg = w.doubleValue();
-        if (kg < 5)
-            return Size.SMALL;
-        if (kg < 15)
-            return Size.MEDIUM;
-        return Size.LARGE;
+        return SizeEstimate.fromWeight(parseWeight(weight));
     }
 
     private LocalDate parseDate(String dateStr) {

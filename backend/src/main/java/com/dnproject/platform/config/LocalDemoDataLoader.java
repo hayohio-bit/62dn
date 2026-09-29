@@ -14,6 +14,8 @@ import com.dnproject.platform.domain.constant.Size;
 import com.dnproject.platform.domain.constant.Species;
 import com.dnproject.platform.domain.constant.VerificationStatus;
 import com.dnproject.platform.util.KoreanDate;
+import com.dnproject.platform.util.SizeEstimate;
+import com.dnproject.platform.util.TemporaryNames;
 import com.dnproject.platform.repository.AnimalRepository;
 import com.dnproject.platform.repository.BoardRepository;
 import com.dnproject.platform.repository.CommentRepository;
@@ -131,6 +133,9 @@ public class LocalDemoDataLoader implements ApplicationRunner {
                 "1596854407944-bf87f6fdd49e", "현재 임시보호 가정에서 지내고 있습니다.", "온순함", true, true, today, 21);
         fostering.setStatus(AnimalStatus.FOSTERING);
         animals.add(fostering);
+        // 공공데이터로 들어온 동물처럼 보이게 한다: 유기번호가 있고, 이름은 임시 이름이며, 중성화·체중을 모른다
+        markAsPublicData(animals.get(9), "448500202600101", false);
+        markAsPublicData(animals.get(17), "448500202600102", true);
         animalRepository.saveAll(animals);
 
         // 마이페이지·추천 화면용: 찜 3마리, 선호 조건 (서울·경기, 1~5살 강아지)
@@ -205,6 +210,17 @@ public class LocalDemoDataLoader implements ApplicationRunner {
                 .noticeStartDate(today.minusDays(daysUntilNoticeEnd % 9))
                 .noticeEndDate(today.plusDays(daysUntilNoticeEnd))
                 .build();
+    }
+
+    private void markAsPublicData(Animal animal, String desertionNo, boolean weightUnknown) {
+        animal.setPublicApiAnimalId(desertionNo);
+        animal.setName(TemporaryNames.forAnimal(desertionNo, animal.getSpecies() == Species.CAT));
+        animal.setNeutered(false);
+        if (weightUnknown) {
+            animal.setWeight(null);
+        }
+        // 공공데이터는 크기를 체중으로 추정하므로 같은 규칙을 적용한다
+        animal.setSize(SizeEstimate.fromWeight(animal.getWeight()));
     }
 
     private Comment comment(Board board, User user, String content) {
