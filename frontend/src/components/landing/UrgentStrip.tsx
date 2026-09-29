@@ -38,10 +38,11 @@ export default function UrgentStrip({ animals, stats }: Props) {
           <div>
             <p className="dn-eyebrow !text-terracotta-400">Urgent</p>
             <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">
-              이번 주, 시간이 얼마 남지 않았어요
+              공고 마감이 가까운 아이들
             </h2>
             <p className="mt-3 max-w-xl text-cream/60">
-              공고 기간이 끝나면 보호소 사정에 따라 안락사가 결정될 수 있어요. 한 번 더 눈여겨봐 주세요.
+              공고 기간이 지나 새 가족을 찾기 어려우면, 지자체 판단에 따라 인도적 처리(안락사)될 수 있어요. 한 번 더
+              눈여겨봐 주세요.
             </p>
             {stats && stats.protectedCount > 0 && (
               <p className="mt-5 text-sm text-cream/80">
@@ -109,7 +110,7 @@ export default function UrgentStrip({ animals, stats }: Props) {
                 </div>
                 <div className="mt-4 flex items-baseline justify-between gap-3">
                   <h3 className="font-display text-2xl">{a.name || "이름 없음"}</h3>
-                  <span className="truncate text-sm text-cream/50">{a.shelterName}</span>
+                  <span className="truncate text-sm text-cream/70">{a.shelterName}</span>
                 </div>
                 <p className="text-sm text-cream/60">
                   {[speciesLabels[a.species], a.breed, a.age != null ? `${a.age}살` : null, genderLabels[a.gender]]

@@ -5,7 +5,7 @@ import HeroSection from "@/components/landing/HeroSection";
 import UrgentStrip from "@/components/landing/UrgentStrip";
 import WaysSection from "@/components/landing/WaysSection";
 import RealitySection from "@/components/landing/RealitySection";
-import StoriesSection from "@/components/landing/StoriesSection";
+import BeforeAdoptSection from "@/components/landing/BeforeAdoptSection";
 import FAQSection from "@/components/landing/FAQSection";
 import FinalCTA from "@/components/landing/FinalCTA";
 import { animalApi } from "@/api";
@@ -13,7 +13,7 @@ import type { AnimalResponse, AnimalStatsResponse } from "@/types/dto";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 /**
- * 랜딩 흐름: 첫인사(히어로) → 마감 임박 아이들 → 함께하는 방법 → 보호소의 현실 → 입양 후기 → FAQ → 행동 유도
+ * 랜딩 흐름: 첫인사(히어로) → 마감 임박 아이들 → 함께하는 방법 → 보호소의 현실 → 입양 전 생각할 것 → FAQ → 행동 유도
  */
 export default function LandingPage() {
   useDocumentTitle();
@@ -51,7 +51,7 @@ export default function LandingPage() {
         <UrgentStrip animals={urgent} stats={stats} />
         <WaysSection />
         <RealitySection />
-        <StoriesSection />
+        <BeforeAdoptSection />
         <FAQSection />
         <FinalCTA />
       </main>

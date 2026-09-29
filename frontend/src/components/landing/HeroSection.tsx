@@ -20,7 +20,7 @@ function liveMessage(stats: AnimalStatsResponse | null) {
     return `일주일 안에 공고가 끝나는 아이 ${stats.endingWithinWeekCount.toLocaleString()}마리`;
   }
   if (stats && stats.protectedCount > 0) return `지금 ${stats.protectedCount.toLocaleString()}마리가 가족을 기다려요`;
-  return "매일 새로운 공고가 올라와요";
+  return "전국 보호소의 공고를 한곳에 모았어요";
 }
 
 export default function HeroSection({ featured, stats }: Props) {
@@ -104,6 +104,7 @@ export default function HeroSection({ featured, stats }: Props) {
                 </div>
               ))}
             </dl>
+            <p className="mt-4 text-xs text-ink-muted">출처: 농림축산식품부, 2025년 조사</p>
           </motion.div>
         </div>
 
@@ -137,12 +138,12 @@ export default function HeroSection({ featured, stats }: Props) {
             initial={{ opacity: 0, rotate: -20, scale: 0.6 }}
             animate={{ opacity: 1, rotate: -8, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.6, ease }}
-            className="absolute left-[6%] top-[8%] grid h-24 w-24 place-items-center rounded-full bg-sage text-center font-display text-sm leading-tight text-white shadow-card"
+            className="absolute left-[6%] top-[8%] grid h-24 w-24 place-items-center rounded-full bg-sage-600 text-center font-display text-sm leading-tight text-white shadow-card"
           >
             <span>
-              매일
+              전국
               <br />
-              <b className="text-lg">새 공고</b>
+              <b className="text-lg">보호소 공고</b>
             </span>
           </motion.div>
 
