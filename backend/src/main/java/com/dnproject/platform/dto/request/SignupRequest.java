@@ -29,6 +29,5 @@ public class SignupRequest {
     @Size(max = 20)
     private String phone;
 
-    @Size(max = 255)
-    private String address;
+    // 주소는 쓰는 곳이 없어 받지 않는다. 예전 클라이언트가 address를 보내도 Jackson이 알 수 없는 필드로 무시한다.
 }

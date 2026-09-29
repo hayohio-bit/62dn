@@ -15,7 +15,6 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +24,6 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const payload: SignupRequest = { email, password, name, phone };
-      if (address.trim()) payload.address = address;
       const res = await authApi.signup(payload);
       const data = res.data?.data ?? res.data;
       const signupOk = data && data.id !== undefined && data.id !== null;
@@ -154,8 +152,7 @@ export default function SignupPage() {
             autoComplete="name"
           />
         </div>
-        <div className="grid gap-x-3 sm:grid-cols-2">
-          <div className="toss-auth-field">
+        <div className="toss-auth-field">
             <label htmlFor="signup-phone" className="toss-auth-label">
               전화번호 <span className="toss-auth-label-optional">(선택)</span>
             </label>
@@ -168,21 +165,6 @@ export default function SignupPage() {
               placeholder="010-1234-5678"
               autoComplete="tel"
             />
-          </div>
-          <div className="toss-auth-field">
-            <label htmlFor="signup-address" className="toss-auth-label">
-              주소 <span className="toss-auth-label-optional">(선택)</span>
-            </label>
-            <input
-              id="signup-address"
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="toss-auth-input"
-              placeholder="서울시 마포구"
-              autoComplete="street-address"
-            />
-          </div>
         </div>
         <p className="-mt-1 pl-1 text-xs leading-relaxed text-ink-muted">
           전화번호를 남기면 이메일을 잊었을 때 이름과 전화번호로 찾을 수 있어요.

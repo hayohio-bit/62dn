@@ -177,7 +177,6 @@ public class AuthService {
                 .password(encodedPassword)
                 .name(request.getName())
                 .phone(request.getPhone())
-                .address(request.getAddress())
                 .build();
         user = userRepository.save(user);
         userRepository.flush();

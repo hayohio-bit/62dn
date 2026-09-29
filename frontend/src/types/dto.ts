@@ -40,7 +40,6 @@ export interface SignupRequest {
   password: string;
   name: string;
   phone: string;
-  address?: string;
 }
 
 export interface LoginRequest {
