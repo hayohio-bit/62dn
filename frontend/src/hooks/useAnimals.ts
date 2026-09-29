@@ -16,6 +16,7 @@ export function useAnimals() {
   const page = Number(searchParams.get("page") || "0");
   const species = (searchParams.get("species") || "") as "DOG" | "CAT" | "";
   const size = (searchParams.get("size") || "") as "SMALL" | "MEDIUM" | "LARGE" | "";
+  const gender = (searchParams.get("gender") || "") as "MALE" | "FEMALE" | "";
   const status = (searchParams.get("status") || "PROTECTED") as "PROTECTED" | "FOSTERING" | "";
   const region = searchParams.get("region") || "";
   const sigungu = searchParams.get("sigungu") || "";
@@ -44,6 +45,7 @@ export function useAnimals() {
           (key === "page" && value === "0") ||
           (key === "species" && value === "") ||
           (key === "size" && value === "") ||
+          (key === "gender" && value === "") ||
           (key === "status" && value === "PROTECTED") ||
           (key === "region" && value === "") ||
           (key === "sigungu" && value === "") ||
@@ -63,6 +65,7 @@ export function useAnimals() {
   const setPage = useCallback((p: number) => updateParams({ page: String(p) }), [updateParams]);
   const setSpecies = useCallback((v: "DOG" | "CAT" | "") => updateParams({ species: v, page: "0" }), [updateParams]);
   const setSize = useCallback((v: "SMALL" | "MEDIUM" | "LARGE" | "") => updateParams({ size: v, page: "0" }), [updateParams]);
+  const setGender = useCallback((v: "MALE" | "FEMALE" | "") => updateParams({ gender: v, page: "0" }), [updateParams]);
   const setStatus = useCallback((v: "PROTECTED" | "FOSTERING" | "") => updateParams({ status: v, page: "0" }), [updateParams]);
   const setRegion = useCallback((v: string) => updateParams({ region: v, sigungu: "", page: "0" }), [updateParams]);
   const setSigungu = useCallback((v: string) => updateParams({ sigungu: v, page: "0" }), [updateParams]);
@@ -125,6 +128,7 @@ export function useAnimals() {
         } else {
            const data = await animalApi.getAll({
              page, sizeParam: pageSize, species: species || undefined, animalSize: size || undefined,
+             gender: gender || undefined,
              status: status || undefined, region: region || undefined, sigungu: sigungu || undefined,
              search: debouncedSearch || undefined, sort,
            });
@@ -160,7 +164,7 @@ export function useAnimals() {
     return () => {
       cancelled = true;
     };
-  }, [viewMode, page, pageSize, species, size, status, region, sigungu, sort, debouncedSearch, isAuthenticated]);
+  }, [viewMode, page, pageSize, species, size, gender, status, region, sigungu, sort, debouncedSearch, isAuthenticated]);
 
   // 검색어가 실제로 바뀐 경우에만 첫 페이지로 이동한다.
   // setPage는 URL이 바뀔 때마다 새로 만들어지므로, 의존성 변화만으로 실행하면
@@ -192,12 +196,12 @@ export function useAnimals() {
 
   return {
     state: {
-      loading, error, viewMode, search, species, size, status, region, sigungu,
+      loading, error, viewMode, search, species, size, gender, status, region, sigungu,
       sort, page, pageSize, preference, showPreferenceModal, favoriteIds,
       animals: apiAnimals, totalPages, apiTotalElements
     },
     actions: {
-      setViewMode, setSearch, setSpecies, setSize, setStatus, setRegion, setSigungu,
+      setViewMode, setSearch, setSpecies, setSize, setGender, setStatus, setRegion, setSigungu,
       setSort, setPage, setPageSize, setShowPreferenceModal, setFavoriteIds, handleSavePreference, resetFilters
     }
   };

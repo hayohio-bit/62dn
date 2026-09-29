@@ -19,6 +19,11 @@ import type { Animal } from "@/types/entities";
 
 const PAGE_SIZE_OPTIONS = [8, 12, 20];
 
+const SORT_OPTIONS = [
+  { value: "noticeEndDate,asc", label: "공고 마감 임박순" },
+  { value: "noticeStartDate,desc", label: "새로 들어온 순" },
+];
+
 function formatAgeRange(min?: number, max?: number) {
   if (min === undefined && max === undefined) return "나이 무관";
   if (max === undefined) return `${min}살 이상`;
@@ -132,18 +137,18 @@ export default function AnimalsPage() {
   const { state, actions } = useAnimals();
 
   const {
-    loading, error, viewMode, search, species, size, region, sigungu,
+    loading, error, viewMode, search, species, size, gender, region, sigungu, sort,
     page, pageSize, preference, showPreferenceModal, favoriteIds,
     animals, totalPages, apiTotalElements,
   } = state;
 
   const {
-    setViewMode, setSearch, setSpecies, setSize, setRegion, setSigungu,
+    setViewMode, setSearch, setSpecies, setSize, setGender, setRegion, setSigungu, setSort,
     setPage, setPageSize, setShowPreferenceModal, setFavoriteIds, handleSavePreference, resetFilters,
   } = actions;
 
-  const hasFilter = !!(search || species || size || region || sigungu);
-  const activeFilterCount = [species, size, region].filter(Boolean).length;
+  const hasFilter = !!(search || species || size || gender || region || sigungu);
+  const activeFilterCount = [species, size, gender, region].filter(Boolean).length;
   // 모바일에서는 필터가 첫 화면을 차지하지 않도록 접어 두고, 버튼으로 펼친다
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -302,14 +307,26 @@ export default function AnimalsPage() {
               </button>
             </div>
             {viewMode === "all" && (
-              <p className="text-sm text-ink-muted">
+              <div className="flex items-center gap-3 text-sm text-ink-muted">
                 {!loading && !error && (
-                  <span className="md:hidden">
-                    <strong className="font-semibold text-ink">{apiTotalElements.toLocaleString()}마리</strong> ·{" "}
-                  </span>
+                  <strong className="font-semibold text-ink md:hidden">{apiTotalElements.toLocaleString()}마리</strong>
                 )}
-                공고 마감이 가까운 순서예요
-              </p>
+                <label htmlFor="animal-sort" className="sr-only">
+                  정렬
+                </label>
+                <select
+                  id="animal-sort"
+                  className="list-filter-select"
+                  value={SORT_OPTIONS.some((o) => o.value === sort) ? sort : SORT_OPTIONS[0].value}
+                  onChange={(e) => setSort(e.target.value)}
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
 
@@ -366,6 +383,17 @@ export default function AnimalsPage() {
                       ],
                       value: size,
                       onChange: (v) => setSize(v as "SMALL" | "MEDIUM" | "LARGE" | ""),
+                    },
+                    {
+                      label: "성별",
+                      type: "chips",
+                      options: [
+                        { value: "", label: "전체" },
+                        { value: "MALE", label: genderLabels.MALE },
+                        { value: "FEMALE", label: genderLabels.FEMALE },
+                      ],
+                      value: gender,
+                      onChange: (v) => setGender(v as "MALE" | "FEMALE" | ""),
                     },
                     {
                       label: "시/도",

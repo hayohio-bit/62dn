@@ -3,6 +3,7 @@ package com.dnproject.platform.service;
 import com.dnproject.platform.domain.Animal;
 import com.dnproject.platform.domain.Shelter;
 import com.dnproject.platform.domain.constant.AnimalStatus;
+import com.dnproject.platform.domain.constant.Gender;
 import com.dnproject.platform.domain.constant.Size;
 import com.dnproject.platform.domain.constant.Species;
 
@@ -36,12 +37,12 @@ public class AnimalService {
     private final com.dnproject.platform.repository.AnimalImageRepository animalImageRepository;
 
     @Transactional(readOnly = true)
-    public PageResponse<AnimalResponse> findAll(Species species, AnimalStatus status, Size size, String region,
-            String sigungu, String search, Pageable pageable) {
+    public PageResponse<AnimalResponse> findAll(Species species, AnimalStatus status, Size size, Gender gender,
+            String region, String sigungu, String search, Pageable pageable) {
         String regionParam = (region != null && !region.isBlank()) ? region.trim() : null;
         String sigunguParam = (sigungu != null && !sigungu.isBlank()) ? sigungu.trim() : null;
         String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
-        Page<Animal> page = animalRepository.findWithFilters(species, status, size, regionParam, sigunguParam,
+        Page<Animal> page = animalRepository.findWithFilters(species, status, size, gender, regionParam, sigunguParam,
                 searchParam, pageable);
         return animalMapper.toPageResponse(page);
     }

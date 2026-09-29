@@ -199,8 +199,9 @@ public class LocalDemoDataLoader implements ApplicationRunner {
                 .vaccinated(vaccinated)
                 .imageUrl(String.format(UNSPLASH, photoId))
                 .status(AnimalStatus.PROTECTED)
-                .registerDate(today.minusDays(10))
-                .noticeStartDate(today.minusDays(10))
+                // "새로 들어온 순" 정렬을 확인할 수 있도록 공고 시작일을 동물마다 0~8일 전으로 다르게 둔다
+                .registerDate(today.minusDays(daysUntilNoticeEnd % 9))
+                .noticeStartDate(today.minusDays(daysUntilNoticeEnd % 9))
                 .noticeEndDate(today.plusDays(daysUntilNoticeEnd))
                 .build();
     }

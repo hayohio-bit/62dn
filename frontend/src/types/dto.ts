@@ -78,6 +78,7 @@ export interface AnimalListRequest {
   species?: "DOG" | "CAT";
   /** 동물 크기 필터 (API param: animalSize, size와 충돌 방지) */
   animalSize?: "SMALL" | "MEDIUM" | "LARGE";
+  gender?: "MALE" | "FEMALE";
   status?: "PROTECTED" | "FOSTERING";
   /** 보호소 주소 기준 지역 필터 (시·도 키워드, 예: 서울, 경기) */
   region?: string;
@@ -85,7 +86,7 @@ export interface AnimalListRequest {
   sigungu?: string;
   /** 이름·품종·보호소명 검색 (서버 검색) */
   search?: string;
-  /** 정렬: "필드,방향" 형식 (서버 기본값 noticeEndDate,asc) */
+  /** 정렬: "필드,방향" 형식. 서버는 noticeEndDate·noticeStartDate·createdAt만 허용 (기본값 noticeEndDate,asc) */
   sort?: string;
   page?: number;
   /** 백엔드 동물 목록 API 페이지 크기 파라미터명 */

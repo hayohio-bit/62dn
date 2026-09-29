@@ -5,6 +5,7 @@ import com.dnproject.platform.domain.Favorite;
 import com.dnproject.platform.domain.Shelter;
 import com.dnproject.platform.domain.User;
 import com.dnproject.platform.domain.constant.AnimalStatus;
+import com.dnproject.platform.domain.constant.Gender;
 import com.dnproject.platform.domain.constant.Species;
 import com.dnproject.platform.mapper.AnimalMapper;
 import jakarta.persistence.EntityManager;
@@ -79,7 +80,7 @@ class AnimalRepositoryQueryCountTest {
     @Test
     @DisplayName("동물 목록(findWithFilters)은 보호소를 함께 조회한다")
     void findWithFiltersFetchesShelter() {
-        Page<Animal> page = animalRepository.findWithFilters(null, null, null, null, null, null,
+        Page<Animal> page = animalRepository.findWithFilters(null, null, null, null, null, null, null,
                 PageRequest.of(0, 20, Sort.by("noticeEndDate")));
         // 목록 조회 1회 (+ 전체 건수 조회는 결과가 페이지보다 적으면 생략된다)
         assertShelterLoadedWithoutExtraQueries(page.getContent(), 2);
@@ -88,14 +89,28 @@ class AnimalRepositoryQueryCountTest {
     @Test
     @DisplayName("보호소 조건(지역·보호소명 검색)과 전체 건수는 그대로 동작한다")
     void findWithFiltersKeepsShelterConditions() {
-        Page<Animal> byName = animalRepository.findWithFilters(null, null, null, "서울", null, "보호소1",
+        Page<Animal> byName = animalRepository.findWithFilters(null, null, null, null, "서울", null, "보호소1",
                 PageRequest.of(0, 20, Sort.by("noticeEndDate")));
         assertThat(byName.getContent()).extracting(a -> a.getShelter().getName()).containsExactly("보호소1");
 
-        Page<Animal> paged = animalRepository.findWithFilters(null, null, null, "서울", null, null,
+        Page<Animal> paged = animalRepository.findWithFilters(null, null, null, null, "서울", null, null,
                 PageRequest.of(0, 2, Sort.by("noticeEndDate")));
         assertThat(paged.getContent()).hasSize(2);
         assertThat(paged.getTotalElements()).isEqualTo(ANIMALS);
+    }
+
+    @Test
+    @DisplayName("성별 조건을 주면 해당 성별 동물만 조회한다")
+    void findWithFiltersByGender() {
+        Shelter shelter = shelterRepository.findAll().get(0);
+        animalRepository.save(Animal.builder()
+                .shelter(shelter).species(Species.CAT).status(AnimalStatus.PROTECTED).gender(Gender.FEMALE)
+                .name("암컷").build());
+
+        Page<Animal> females = animalRepository.findWithFilters(null, null, null, Gender.FEMALE, null, null, null,
+                PageRequest.of(0, 20, Sort.by("noticeEndDate")));
+
+        assertThat(females.getContent()).extracting(Animal::getName).containsExactly("암컷");
     }
 
     @Test
