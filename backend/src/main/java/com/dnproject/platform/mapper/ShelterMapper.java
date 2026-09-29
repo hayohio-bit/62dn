@@ -1,5 +1,7 @@
 package com.dnproject.platform.mapper;
 
+import com.dnproject.platform.util.ContactPhone;
+
 import com.dnproject.platform.domain.Shelter;
 import com.dnproject.platform.dto.response.PublicShelterResponse;
 import com.dnproject.platform.dto.response.ShelterResponse;
@@ -13,7 +15,7 @@ public class ShelterMapper {
                 .id(s.getId())
                 .name(s.getName())
                 .address(s.getAddress())
-                .phone(s.getPhone())
+                .phone(ContactPhone.usable(s.getPhone()))
                 .email(s.getEmail())
                 .businessRegistrationNumber(s.getBusinessRegistrationNumber())
                 .businessRegistrationFile(s.getBusinessRegistrationFile())
@@ -31,7 +33,7 @@ public class ShelterMapper {
                 .regionSigungu(s.getRegionSigungu())
                 .latitude(s.getLatitude())
                 .longitude(s.getLongitude())
-                .phone(s.getPhone())
+                .phone(ContactPhone.usable(s.getPhone()))
                 .email(s.getEmail())
                 .build();
     }

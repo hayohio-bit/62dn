@@ -13,6 +13,7 @@ import com.dnproject.platform.domain.constant.Role;
 import com.dnproject.platform.domain.constant.Size;
 import com.dnproject.platform.domain.constant.Species;
 import com.dnproject.platform.domain.constant.VerificationStatus;
+import com.dnproject.platform.util.KoreanDate;
 import com.dnproject.platform.repository.AnimalRepository;
 import com.dnproject.platform.repository.BoardRepository;
 import com.dnproject.platform.repository.CommentRepository;
@@ -84,7 +85,7 @@ public class LocalDemoDataLoader implements ApplicationRunner {
                 shelter("부산 해운대 동물보호센터", "부산광역시 해운대구 중동2로 11", "부산", "해운대구", "35.1631", "129.1636", "051-000-1005"),
                 shelter("제주 동물보호센터", "제주특별자치도 제주시 광양9길 10", "제주", "제주시", "33.4996", "126.5312", "064-000-1006")));
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = KoreanDate.today();
         List<Animal> animals = new ArrayList<>();
         // 개 12마리
         animals.add(animal(shelters.get(0), Species.DOG, "믹스견", "보리", 2, Gender.MALE, Size.MEDIUM, "12.4",

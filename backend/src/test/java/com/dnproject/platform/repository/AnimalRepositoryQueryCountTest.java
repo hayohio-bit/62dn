@@ -80,7 +80,7 @@ class AnimalRepositoryQueryCountTest {
     @Test
     @DisplayName("동물 목록(findWithFilters)은 보호소를 함께 조회한다")
     void findWithFiltersFetchesShelter() {
-        Page<Animal> page = animalRepository.findWithFilters(null, null, null, null, null, null, null, null,
+        Page<Animal> page = animalRepository.findWithFilters(null, null, null, null, null, null, null, null, LocalDate.now(),
                 PageRequest.of(0, 20, Sort.by("noticeEndDate")));
         // 목록 조회 1회 (+ 전체 건수 조회는 결과가 페이지보다 적으면 생략된다)
         assertShelterLoadedWithoutExtraQueries(page.getContent(), 2);
@@ -89,11 +89,11 @@ class AnimalRepositoryQueryCountTest {
     @Test
     @DisplayName("보호소 조건(지역·보호소명 검색)과 전체 건수는 그대로 동작한다")
     void findWithFiltersKeepsShelterConditions() {
-        Page<Animal> byName = animalRepository.findWithFilters(null, null, null, null, null, "서울", null, "보호소1",
+        Page<Animal> byName = animalRepository.findWithFilters(null, null, null, null, null, "서울", null, "보호소1", LocalDate.now(),
                 PageRequest.of(0, 20, Sort.by("noticeEndDate")));
         assertThat(byName.getContent()).extracting(a -> a.getShelter().getName()).containsExactly("보호소1");
 
-        Page<Animal> paged = animalRepository.findWithFilters(null, null, null, null, null, "서울", null, null,
+        Page<Animal> paged = animalRepository.findWithFilters(null, null, null, null, null, "서울", null, null, LocalDate.now(),
                 PageRequest.of(0, 2, Sort.by("noticeEndDate")));
         assertThat(paged.getContent()).hasSize(2);
         assertThat(paged.getTotalElements()).isEqualTo(ANIMALS);
@@ -107,7 +107,7 @@ class AnimalRepositoryQueryCountTest {
                 .shelter(shelter).species(Species.CAT).status(AnimalStatus.PROTECTED).gender(Gender.FEMALE)
                 .name("암컷").build());
 
-        Page<Animal> females = animalRepository.findWithFilters(null, null, null, Gender.FEMALE, null, null, null, null,
+        Page<Animal> females = animalRepository.findWithFilters(null, null, null, Gender.FEMALE, null, null, null, null, LocalDate.now(),
                 PageRequest.of(0, 20, Sort.by("noticeEndDate")));
 
         assertThat(females.getContent()).extracting(Animal::getName).containsExactly("암컷");
@@ -119,16 +119,49 @@ class AnimalRepositoryQueryCountTest {
         Shelter shelter = shelterRepository.findAll().get(2);
 
         Page<Animal> page = animalRepository.findWithFilters(null, null, null, null, shelter.getId(), null, null,
-                null, PageRequest.of(0, 20, Sort.by("noticeEndDate")));
+                null, LocalDate.now(), PageRequest.of(0, 20, Sort.by("noticeEndDate")));
 
         assertThat(page.getContent()).extracting(a -> a.getShelter().getId()).containsExactly(shelter.getId());
+    }
+
+    @Test
+    @DisplayName("공고 마감일이 지난 동물은 목록에서 뺀다")
+    void findWithFiltersExcludesExpired() {
+        Shelter shelter = shelterRepository.findAll().get(0);
+        animalRepository.save(Animal.builder()
+                .shelter(shelter).species(Species.DOG).status(AnimalStatus.PROTECTED).name("마감")
+                .noticeEndDate(LocalDate.now().minusDays(1)).build());
+
+        Page<Animal> page = animalRepository.findWithFilters(null, null, null, null, null, null, null, null,
+                LocalDate.now(), PageRequest.of(0, 20, Sort.by("noticeEndDate")));
+
+        assertThat(page.getContent()).extracting(Animal::getName).doesNotContain("마감");
+        assertThat(page.getTotalElements()).isEqualTo(ANIMALS);
+    }
+
+    @Test
+    @DisplayName("공공데이터 동물의 임시 이름은 이름 검색에 걸리지 않고, 품종 검색에는 걸린다")
+    void searchIgnoresTemporaryNames() {
+        Shelter shelter = shelterRepository.findAll().get(0);
+        animalRepository.save(Animal.builder()
+                .shelter(shelter).species(Species.DOG).status(AnimalStatus.PROTECTED)
+                .publicApiAnimalId("P-1").name("초코").breed("진돗개")
+                .noticeEndDate(LocalDate.now().plusDays(3)).build());
+
+        Page<Animal> byName = animalRepository.findWithFilters(null, null, null, null, null, null, null, "초코",
+                LocalDate.now(), PageRequest.of(0, 20, Sort.by("noticeEndDate")));
+        Page<Animal> byBreed = animalRepository.findWithFilters(null, null, null, null, null, null, null, "진돗",
+                LocalDate.now(), PageRequest.of(0, 20, Sort.by("noticeEndDate")));
+
+        assertThat(byName.getContent()).isEmpty();
+        assertThat(byBreed.getContent()).extracting(Animal::getPublicApiAnimalId).containsExactly("P-1");
     }
 
     @Test
     @DisplayName("추천 목록(findRecommended)은 보호소를 함께 조회한다")
     void findRecommendedFetchesShelter() {
         Page<Animal> page = animalRepository.findRecommended(List.of(AnimalStatus.PROTECTED), null, null, null,
-                null, null, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
+                null, null, LocalDate.now(), PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
         assertShelterLoadedWithoutExtraQueries(page.getContent(), 2);
     }
 

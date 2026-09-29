@@ -27,8 +27,9 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
         Optional<Animal> findByPublicApiAnimalId(String publicApiAnimalId);
 
         /**
-         * region/sigungu는 Shelter.regionSido, regionSigungu 기준 정확 매칭. search는
-         * 이름·품종·보호소명 LIKE
+         * region/sigungu는 Shelter.regionSido, regionSigungu 기준 정확 매칭. search는 이름·품종·보호소명 LIKE.
+         * 공고 마감일이 지난 동물은 빼고(일일 동기화가 최근 7일치만 다시 조회해 DB에 남을 수 있다),
+         * 공공데이터 동물의 이름은 임시 이름이라 이름 검색 대상에서 뺀다.
          */
         @EntityGraph(attributePaths = "shelter")
         @Query("SELECT a FROM Animal a JOIN a.shelter s WHERE " +
@@ -38,12 +39,15 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
                         "AND (:shelterId IS NULL OR s.id = :shelterId) " +
                         "AND (:region IS NULL OR :region = '' OR s.regionSido = :region) " +
                         "AND (:sigungu IS NULL OR :sigungu = '' OR s.regionSigungu = :sigungu) " +
-                        "AND (:search IS NULL OR :search = '' OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+                        "AND (a.noticeEndDate IS NULL OR a.noticeEndDate >= :today) " +
+                        "AND (:search IS NULL OR :search = '' " +
+                        "OR ((a.publicApiAnimalId IS NULL OR a.publicApiAnimalId = '') AND LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%'))) " +
                         "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
         Page<Animal> findWithFilters(@Param("species") Species species, @Param("status") AnimalStatus status,
                         @Param("size") Size size, @Param("gender") Gender gender, @Param("shelterId") Long shelterId,
                         @Param("region") String region,
-                        @Param("sigungu") String sigungu, @Param("search") String search, Pageable pageable);
+                        @Param("sigungu") String sigungu, @Param("search") String search,
+                        @Param("today") LocalDate today, Pageable pageable);
 
         /** 공공API 유래, 보호중, 등록일이 N일 초과된 동물 (상태 보정 대상) */
         @Query("SELECT a FROM Animal a WHERE a.publicApiAnimalId IS NOT NULL AND a.publicApiAnimalId != '' " +
@@ -70,11 +74,13 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
                         "AND (:species IS NULL OR a.species = :species) " +
                         "AND (:minAge IS NULL OR a.age >= :minAge) AND (:maxAge IS NULL OR a.age <= :maxAge) " +
                         "AND (:size IS NULL OR a.size = :size) " +
-                        "AND (:regions IS NULL OR s.regionSido IN (:regions))")
+                        "AND (:regions IS NULL OR s.regionSido IN (:regions)) " +
+                        "AND (a.noticeEndDate IS NULL OR a.noticeEndDate >= :today)")
         Page<Animal> findRecommended(@Param("statuses") List<AnimalStatus> statuses,
                         @Param("species") Species species,
                         @Param("minAge") Integer minAge, @Param("maxAge") Integer maxAge,
-                        @Param("size") Size size, @Param("regions") List<String> regions, Pageable pageable);
+                        @Param("size") Size size, @Param("regions") List<String> regions,
+                        @Param("today") LocalDate today, Pageable pageable);
 
         /** 안락사 D-Day: 마감이 임박한 보호중 동물 (오늘 ~ maxDate) */
         @EntityGraph(attributePaths = "shelter")

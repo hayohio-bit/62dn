@@ -10,6 +10,8 @@ import com.dnproject.platform.repository.AnimalRepository;
 import com.dnproject.platform.repository.FavoriteRepository;
 import com.dnproject.platform.repository.ShelterRepository;
 import com.dnproject.platform.util.AddressRegionParser;
+import com.dnproject.platform.util.KoreanDate;
+import com.dnproject.platform.util.TemporaryNames;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -121,7 +123,7 @@ public class AnimalSyncService {
      */
     public SyncResult syncFromPublicApi(int days, Integer maxPages, String speciesFilter) {
         ensureKindMapLoaded();
-        LocalDate endDate = LocalDate.now();
+        LocalDate endDate = KoreanDate.today();
         LocalDate startDate = endDate.minusDays(days);
 
         SyncCounter counter = new SyncCounter();
@@ -140,7 +142,7 @@ public class AnimalSyncService {
      */
     public SyncResult syncDailySchedule() {
         ensureKindMapLoaded();
-        LocalDate endDate = LocalDate.now();
+        LocalDate endDate = KoreanDate.today();
         LocalDate startDate = endDate.minusDays(NEW_DAYS);
 
         SyncCounter counter = new SyncCounter();
@@ -154,7 +156,7 @@ public class AnimalSyncService {
      * insert/update 없이 삭제만 수행하므로 빠르고 실패 위험이 낮음.
      */
     public int removeNonProtectedFromApi(int days) {
-        LocalDate endDate = LocalDate.now();
+        LocalDate endDate = KoreanDate.today();
         LocalDate startDate = endDate.minusDays(days);
         int removed = 0;
 
@@ -275,7 +277,7 @@ public class AnimalSyncService {
         var existing = animalRepository.findByPublicApiAnimalId(item.getDesertionNo());
 
         // 보호 대상이 아니거나 공고 기한이 이미 지난 경우 → 삭제 또는 무시
-        boolean isExpired = noticeEndDate != null && noticeEndDate.isBefore(LocalDate.now());
+        boolean isExpired = noticeEndDate != null && noticeEndDate.isBefore(KoreanDate.today());
 
         if (status == null || isExpired) {
             if (existing.isPresent()) {
@@ -319,6 +321,12 @@ public class AnimalSyncService {
         animal.setChargePhone(nullToBlank(item.getOfficetel(), 30));
         animal.setNoticeStartDate(parseDate(item.getNoticeSdt()));
         animal.setNoticeEndDate(parseDate(item.getNoticeEdt()));
+        // 처음 받은 뒤 공고가 정정되면(중성화 확인, 체중 측정 등) 화면에도 반영한다
+        animal.setAge(parseAge(item.getAge()));
+        animal.setGender(mapGender(item.getSexCd()));
+        animal.setSize(estimateSize(item.getWeight()));
+        animal.setWeight(parseWeight(item.getWeight()));
+        animal.setNeutered("Y".equalsIgnoreCase(item.getNeuterYn()));
         animalRepository.save(animal);
     }
 
@@ -344,7 +352,25 @@ public class AnimalSyncService {
             return true;
         if (!java.util.Objects.equals(animal.getNoticeEndDate(), parseDate(item.getNoticeEdt())))
             return true;
+        if (!java.util.Objects.equals(animal.getName(), generateName(item)))
+            return true;
+        if (!java.util.Objects.equals(animal.getAge(), parseAge(item.getAge())))
+            return true;
+        if (animal.getGender() != mapGender(item.getSexCd()))
+            return true;
+        if (animal.getSize() != estimateSize(item.getWeight()))
+            return true;
+        if (!sameWeight(animal.getWeight(), parseWeight(item.getWeight())))
+            return true;
+        if (!java.util.Objects.equals(animal.getNeutered(), "Y".equalsIgnoreCase(item.getNeuterYn())))
+            return true;
         return false;
+    }
+
+    private static boolean sameWeight(BigDecimal a, BigDecimal b) {
+        if (a == null || b == null)
+            return a == b;
+        return a.compareTo(b) == 0;
     }
 
     private void createAnimalFromApi(AnimalItem item) {
@@ -454,7 +480,8 @@ public class AnimalSyncService {
     private Shelter createShelterFromApi(AnimalItem item) {
         String name = item.getCareNm() != null && !item.getCareNm().isBlank() ? item.getCareNm() : "미상";
         String addr = item.getCareAddr() != null ? item.getCareAddr() : "";
-        String tel = item.getCareTel() != null ? item.getCareTel() : "000-0000-0000";
+        // phone 컬럼이 NOT NULL이라 번호가 없으면 빈 문자열로 둔다. 가짜 번호를 넣으면 화면에 전화 링크로 나간다.
+        String tel = item.getCareTel() != null ? item.getCareTel().trim() : "";
         String[] region = AddressRegionParser.parse(addr);
         return shelterRepository.save(Shelter.builder()
                 .name(name)
@@ -504,7 +531,7 @@ public class AnimalSyncService {
             String num = age.replaceAll("[^0-9]", "");
             if (num.length() >= 4) {
                 int year = Integer.parseInt(num.substring(0, 4));
-                return LocalDate.now().getYear() - year;
+                return KoreanDate.today().getYear() - year;
             }
             return Integer.parseInt(num);
         } catch (Exception e) {
@@ -538,33 +565,36 @@ public class AnimalSyncService {
         return null;
     }
 
+    private static final java.util.regex.Pattern FIRST_NUMBER = java.util.regex.Pattern.compile("\\d+(\\.\\d+)?");
+
+    /**
+     * 체중 문자열에서 첫 번째 숫자를 kg으로 읽는다 (예: "3.2(Kg)" → 3.2, "1~2(Kg)" → 1).
+     * 숫자를 모두 이어 붙이면 "1~2"가 12가 되므로 첫 숫자만 쓴다.
+     */
     private BigDecimal parseWeight(String weight) {
         if (weight == null || weight.isBlank())
             return null;
+        var m = FIRST_NUMBER.matcher(weight);
+        if (!m.find())
+            return null;
         try {
-            String num = weight.replaceAll("[^0-9.]", "");
-            if (num.isEmpty())
-                return null;
-            return new BigDecimal(num);
-        } catch (Exception e) {
+            return new BigDecimal(m.group());
+        } catch (NumberFormatException e) {
             return null;
         }
     }
 
+    /** 체중으로 크기를 추정한다. 체중을 모르면 크기도 모름(null)으로 둔다. */
     private Size estimateSize(String weight) {
-        if (weight == null)
+        BigDecimal w = parseWeight(weight);
+        if (w == null || w.signum() <= 0)
+            return null;
+        double kg = w.doubleValue();
+        if (kg < 5)
+            return Size.SMALL;
+        if (kg < 15)
             return Size.MEDIUM;
-        try {
-            String num = weight.replaceAll("[^0-9.]", "");
-            double w = Double.parseDouble(num.isEmpty() ? "0" : num);
-            if (w < 5)
-                return Size.SMALL;
-            if (w < 15)
-                return Size.MEDIUM;
-            return Size.LARGE;
-        } catch (Exception e) {
-            return Size.MEDIUM;
-        }
+        return Size.LARGE;
     }
 
     private LocalDate parseDate(String dateStr) {
@@ -577,16 +607,8 @@ public class AnimalSyncService {
         }
     }
 
-    /** 가명용 이름 풀 (desertionNo 해시로 고정 배정) */
-    private static final String[] PLACEHOLDER_NAMES = {
-            "똘이", "초코", "감자", "콩이", "나비", "링고", "토리", "초롱", "루니", "모카",
-            "달이", "별이", "하늘이", "꼬미", "보리", "찰리", "해피", "코코", "두부", "깜이"
-    };
-
+    /** 공고에 이름이 없으므로 유기번호로 임시 이름을 고정 배정한다. 화면에서는 "임시 이름"으로 표시한다. */
     private String generateName(AnimalItem item) {
-        String no = item.getDesertionNo();
-        int idx = no != null ? Math.abs(no.hashCode() % PLACEHOLDER_NAMES.length) : 0;
-        String base = PLACEHOLDER_NAMES[idx];
-        return base + "(가명)";
+        return TemporaryNames.forAnimal(item.getDesertionNo(), mapSpecies(item) == Species.CAT);
     }
 }

@@ -99,4 +99,78 @@ class AnimalSyncServiceJpaTest {
         assertThat(favoriteRepository.count()).isZero();
         assertThat(animalImageRepository.count()).isZero();
     }
+
+    private AnimalSyncService serviceReturning(AnimalItem... items) {
+        PublicApiService publicApiService = mock(PublicApiService.class);
+        when(publicApiService.getKindList(anyString())).thenReturn(Collections.emptyList());
+        when(publicApiService.getAbandonedAnimals(any(), any(), eq("417000"), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of(items));
+        AnimalSyncService service = new AnimalSyncService(publicApiService, animalRepository, shelterRepository,
+                favoriteRepository, animalImageRepository, transactionManager);
+        service.init();
+        return service;
+    }
+
+    private AnimalItem dogItem(String desertionNo) {
+        AnimalItem item = new AnimalItem();
+        item.setDesertionNo(desertionNo);
+        item.setUpKindCd("417000");
+        item.setKindNm("믹스견");
+        item.setProcessState("보호중");
+        item.setCareNm("테스트 보호소");
+        item.setCareAddr("서울특별시 중구 세종대로 110");
+        item.setNoticeSdt(KoreanDateText.plusDays(-2));
+        item.setNoticeEdt(KoreanDateText.plusDays(8));
+        return item;
+    }
+
+    @Test
+    @DisplayName("공고에 이름·보호소 전화번호가 없으면 임시 이름을 붙이고, 가짜 번호 대신 빈 번호로 저장한다")
+    void createsAnimalWithTemporaryNameAndNoFakePhone() {
+        AnimalItem item = dogItem("B-1");
+        item.setWeight("1~2(Kg)");
+
+        serviceReturning(item).syncFromPublicApi(3, null, "DOG");
+
+        Animal saved = animalRepository.findByPublicApiAnimalId("B-1").orElseThrow();
+        assertThat(saved.getName()).doesNotContain("가명").isNotBlank();
+        assertThat(saved.getWeight()).isEqualByComparingTo("1");
+        // 테스트는 트랜잭션 밖이라 지연 로딩 대신 보호소를 따로 조회한다
+        assertThat(shelterRepository.findFirstByName("테스트 보호소").orElseThrow().getPhone()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("체중이 없으면 크기를 추정하지 않는다")
+    void unknownWeightLeavesSizeEmpty() {
+        serviceReturning(dogItem("B-2")).syncFromPublicApi(3, null, "DOG");
+
+        Animal saved = animalRepository.findByPublicApiAnimalId("B-2").orElseThrow();
+        assertThat(saved.getSize()).isNull();
+        assertThat(saved.getWeight()).isNull();
+    }
+
+    @Test
+    @DisplayName("이미 저장된 동물의 중성화·체중이 공고에서 정정되면 다시 동기화할 때 반영한다")
+    void updatesCorrectedFields() {
+        AnimalItem first = dogItem("B-3");
+        first.setNeuterYn("U");
+        serviceReturning(first).syncFromPublicApi(3, null, "DOG");
+
+        AnimalItem corrected = dogItem("B-3");
+        corrected.setNeuterYn("Y");
+        corrected.setWeight("12(Kg)");
+        serviceReturning(corrected).syncFromPublicApi(3, null, "DOG");
+
+        Animal saved = animalRepository.findByPublicApiAnimalId("B-3").orElseThrow();
+        assertThat(saved.getNeutered()).isTrue();
+        assertThat(saved.getWeight()).isEqualByComparingTo("12");
+    }
+
+    /** 공공 API 날짜 형식(yyyyMMdd)으로 오늘 기준 날짜를 만든다 */
+    private static final class KoreanDateText {
+        static String plusDays(int days) {
+            return com.dnproject.platform.util.KoreanDate.today().plusDays(days)
+                    .format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+        }
+    }
 }

@@ -43,6 +43,8 @@ public class AnimalResponse {
     private Integer age;
     private Gender gender;
     private Size size;
+    /** 체중(kg). 크기는 이 값으로 추정한 것이다 */
+    private Double weight;
     private String description;
     private String imageUrl;
     private Boolean neutered;

@@ -16,6 +16,7 @@ import com.dnproject.platform.repository.AnimalRepository;
 import com.dnproject.platform.repository.ShelterRepository;
 import com.dnproject.platform.service.PreferenceService;
 import com.dnproject.platform.mapper.AnimalMapper;
+import com.dnproject.platform.util.KoreanDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,7 +45,7 @@ public class AnimalService {
         String sigunguParam = (sigungu != null && !sigungu.isBlank()) ? sigungu.trim() : null;
         String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
         Page<Animal> page = animalRepository.findWithFilters(species, status, size, gender, shelterId, regionParam, sigunguParam,
-                searchParam, pageable);
+                searchParam, KoreanDate.today(), pageable);
         return animalMapper.toPageResponse(page);
     }
 
@@ -60,7 +61,7 @@ public class AnimalService {
      */
     @Transactional(readOnly = true)
     public List<AnimalResponse> findUrgentAnimals(int limit) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = KoreanDate.today();
         LocalDate maxDate = today.plusYears(1);
         Pageable pageable = org.springframework.data.domain.PageRequest.of(0, limit);
 
@@ -77,7 +78,7 @@ public class AnimalService {
      */
     @Transactional(readOnly = true)
     public AnimalStatsResponse getStats() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = KoreanDate.today();
         return AnimalStatsResponse.builder()
                 .protectedCount(animalRepository.countOpenNotices(AnimalStatus.PROTECTED, today))
                 .endingWithinWeekCount(animalRepository.countByStatusAndNoticeEndDateBetween(
@@ -123,7 +124,7 @@ public class AnimalService {
                 : null;
         List<AnimalStatus> statuses = List.of(AnimalStatus.PROTECTED);
         Page<Animal> page = animalRepository.findRecommended(statuses, species, minAge, maxAge, size, regions,
-                pageable);
+                KoreanDate.today(), pageable);
         return animalMapper.toPageResponse(page);
     }
 
@@ -137,7 +138,7 @@ public class AnimalService {
         List<Animal> adoptedAnimals = animalRepository.findAllByStatus(AnimalStatus.ADOPTED);
         List<Animal> nullAnimals = animalRepository.findAllByStatusIsNull();
         List<Animal> expiredAnimals = animalRepository.findAllByStatusAndNoticeEndDateBefore(AnimalStatus.PROTECTED,
-                LocalDate.now());
+                KoreanDate.today());
 
         List<Animal> toDelete = new java.util.ArrayList<>();
         toDelete.addAll(adoptedAnimals);
