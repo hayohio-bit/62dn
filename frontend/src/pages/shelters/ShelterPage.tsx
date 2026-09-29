@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import clsx from "clsx";
 import { animalApi, shelterApi } from "@/api";
@@ -30,8 +30,24 @@ export default function ShelterPage() {
   const shelterId = Number(id);
   const [shelter, setShelter] = useState<PublicShelterResponse | null>(null);
   const [shelterState, setShelterState] = useState<"loading" | "ready" | "notFound" | "error">("loading");
-  const [species, setSpecies] = useState<Species | "">("");
-  const [page, setPage] = useState(0);
+  // 종류 필터와 페이지는 URL에 두어, 동물 상세에서 뒤로 돌아와도 보던 목록이 유지되게 한다
+  const [searchParams, setSearchParams] = useSearchParams();
+  const speciesParam = searchParams.get("species");
+  const species: Species | "" = speciesParam === "DOG" || speciesParam === "CAT" ? speciesParam : "";
+  const page = Math.max(0, Number(searchParams.get("page")) || 0);
+  const updateList = (next: { species?: Species | ""; page: number }) =>
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        const nextSpecies = next.species ?? species;
+        if (nextSpecies) params.set("species", nextSpecies);
+        else params.delete("species");
+        if (next.page > 0) params.set("page", String(next.page));
+        else params.delete("page");
+        return params;
+      },
+      { replace: true },
+    );
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [total, setTotal] = useState(0);
   const [animalsLoading, setAnimalsLoading] = useState(true);
@@ -40,9 +56,6 @@ export default function ShelterPage() {
   useDocumentTitle(shelterState === "notFound" ? "보호소를 찾을 수 없음" : shelter?.name);
 
   useEffect(() => {
-    // 다른 보호소로 이동하면 이전 보호소의 필터와 페이지를 이어 쓰지 않는다
-    setSpecies("");
-    setPage(0);
     if (!Number.isInteger(shelterId) || shelterId <= 0) {
       setShelterState("notFound");
       return;
@@ -72,7 +85,8 @@ export default function ShelterPage() {
     setAnimalsLoading(true);
     setAnimalsError(false);
     animalApi
-      .getAll({ shelterId, species: species || undefined, page, sizeParam: PAGE_SIZE })
+      // 목록 화면·랜딩 현황과 같은 기준으로 보호 중(공고 중)인 동물만 보여 준다
+      .getAll({ shelterId, status: "PROTECTED", species: species || undefined, page, sizeParam: PAGE_SIZE })
       .then((data) => {
         if (cancelled) return;
         setAnimals(data?.content ?? []);
@@ -197,10 +211,7 @@ export default function ShelterPage() {
                         type="button"
                         className={clsx("list-filter-chip", species === opt.value && "is-active")}
                         aria-pressed={species === opt.value}
-                        onClick={() => {
-                          setSpecies(opt.value);
-                          setPage(0);
-                        }}
+                        onClick={() => updateList({ species: opt.value, page: 0 })}
                       >
                         {opt.label}
                       </button>
@@ -244,7 +255,7 @@ export default function ShelterPage() {
                           totalPages={totalPages}
                           totalElements={total}
                           size={PAGE_SIZE}
-                          onPageChange={setPage}
+                          onPageChange={(p) => updateList({ page: p })}
                           unit="마리"
                         />
                       )}
