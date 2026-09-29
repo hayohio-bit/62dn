@@ -20,7 +20,7 @@
   --toss-gray-900: #3a3129;
   --toss-gray-700: #5b5147;
   --toss-gray-600: #6f6459;
-  --toss-gray-500: #8a7f73;
+  --toss-gray-500: #6e6357;
   --toss-gray-400: #a39888;
   --toss-gray-300: #d6cbbb;
   --toss-gray-100: #efe7db;
@@ -511,7 +511,7 @@ body.toss-menu-open {
 
 .toss-footer-copy {
   font-size: 0.8125rem;
-  color: rgba(245, 239, 230, 0.45);
+  color: rgba(245, 239, 230, 0.65);
 }
 
 /* 고정 헤더 아래 본문 여백 */

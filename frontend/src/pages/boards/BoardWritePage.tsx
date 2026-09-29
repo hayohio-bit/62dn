@@ -165,7 +165,7 @@ export default function BoardWritePage() {
                 <label htmlFor="board-title" className="text-sm font-semibold text-ink">
                   제목
                 </label>
-                <span className="text-xs text-ink-faint">
+                <span className="text-xs text-ink-muted">
                   {formData.title.length}/{TITLE_MAX}
                 </span>
               </div>

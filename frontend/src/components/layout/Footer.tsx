@@ -51,7 +51,7 @@ export default function Footer() {
           </div>
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title}>
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-cream/40">{col.title}</p>
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-cream/60">{col.title}</p>
               <ul className="space-y-3">
                 {col.links.map((l) => (
                   <li key={l.to}>

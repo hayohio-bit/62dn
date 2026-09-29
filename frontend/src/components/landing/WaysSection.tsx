@@ -27,7 +27,7 @@ export default function WaysSection() {
               to={w.to}
               className="group grid items-center gap-4 border-b border-ink/15 py-8 transition-colors md:grid-cols-12 md:py-10"
             >
-              <span className="font-display text-lg text-ink-faint md:col-span-1">{w.no}</span>
+              <span className="font-display text-lg text-ink-muted md:col-span-1">{w.no}</span>
               <h3 className="font-display font-display-strong text-4xl transition-colors group-hover:text-terracotta md:col-span-4 md:text-5xl">
                 {w.title}
               </h3>

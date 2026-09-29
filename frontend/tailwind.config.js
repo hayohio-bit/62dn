@@ -15,7 +15,7 @@ export default {
         ink: {
           DEFAULT: "#221C16",
           soft: "#5B5147",
-          muted: "#8A7F73",
+          muted: "#6E6357",
           faint: "#B5AB9E",
         },
         terracotta: {
