@@ -7,7 +7,7 @@ import { authApi } from "@/api/auth";
 
 const navItems = [
   { to: "/animals", label: "가족 찾기" },
-  { to: "/guide/adoption", label: "입양·임보 안내" },
+  { to: "/guide/adoption", label: "입양·임시보호 안내" },
   { to: "/support", label: "봉사·기부" },
   { to: "/boards", label: "게시판" },
 ];

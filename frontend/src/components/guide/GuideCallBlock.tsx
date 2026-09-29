@@ -1,6 +1,6 @@
 /**
  * 전화 문의 블록
- * - GuideCallBlock: 절차 안내 페이지에서 특정 동물을 두고 "입양상담 예약" / "임보 신청 전화하기"를 안내한다.
+ * - GuideCallBlock: 절차 안내 페이지에서 특정 동물을 두고 "입양 상담 문의" / "임시보호 문의"를 안내한다.
  * - CallInquiryTip: 보호소에 전화할 때 말할 유기번호와 예시 문구 (상세 페이지와 함께 쓴다)
  */
 
@@ -13,8 +13,8 @@ import { genderLabels, speciesLabels } from "@/constants/animalLabels";
 type CallBlockType = "adoption" | "foster";
 
 const titles: Record<CallBlockType, string> = {
-  adoption: "입양상담 예약하기",
-  foster: "임보 신청 전화하기",
+  adoption: "입양 상담 문의하기",
+  foster: "임시보호 문의하기",
 };
 
 /** 전화번호의 공백을 지워 tel: 링크에 쓴다 */

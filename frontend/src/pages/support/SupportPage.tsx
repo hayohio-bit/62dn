@@ -218,7 +218,7 @@ export default function SupportPage() {
               <br className="sm:hidden" /> 손을 보태 주세요
             </h1>
             <p className="dn-page-desc">
-              공공데이터에 등록된 전국 동물보호센터 목록이에요. 보호소에 직접 전화하면 봉사와 기부를 신청할 수 있어요.
+              유기동물 공고에 등록된 전국 보호소 목록이에요. 봉사와 기부는 보호소마다 받는 방법이 다르니 먼저 전화로 문의해 주세요.
             </p>
             <a href="#shelters" className="toss-btn toss-btn-accent mt-8">
               보호소 찾기 <span aria-hidden>↓</span>

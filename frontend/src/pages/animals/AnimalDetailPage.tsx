@@ -342,7 +342,7 @@ export default function AnimalDetailPage() {
                   보호소에 전화해 주세요
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-cream/60">
-                  입양·임시보호 신청과 방문 예약은 보호소에서 전화로 받고 있어요.
+                  입양·임시보호 가능 여부와 방문 예약은 보호소에 전화로 문의해 주세요.
                 </p>
                 {phones.length > 0 ? (
                   <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -377,7 +377,7 @@ export default function AnimalDetailPage() {
                     to={`/guide/foster?animalId=${animal.id}`}
                     className="group flex items-center justify-between rounded-2xl px-1 py-1 text-sm font-semibold text-cream/85 transition hover:text-cream sm:pl-4"
                   >
-                    임보 절차 안내
+                    임시보호 절차 안내
                     <span aria-hidden className="grid h-8 w-8 place-items-center rounded-full border border-cream/25 transition group-hover:border-terracotta group-hover:bg-terracotta">
                       →
                     </span>

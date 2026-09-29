@@ -277,7 +277,7 @@ export default function ShelterPage() {
                       입양 절차 안내
                     </Link>
                     <Link to="/guide/foster" className="toss-btn toss-btn-outline !px-4 !py-2.5 text-sm">
-                      임보 절차 안내
+                      임시보호 절차 안내
                     </Link>
                   </div>
                 </div>
