@@ -73,15 +73,16 @@ public class AnimalService {
 
     /**
      * 랜딩 실시간 현황. 일주일 안은 오늘(D-Day)부터 7일 뒤(D-7)까지로, 목록의 D-day 강조 기준과 같다.
+     * 일일 동기화는 최근 7일치만 다시 조회하므로 공고 마감일이 지난 동물이 DB에 남을 수 있어, 집계에서 뺀다.
      */
     @Transactional(readOnly = true)
     public AnimalStatsResponse getStats() {
         LocalDate today = LocalDate.now();
         return AnimalStatsResponse.builder()
-                .protectedCount(animalRepository.countByStatus(AnimalStatus.PROTECTED))
+                .protectedCount(animalRepository.countOpenNotices(AnimalStatus.PROTECTED, today))
                 .endingWithinWeekCount(animalRepository.countByStatusAndNoticeEndDateBetween(
                         AnimalStatus.PROTECTED, today, today.plusDays(7)))
-                .shelterCount(animalRepository.countSheltersWithStatus(AnimalStatus.PROTECTED))
+                .shelterCount(animalRepository.countSheltersWithOpenNotices(AnimalStatus.PROTECTED, today))
                 .build();
     }
 

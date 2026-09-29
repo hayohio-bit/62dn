@@ -37,11 +37,13 @@ class AnimalStatsRepositoryTest {
         animalRepository.deleteAllInBatch();
         Shelter a = shelter("가 보호소");
         Shelter b = shelter("나 보호소");
-        shelter("동물 없는 보호소");
+        Shelter expiredOnly = shelter("마감된 동물만 있는 보호소");
         animal(a, AnimalStatus.PROTECTED, today);
         animal(a, AnimalStatus.PROTECTED, today.plusDays(7));
         animal(b, AnimalStatus.PROTECTED, today.plusDays(8));
         animal(b, AnimalStatus.FOSTERING, today.plusDays(1));
+        // 공고 마감일이 지났지만 아직 삭제되지 않은 동물
+        animal(expiredOnly, AnimalStatus.PROTECTED, today.minusDays(1));
     }
 
     private Shelter shelter(String name) {
@@ -63,9 +65,9 @@ class AnimalStatsRepositoryTest {
     }
 
     @Test
-    @DisplayName("보호소 수는 보호 중인 동물이 있는 보호소만 한 번씩 센다")
-    void countShelters() {
-        assertThat(animalRepository.countSheltersWithStatus(AnimalStatus.PROTECTED)).isEqualTo(2);
-        assertThat(animalRepository.countByStatus(AnimalStatus.PROTECTED)).isEqualTo(3);
+    @DisplayName("공고 중인 동물 수와 보호소 수는 마감일이 지난 동물을 빼고 보호소를 한 번씩 센다")
+    void countOpenNoticesAndShelters() {
+        assertThat(animalRepository.countOpenNotices(AnimalStatus.PROTECTED, today)).isEqualTo(3);
+        assertThat(animalRepository.countSheltersWithOpenNotices(AnimalStatus.PROTECTED, today)).isEqualTo(2);
     }
 }

@@ -87,9 +87,15 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
         /** 공고 종료일이 기간 안에 있는 동물 수 (랜딩 실시간 현황) */
         long countByStatusAndNoticeEndDateBetween(AnimalStatus status, LocalDate from, LocalDate to);
 
-        /** 해당 상태의 동물이 한 마리 이상 있는 보호소 수 (랜딩 실시간 현황) */
-        @Query("SELECT COUNT(DISTINCT a.shelter.id) FROM Animal a WHERE a.status = :status")
-        long countSheltersWithStatus(@Param("status") AnimalStatus status);
+        /** 공고가 끝나지 않은(마감일이 오늘 이후이거나 없는) 해당 상태 동물 수 (랜딩 실시간 현황) */
+        @Query("SELECT COUNT(a) FROM Animal a WHERE a.status = :status " +
+                        "AND (a.noticeEndDate IS NULL OR a.noticeEndDate >= :today)")
+        long countOpenNotices(@Param("status") AnimalStatus status, @Param("today") LocalDate today);
+
+        /** 공고가 끝나지 않은 해당 상태 동물이 한 마리 이상 있는 보호소 수 (랜딩 실시간 현황) */
+        @Query("SELECT COUNT(DISTINCT a.shelter.id) FROM Animal a WHERE a.status = :status " +
+                        "AND (a.noticeEndDate IS NULL OR a.noticeEndDate >= :today)")
+        long countSheltersWithOpenNotices(@Param("status") AnimalStatus status, @Param("today") LocalDate today);
 
         /** 만료 보정: 공고 종료일이 지난 보호중 동물 */
         List<Animal> findAllByStatusAndNoticeEndDateBefore(AnimalStatus status, LocalDate date);
