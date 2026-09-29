@@ -38,8 +38,11 @@ export default function MoreAnimals({ animal, favoriteIds, onFavoriteToggle }: M
           setResult({ source: "shelter", animals: fromShelter });
           return;
         }
-        const sameSpecies = await animalApi.getAll({ species, status: "PROTECTED", sizeParam: MAX_CARDS + 1 });
-        if (!cancelled) setResult({ source: "species", animals: others(sameSpecies?.content) });
+        // 마감일이 지났지만 아직 정리되지 않은 동물이 마감 임박순 맨 앞에 올 수 있으므로 넉넉히 받아 거른다
+        const sameSpecies = await animalApi.getAll({ species, status: "PROTECTED", sizeParam: 12 });
+        if (cancelled) return;
+        const open = (sameSpecies?.content ?? []).filter((a) => a.daysUntilExpiry == null || a.daysUntilExpiry >= 0);
+        setResult({ source: "species", animals: others(open) });
       } catch {
         // 추가 목록은 부가 정보이므로 실패하면 영역을 숨긴다
         if (!cancelled) setResult(null);
