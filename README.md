@@ -5,7 +5,7 @@
 
 ## 화면 구성
 
-| 랜딩 | 가족을 기다리는 아이들 (공고 마감 임박순) |
+| 랜딩 | 공고 마감이 가까운 아이들 |
 | --- | --- |
 | <img src="assets/screenshots/landing.webp" alt="랜딩 페이지" width="420"> | <img src="assets/screenshots/landing-urgent.webp" alt="마감 임박 동물 섹션" width="420"> |
 
@@ -13,29 +13,30 @@
 | --- | --- |
 | <img src="assets/screenshots/animals.webp" alt="동물 목록" width="420"> | <img src="assets/screenshots/animal-detail.webp" alt="동물 상세" width="420"> |
 
-| 봉사·기부 안내 (보호소 검색) | 게시판 |
+| 보호소 페이지 | 봉사·기부 안내 (보호소 검색) |
 | --- | --- |
-| <img src="assets/screenshots/support.webp" alt="봉사·기부 안내" width="420"> | <img src="assets/screenshots/boards.webp" alt="게시판" width="420"> |
+| <img src="assets/screenshots/shelter.webp" alt="보호소 페이지" width="420"> | <img src="assets/screenshots/support.webp" alt="봉사·기부 안내" width="420"> |
 
-| 마이페이지 | 관리자 대시보드 |
+| 게시판 | 마이페이지 |
 | --- | --- |
-| <img src="assets/screenshots/mypage.webp" alt="마이페이지" width="420"> | <img src="assets/screenshots/admin.webp" alt="관리자 대시보드" width="420"> |
+| <img src="assets/screenshots/boards.webp" alt="게시판" width="420"> | <img src="assets/screenshots/mypage.webp" alt="마이페이지" width="420"> |
 
-| 모바일 |
-| --- |
-| <img src="assets/screenshots/mobile.webp" alt="모바일 동물 목록" width="220"> |
+| 관리자 대시보드 | 모바일 |
+| --- | --- |
+| <img src="assets/screenshots/admin.webp" alt="관리자 대시보드" width="420"> | <img src="assets/screenshots/mobile.webp" alt="모바일 동물 목록" width="220"> |
 
 > 스크린샷은 `local` 프로필의 데모 데이터로 찍었습니다. 동물 사진은 Unsplash 이미지입니다.
 
 ## 주요 기능
 
 - 유기동물 목록: 종류·크기·성별·시/도 필터와 이름·품종·보호소 검색, 공고 마감 임박순·새로 들어온 순 정렬, 공고 마감일(D-day) 표시
-- 동물 상세: 보호소·담당자 연락처, 지도, 입양·임보 절차 안내, 공유하기, 같은 보호소의 다른 아이들
+- 동물 상세: 보호소·담당자 연락처, 지도, 입양·임시보호 절차 안내, 공유하기, 같은 보호소의 다른 아이들
 - 보호소 페이지: 보호소 연락처·길찾기와 그 보호소에서 공고 중인 동물 목록
 - 최근 본 아이들: 로그인 없이 브라우저에 기록해 목록 상단에 표시
 - 나를 위한 추천: 회원이 저장한 선호 조건(종류, 나이, 크기, 지역)에 맞는 동물 추천
 - 관심 동물(찜) 저장
-- 랜딩 실시간 현황: 공고 중인 동물 수, 일주일 안에 공고가 끝나는 동물 수, 보호소 수
+- 랜딩: 종류·지역 빠른 찾기, 실시간 현황(공고 중인 동물 수, 일주일 안에 공고가 끝나는 동물 수, 보호소 수), 농림축산식품부 2025년 조사 통계(출처 표기)
+- 공공데이터 표시 원칙: 공고에 없는 이름은 "임시 이름"으로, 체중으로 추정한 크기는 "(추정)"으로, 확인되지 않은 중성화는 "보호소 확인 필요"로 표시
 - 봉사·기부 안내: 보호소 검색과 전화 연결 안내
 - 게시판: 공지사항·FAQ·자유게시판, 댓글
 - 회원: 이메일 가입·로그인, 카카오·구글 로그인, 이메일 찾기
