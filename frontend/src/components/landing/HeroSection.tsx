@@ -4,6 +4,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import type { AnimalResponse, AnimalStatsResponse } from "@/types/dto";
 import { ageLabel, ddayBadgeClass, formatDday, genderLabels, isTemporaryName } from "@/constants/animalLabels";
 import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
+import QuickFind from "@/components/landing/QuickFind";
 import { heroStats } from "@/constants/landingContent";
 
 interface Props {
@@ -84,13 +85,16 @@ export default function HeroSection({ featured, stats }: Props) {
             <p className="mt-8 max-w-md text-lg leading-relaxed text-ink-soft">
               전국 보호소에서 새 가족을 기다리는 아이들을 한곳에서 만나고, 마음이 닿으면 보호소에 바로 연락하세요.
             </p>
-            <div className="mt-10 flex flex-wrap gap-3">
-              <Link to="/animals" className="toss-btn toss-btn-accent text-base">
-                아이들 만나러 가기 <span aria-hidden>→</span>
-              </Link>
-              <Link to="/guide/foster" className="toss-btn toss-btn-outline text-base">
-                임시보호 알아보기
-              </Link>
+            <div className="mt-9">
+              <QuickFind />
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 px-2 text-sm font-semibold">
+                <Link to="/animals" className="text-ink underline-offset-4 hover:text-terracotta hover:underline">
+                  모든 아이들 보기 <span aria-hidden>→</span>
+                </Link>
+                <Link to="/guide/foster" className="text-ink-soft underline-offset-4 hover:text-terracotta hover:underline">
+                  임시보호 알아보기 <span aria-hidden>→</span>
+                </Link>
+              </div>
             </div>
 
             <dl className="mt-14 grid max-w-lg grid-cols-3 gap-6 border-t border-ink/10 pt-8">

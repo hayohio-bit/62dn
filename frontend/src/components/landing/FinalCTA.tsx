@@ -6,7 +6,7 @@ const words = ["입양", "임시보호", "산책 봉사", "물품 후원", "공�
 /** 흐르는 단어 띠 + 마지막 행동 유도 */
 export default function FinalCTA() {
   return (
-    <section className="overflow-hidden bg-terracotta text-white">
+    <section className="overflow-hidden bg-terracotta-600 text-white">
       <div className="border-b border-white/15 py-5" aria-hidden>
         <div className="flex w-max animate-marquee gap-10 whitespace-nowrap font-display text-2xl text-white/80 md:text-3xl">
           {[...words, ...words, ...words, ...words].map((w, i) => (
@@ -25,7 +25,7 @@ export default function FinalCTA() {
             <br />
             오늘의 한 걸음이에요
           </h2>
-          <p className="mx-auto mt-6 max-w-lg text-lg text-white/80">
+          <p className="mx-auto mt-6 max-w-lg text-lg text-white/90">
             마음에 닿는 아이를 찾았다면 보호소에 전화 한 통으로 시작할 수 있어요.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
