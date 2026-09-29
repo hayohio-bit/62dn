@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import clsx from "clsx";
 import { animalApi } from "@/api";
 import { useFavoriteIds } from "@/hooks/useFavoriteIds";
+import { recordRecentAnimal } from "@/lib/recentAnimals";
 import type { Animal } from "@/types/entities";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -150,7 +151,9 @@ export default function AnimalDetailPage() {
       try {
         setLoading(true);
         const data = await animalApi.getById(Number(id));
-        if (!cancelled) setAnimal(data);
+        if (cancelled) return;
+        setAnimal(data);
+        if (data) recordRecentAnimal(data);
       } catch {
         if (cancelled) return;
         alert("동물 정보를 불러오는데 실패했습니다.");

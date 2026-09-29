@@ -9,6 +9,7 @@ import PreferenceModal from "@/components/animals/PreferenceModal";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import AnimalCard, { AnimalCardSkeletonGrid } from "@/components/animals/AnimalCard";
+import RecentAnimals from "@/components/animals/RecentAnimals";
 import Reveal from "@/components/motion/Reveal";
 import { REGION_SIDO_OPTIONS, SIGUNGU_BY_SIDO } from "@/constants/regions";
 import { genderLabels, sizeLabels, speciesLabels } from "@/constants/animalLabels";
@@ -177,6 +178,7 @@ export default function AnimalsPage() {
         </header>
 
         <div className="mx-auto max-w-[76rem] px-6">
+          {viewMode === "all" && <RecentAnimals className="mb-8 border-b border-ink/10 pb-6" />}
           {/* 탭 */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="inline-flex rounded-full bg-ink/[0.06] p-1" role="group" aria-label="보기 방식">
