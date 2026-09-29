@@ -14,7 +14,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        // 8080을 다른 프로세스가 쓰고 있으면 API_PROXY_TARGET=http://localhost:8081 처럼 바꿔 실행한다
+        target: process.env.API_PROXY_TARGET ?? 'http://localhost:8080',
         changeOrigin: true,
       },
     },
