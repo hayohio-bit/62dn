@@ -1,4 +1,4 @@
-# 62댕냥 · 유기동물 입양/임시보호 매칭 플랫폼
+# 62댕냥 · 유기동물 입양·임시보호 정보 플랫폼
 
 전국 보호소의 유기동물 공고를 공공데이터로 모아 보여 주고, 입양·임시보호·봉사·후원을 원하는 사람이 보호소에 바로 연락할 수 있도록 돕는 웹 서비스입니다.
 신청과 예약은 보호소와 전화로 진행하며, 이 서비스는 동물과 보호소 정보를 찾기 쉽게 정리하는 역할을 합니다.
@@ -45,7 +45,7 @@
 
 | 영역 | 사용 기술 |
 | --- | --- |
-| Frontend | React 18, TypeScript, Vite 5, TailwindCSS, TanStack Query, Zustand, Axios, Framer Motion |
+| Frontend | React 18, TypeScript, Vite 5, TailwindCSS, Zustand, Axios, Framer Motion |
 | Backend | Java 21, Spring Boot 3.2, Spring Security + JWT, Spring Data JPA, Flyway, springdoc-openapi |
 | DB | MySQL 8 (운영·개발), H2 인메모리 (`local` 데모 프로필) |
 | 외부 연동 | 공공데이터포털 농림축산식품부 구조동물 조회 API, 카카오 지도, 카카오·구글 OAuth |
@@ -66,14 +66,14 @@ npm ci
 npm run dev
 ```
 
-`local` 프로필은 기동할 때마다 DB를 새로 만들고 보호소 6곳, 동물 20마리, 게시글과 댓글을 넣습니다.
+`local` 프로필은 기동할 때마다 DB를 새로 만들고 보호소 6곳, 동물 20마리, 게시글과 댓글을 넣습니다. 게시판 예시 글은 `local`·`dev` 프로필에서만 들어가고 운영(`prod`)에서는 넣지 않습니다.
 
 | 계정 | 이메일 | 비밀번호 |
 | --- | --- | --- |
 | 데모 회원 | `demo@62dn.local` | `demo1234!` |
 | 관리자 | `admin@admin.com` | `1234` |
 
-공공데이터 동기화까지 시험하려면 `backend/.env`에 `DATA_API_KEY`(공공데이터포털에서 발급한 인코딩 키)를 넣고, 관리자 대시보드의 "API 수동 동기화" 탭에서 실행합니다.
+공공데이터 동기화까지 시험하려면 `backend/.env`에 `DATA_API_KEY`(공공데이터포털에서 발급한 인코딩 키)를 넣고, 관리자 대시보드의 "데이터 동기화" 탭에서 실행합니다.
 
 ## 개발 환경 (MySQL)
 
