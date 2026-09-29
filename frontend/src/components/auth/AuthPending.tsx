@@ -12,7 +12,7 @@ export default function AuthPending({ message }: { message: string }) {
         aria-hidden
       />
       <div>
-        <p className="break-keep font-serif text-2xl text-ink">{message}</p>
+        <p className="break-keep font-display text-2xl text-ink">{message}</p>
         <p className="mt-2 text-sm text-ink-muted">잠시만 기다려 주세요. 곧 이동합니다.</p>
       </div>
     </div>

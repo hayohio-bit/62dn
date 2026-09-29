@@ -96,7 +96,7 @@ export default function HeroSection({ featured, stats }: Props) {
               {heroStats.map((s) => (
                 <div key={s.label}>
                   <dt className="sr-only">{s.label}</dt>
-                  <dd className="font-serif text-3xl sm:text-4xl">
+                  <dd className="font-display font-display-strong text-3xl sm:text-4xl">
                     {s.value}
                     <span className="text-xl sm:text-2xl">{s.unit}</span>
                   </dd>
@@ -137,7 +137,7 @@ export default function HeroSection({ featured, stats }: Props) {
             initial={{ opacity: 0, rotate: -20, scale: 0.6 }}
             animate={{ opacity: 1, rotate: -8, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.6, ease }}
-            className="absolute left-[6%] top-[8%] grid h-24 w-24 place-items-center rounded-full bg-sage text-center font-serif text-sm leading-tight text-white shadow-card"
+            className="absolute left-[6%] top-[8%] grid h-24 w-24 place-items-center rounded-full bg-sage text-center font-display text-sm leading-tight text-white shadow-card"
           >
             <span>
               매일
@@ -158,7 +158,7 @@ export default function HeroSection({ featured, stats }: Props) {
                 className="block rounded-2xl bg-white/90 p-5 shadow-lift backdrop-blur transition hover:-translate-y-1"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-serif text-xl">{featured.name || "이름 없음"}</span>
+                  <span className="font-display text-xl">{featured.name || "이름 없음"}</span>
                   {dday && (
                     <span className="rounded-full bg-terracotta px-2.5 py-0.5 text-xs font-bold text-white">{dday}</span>
                   )}
@@ -175,7 +175,7 @@ export default function HeroSection({ featured, stats }: Props) {
               </Link>
             ) : (
               <div className="rounded-2xl bg-white/90 p-5 shadow-lift backdrop-blur">
-                <p className="font-serif text-xl">함께 찾아볼까요?</p>
+                <p className="font-display text-xl">함께 찾아볼까요?</p>
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">
                   종류·지역·크기로 새 가족을 기다리는 아이들을 찾아볼 수 있어요.
                 </p>

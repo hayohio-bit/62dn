@@ -42,7 +42,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
       className="grid gap-4 border-b border-ink/10 py-8 first:pt-0 md:grid-cols-12 md:gap-8"
     >
       <div className="md:col-span-4">
-        <p id={titleId} className="font-serif text-xl text-ink">
+        <p id={titleId} className="font-display text-xl text-ink">
           {title}
         </p>
         {hint && <p className="mt-1 text-sm leading-relaxed text-ink-muted">{hint}</p>}

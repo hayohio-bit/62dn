@@ -30,9 +30,9 @@
 }
 
 .landing-section-title {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: clamp(2rem, 4.5vw, 3.25rem);
-  font-weight: 400;
+  font-weight: 700;
   color: var(--toss-black);
   letter-spacing: -0.02em;
   line-height: 1.15;
@@ -150,7 +150,7 @@
 }
 
 .landing-pet-card-name {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: 1.5rem;
   color: var(--toss-black);
   margin-bottom: 0.125rem;

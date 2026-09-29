@@ -40,7 +40,7 @@ export function NameAvatar({ name, size = "md" }: { name?: string | null; size?:
     <span
       aria-hidden
       className={clsx(
-        "grid shrink-0 place-items-center rounded-full bg-terracotta-50 font-serif text-terracotta-700",
+        "grid shrink-0 place-items-center rounded-full bg-terracotta-50 font-display text-terracotta-700",
         size === "sm" && "h-8 w-8 text-sm",
         size === "md" && "h-10 w-10 text-base",
         size === "lg" && "h-16 w-16 text-2xl",

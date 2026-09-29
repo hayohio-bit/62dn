@@ -79,7 +79,7 @@ export default function FindEmailPage() {
             </svg>
           </div>
           <p className="mt-5 text-ink-soft">회원님의 이메일은</p>
-          <p className="mt-2 break-all font-serif text-2xl text-ink">{maskedEmail}</p>
+          <p className="mt-2 break-all font-display text-2xl text-ink">{maskedEmail}</p>
           <p className="mt-2 text-sm text-ink-muted">개인정보 보호를 위해 일부를 가려서 보여 드려요.</p>
           <Link to="/login" className="toss-auth-submit">
             로그인하기

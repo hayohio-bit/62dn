@@ -37,7 +37,7 @@ export default function UrgentStrip({ animals, stats }: Props) {
         <Reveal className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="dn-eyebrow !text-terracotta-400">Urgent</p>
-            <h2 className="mt-3 font-serif text-4xl leading-tight md:text-5xl">
+            <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">
               이번 주, 시간이 얼마 남지 않았어요
             </h2>
             <p className="mt-3 max-w-xl text-cream/60">
@@ -108,7 +108,7 @@ export default function UrgentStrip({ animals, stats }: Props) {
                   )}
                 </div>
                 <div className="mt-4 flex items-baseline justify-between gap-3">
-                  <h3 className="font-serif text-2xl">{a.name || "이름 없음"}</h3>
+                  <h3 className="font-display text-2xl">{a.name || "이름 없음"}</h3>
                   <span className="truncate text-sm text-cream/50">{a.shelterName}</span>
                 </div>
                 <p className="text-sm text-cream/60">

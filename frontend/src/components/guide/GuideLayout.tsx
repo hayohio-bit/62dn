@@ -127,10 +127,10 @@ export default function GuideLayout({ kind, eyebrow, title, desc, notice, steps,
             {steps.map((s, i) => (
               <li key={s.title} className="border-b border-ink/15">
                 <Reveal delay={Math.min(i, 3) * 0.05} className="grid gap-3 py-8 md:grid-cols-12 md:gap-6 md:py-10">
-                  <span className="font-serif text-lg text-ink-faint md:col-span-1 md:pt-2" aria-hidden>
+                  <span className="font-display text-lg text-ink-faint md:col-span-1 md:pt-2" aria-hidden>
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <h2 className="font-serif text-3xl leading-tight text-ink md:col-span-4 md:text-[2.25rem]">
+                  <h2 className="font-display text-3xl leading-tight text-ink md:col-span-4 md:text-[2.25rem]">
                     <span className="sr-only">{i + 1}단계. </span>
                     {s.title}
                   </h2>
@@ -164,7 +164,7 @@ export default function GuideLayout({ kind, eyebrow, title, desc, notice, steps,
               <div className="relative grid gap-8 md:grid-cols-12 md:items-end">
                 <div className="md:col-span-7">
                   <p className="dn-eyebrow !text-terracotta-400">Next step</p>
-                  <h2 className="mt-3 font-serif text-4xl leading-tight md:text-5xl">
+                  <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">
                     마음이 닿는 아이를
                     <br />
                     찾아볼까요?

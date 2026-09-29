@@ -45,7 +45,7 @@ export default function RealitySection() {
         <div className="md:col-span-5 md:col-start-8">
           <Reveal>
             <p className="dn-eyebrow">The other 62%</p>
-            <h2 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">
+            <h2 className="mt-4 font-display text-4xl leading-tight md:text-5xl">
               구조되어도,
               <br />
               <span className="text-terracotta">절반은</span> 집으로
@@ -61,7 +61,7 @@ export default function RealitySection() {
           <dl className="mt-12 grid grid-cols-3 gap-6 border-t border-ink/15 pt-8">
             {realityStats.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.1}>
-                <dd className="font-serif text-4xl md:text-5xl">
+                <dd className="font-display font-display-strong text-4xl md:text-5xl">
                   <CountUp to={s.value} />
                   <span className="text-2xl">{s.suffix}</span>
                 </dd>

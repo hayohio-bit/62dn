@@ -188,7 +188,7 @@ export default function ShelterPage() {
                 </Reveal>
                 {!animalsLoading && !animalsError && species === "" && (
                   <Reveal delay={0.1} className="md:col-span-4 md:text-right">
-                    <p className="font-serif text-5xl leading-none text-ink md:text-6xl">
+                    <p className="font-display font-display-strong text-5xl leading-none text-ink md:text-6xl">
                       {total.toLocaleString()}
                       <span className="ml-1 text-2xl md:text-3xl">마리</span>
                     </p>
@@ -201,7 +201,7 @@ export default function ShelterPage() {
             <div className="mx-auto max-w-[76rem] px-6">
               <section aria-labelledby="shelter-animals" aria-busy={animalsLoading}>
                 <div className="flex flex-wrap items-center justify-between gap-4 border-y border-ink/10 py-5">
-                  <h2 id="shelter-animals" className="font-serif text-2xl text-ink md:text-3xl">
+                  <h2 id="shelter-animals" className="font-display text-2xl text-ink md:text-3xl">
                     공고 중인 아이들
                   </h2>
                   <div className="list-filter-row" role="group" aria-label="종류">
@@ -222,14 +222,14 @@ export default function ShelterPage() {
                 <div className="mt-10 md:mt-12">
                   {animalsError ? (
                     <div className="rounded-3xl border border-terracotta/25 bg-terracotta-50 px-6 py-14 text-center" role="alert">
-                      <p className="font-serif text-2xl text-ink">목록을 불러오지 못했어요</p>
+                      <p className="font-display text-2xl text-ink">목록을 불러오지 못했어요</p>
                       <p className="mt-2 text-sm text-ink-soft">잠시 후 다시 시도해 주세요.</p>
                     </div>
                   ) : animalsLoading ? (
                     <AnimalCardSkeletonGrid count={4} />
                   ) : animals.length === 0 ? (
                     <div className="rounded-3xl border border-dashed border-ink/20 px-6 py-16 text-center">
-                      <p className="font-serif text-2xl text-ink">
+                      <p className="font-display text-2xl text-ink">
                         {species ? `공고 중인 ${speciesLabels[species]}가 없어요` : "지금은 공고 중인 아이가 없어요"}
                       </p>
                       <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-soft">
@@ -267,7 +267,7 @@ export default function ShelterPage() {
               <Reveal className="mt-20 grid gap-10 border-t border-ink/15 pt-12 md:mt-28 md:grid-cols-12 md:pt-16 lg:gap-16">
                 <div className="md:col-span-5">
                   <p className="dn-eyebrow">Visit & Support</p>
-                  <h2 className="mt-3 font-serif text-3xl leading-tight text-ink md:text-4xl">방문과 봉사·후원</h2>
+                  <h2 className="mt-3 font-display text-3xl leading-tight text-ink md:text-4xl">방문과 봉사·후원</h2>
                   <p className="mt-5 leading-relaxed text-ink-soft">
                     입양 상담, 봉사 일정, 필요한 후원 물품은 보호소마다 달라요. 방문하거나 물품을 보내기 전에 먼저
                     전화로 확인해 주세요.

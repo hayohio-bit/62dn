@@ -121,7 +121,7 @@ export default function PreferenceModal({ currentPreference, onSave, onClose }: 
               id="preference-modal-title"
               ref={titleRef}
               tabIndex={-1}
-              className="mt-2 font-serif text-3xl leading-tight text-ink focus:outline-none"
+              className="mt-2 font-display text-3xl leading-tight text-ink focus:outline-none"
             >
               어떤 아이를 찾고 계세요?
             </h2>

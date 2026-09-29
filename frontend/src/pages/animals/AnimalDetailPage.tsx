@@ -103,7 +103,7 @@ function ImageLightbox({ src, alt, caption, onClose }: { src: string; alt: strin
         onClick={(e) => e.stopPropagation()}
       >
         <img src={src} alt={alt} className="max-h-[80vh] max-w-full rounded-3xl object-contain" />
-        <figcaption className="mt-4 font-serif text-xl text-cream">{caption}</figcaption>
+        <figcaption className="mt-4 font-display text-xl text-cream">{caption}</figcaption>
       </motion.figure>
     </motion.div>
   );
@@ -329,14 +329,14 @@ export default function AnimalDetailPage() {
 
               {description && (
                 <div className="mt-8">
-                  <h2 className="font-serif text-2xl text-ink">{withJosa(name, "을", "를")} 소개해요</h2>
+                  <h2 className="font-display text-2xl text-ink">{withJosa(name, "을", "를")} 소개해요</h2>
                   <p className="mt-3 whitespace-pre-wrap leading-relaxed text-ink-soft">{description}</p>
                 </div>
               )}
 
               {/* 연락 */}
               <div className="mt-8 rounded-3xl bg-ink p-6 text-cream md:p-7">
-                <p className="font-serif text-2xl leading-snug">
+                <p className="font-display text-2xl leading-snug">
                   {withJosa(name, "과", "와")} 가족이 되고 싶다면
                   <br />
                   보호소에 전화해 주세요
@@ -393,7 +393,7 @@ export default function AnimalDetailPage() {
               <div className="grid gap-10 md:grid-cols-12 lg:gap-16">
                 <div className="md:col-span-5">
                   <p className="dn-eyebrow">Shelter</p>
-                  <h2 className="mt-3 font-serif text-3xl leading-tight text-ink md:text-4xl">
+                  <h2 className="mt-3 font-display text-3xl leading-tight text-ink md:text-4xl">
                     {animal.shelterName || "보호소 정보"}
                   </h2>
                   {animal.shelterId && (
@@ -487,7 +487,7 @@ export default function AnimalDetailPage() {
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink/10 bg-cream-50/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur md:hidden">
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
-              <p className="truncate font-serif text-lg leading-tight text-ink">{name}</p>
+              <p className="truncate font-display text-lg leading-tight text-ink">{name}</p>
               <p className="truncate text-xs text-ink-muted">{animal.shelterName}</p>
             </div>
             <a href={telHref(phones[0])} className="toss-btn toss-btn-accent !px-5 !py-3 text-[0.9375rem]">

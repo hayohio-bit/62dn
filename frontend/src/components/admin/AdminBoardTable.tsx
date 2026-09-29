@@ -98,7 +98,7 @@ export default function AdminBoardTable({ state, actions }: Props) {
                       </div>
                       <Link
                         to={`/boards/${b.id}`}
-                        className="mt-1 line-clamp-2 font-serif text-base hover:text-terracotta sm:mt-0 sm:line-clamp-1"
+                        className="mt-1 line-clamp-2 font-display text-base hover:text-terracotta sm:mt-0 sm:line-clamp-1"
                       >
                         {b.title}
                       </Link>

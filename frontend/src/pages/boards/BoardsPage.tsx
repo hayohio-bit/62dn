@@ -196,7 +196,7 @@ export default function BoardsPage() {
             </div>
           ) : boards.length === 0 ? (
             <div className="py-24 text-center">
-              <p className="font-serif text-2xl text-ink">
+              <p className="font-display text-2xl text-ink">
                 {loadFailed
                   ? "게시글을 불러오지 못했어요"
                   : search.trim()
@@ -228,7 +228,7 @@ export default function BoardsPage() {
                         {board.isPinned && <PinnedMark />}
                       </div>
                       <div className="min-w-0 md:col-span-8">
-                        <h2 className="font-serif text-xl leading-snug text-ink transition-colors group-hover:text-terracotta md:text-2xl">
+                        <h2 className="font-display text-xl leading-snug text-ink transition-colors group-hover:text-terracotta md:text-2xl">
                           {board.title}
                         </h2>
                         <p className="mt-2 line-clamp-2 leading-relaxed text-ink-soft">

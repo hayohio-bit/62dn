@@ -44,7 +44,7 @@ export default {
       },
       fontFamily: {
         sans: ["Pretendard Variable", "Pretendard", "Noto Sans KR", "sans-serif"],
-        serif: ["Gowun Batang", "Nanum Myeongjo", "serif"],
+        display: ["Gowun Dodum", "Pretendard Variable", "Pretendard", "sans-serif"],
       },
       borderRadius: {
         "2xl": "1rem",

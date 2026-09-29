@@ -125,7 +125,7 @@ export default function SupportPage() {
     if (error) {
       return (
         <div className="rounded-3xl border border-terracotta/25 bg-terracotta-50 px-6 py-14 text-center" role="alert">
-          <p className="font-serif text-2xl text-ink">보호소 목록을 불러오지 못했어요</p>
+          <p className="font-display text-2xl text-ink">보호소 목록을 불러오지 못했어요</p>
           <p className="mt-2 text-sm text-ink-soft">잠시 후 다시 시도해 주세요.</p>
         </div>
       );
@@ -142,7 +142,7 @@ export default function SupportPage() {
     if (shelters.length === 0) {
       return (
         <div className="rounded-3xl border border-dashed border-ink/20 px-6 py-16 text-center">
-          <p className="font-serif text-2xl text-ink">조건에 맞는 보호소가 없어요</p>
+          <p className="font-display text-2xl text-ink">조건에 맞는 보호소가 없어요</p>
           <p className="mt-2 text-sm text-ink-soft">검색어를 줄이거나 지역을 바꿔 보세요.</p>
           {hasFilter && (
             <button type="button" className="toss-btn toss-btn-outline mt-6" onClick={resetFilters}>
@@ -169,7 +169,7 @@ export default function SupportPage() {
                     {[shelter.regionSido, shelter.regionSigungu].filter(Boolean).join(" ")}
                   </span>
                 )}
-                <span className="mt-3 block font-serif text-2xl leading-snug text-ink transition-colors group-hover:text-terracotta">
+                <span className="mt-3 block font-display text-2xl leading-snug text-ink transition-colors group-hover:text-terracotta">
                   {shelter.name}
                 </span>
                 <span className="mt-2 block text-sm leading-relaxed text-ink-soft">{shelter.address}</span>
@@ -232,10 +232,10 @@ export default function SupportPage() {
             {GUIDES.map((g, i) => (
               <Reveal key={g.title} delay={i * 0.08}>
                 <div className="flex items-baseline gap-4">
-                  <span className="font-serif text-lg text-ink-faint" aria-hidden>
+                  <span className="font-display text-lg text-ink-faint" aria-hidden>
                     {g.no}
                   </span>
-                  <h2 className="font-serif text-4xl text-ink md:text-5xl">{g.title}</h2>
+                  <h2 className="font-display text-4xl text-ink md:text-5xl">{g.title}</h2>
                 </div>
                 <p className="mt-4 leading-relaxed text-ink-soft">{g.lead}</p>
                 <ol className="mt-6 space-y-0 border-t border-ink/10">
@@ -254,7 +254,7 @@ export default function SupportPage() {
 
           <Reveal className="mt-10 md:mt-14">
             <aside className="rounded-3xl border border-sage/30 bg-sage-50 p-6 md:flex md:gap-10 md:p-8">
-              <p className="shrink-0 font-serif text-xl text-ink md:w-48">방문 전에 꼭 확인해 주세요</p>
+              <p className="shrink-0 font-display text-xl text-ink md:w-48">방문 전에 꼭 확인해 주세요</p>
               <ul className="mt-3 space-y-2 md:mt-0">
                 {CAUTIONS.map((c) => (
                   <li key={c} className="flex gap-2.5 text-[0.9375rem] leading-relaxed text-ink-soft">
@@ -275,7 +275,7 @@ export default function SupportPage() {
             <Reveal className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="dn-eyebrow">Find a shelter</p>
-                <h2 id="shelter-search-title" className="mt-3 font-serif text-4xl leading-tight text-ink md:text-5xl">
+                <h2 id="shelter-search-title" className="mt-3 font-display text-4xl leading-tight text-ink md:text-5xl">
                   보호소 찾기
                 </h2>
               </div>

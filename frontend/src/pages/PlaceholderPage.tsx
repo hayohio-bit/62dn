@@ -74,7 +74,7 @@ export default function PlaceholderPage() {
               </div>
               <span
                 aria-hidden
-                className="absolute -bottom-8 -left-10 font-serif text-[7rem] leading-none text-terracotta/85"
+                className="absolute -bottom-8 -left-10 font-display text-[7rem] leading-none text-terracotta/85"
               >
                 404
               </span>

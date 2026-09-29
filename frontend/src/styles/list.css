@@ -380,7 +380,7 @@
 }
 
 .list-card-title {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: 1.375rem;
   font-weight: 400;
   color: var(--toss-black);

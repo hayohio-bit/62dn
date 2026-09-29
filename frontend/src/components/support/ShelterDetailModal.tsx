@@ -105,7 +105,7 @@ export default function ShelterDetailModal({ shelter, onClose }: ShelterDetailMo
                 {region}
               </span>
             )}
-            <h2 id="shelter-modal-title" className="mt-3 font-serif text-3xl leading-tight text-ink">
+            <h2 id="shelter-modal-title" className="mt-3 font-display text-3xl leading-tight text-ink">
               {shelter.name}
             </h2>
           </div>

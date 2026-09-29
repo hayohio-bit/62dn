@@ -1,6 +1,6 @@
 /**
  * 62댕냥 공통 디자인 시스템 — "따뜻한 에디토리얼"
- * 크림 배경, 잉크 텍스트, 테라코타 포인트, 명조체(Gowun Batang) 제목 + Pretendard 본문
+ * 크림 배경, 잉크 텍스트, 테라코타 포인트, Gowun Dodum 제목 + Pretendard 본문
  *
  * 변수·클래스 이름(toss-*)은 기존 컴포넌트가 인라인 스타일로 참조하므로 그대로 두고 값만 새 팔레트로 바꿨다.
  * --toss-blue 계열은 이제 테라코타(포인트 색)를 뜻한다.
@@ -36,7 +36,8 @@
   --toss-font-sans:
     "Pretendard Variable", "Pretendard", "Noto Sans KR", -apple-system,
     BlinkMacSystemFont, sans-serif;
-  --dn-font-serif: "Gowun Batang", "Nanum Myeongjo", serif;
+  /* 제목 글꼴: Gowun Dodum (SIL OFL 1.1). 굵기가 Regular 하나뿐이라 큰 제목은 브라우저가 굵게 그린다 */
+  --dn-font-display: "Gowun Dodum", "Pretendard Variable", "Pretendard", sans-serif;
 
   --toss-text-display: 2.75rem;
   --toss-text-title: 1.75rem;
@@ -111,7 +112,7 @@
 }
 
 .toss-logo {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-weight: 700;
   font-size: 1.5rem;
   color: var(--toss-black);
@@ -322,7 +323,7 @@
 .toss-menu-link {
   display: block;
   padding: 0.875rem 0.25rem;
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: 1.375rem;
   color: var(--toss-black);
   text-decoration: none;
@@ -397,7 +398,7 @@ body.toss-menu-open {
 }
 
 .toss-section-title {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: 2rem;
   font-weight: 700;
   color: var(--toss-black);
@@ -440,15 +441,16 @@ body.toss-menu-open {
 }
 
 .dn-display {
-  font-family: var(--dn-font-serif);
-  font-weight: 400;
+  font-family: var(--dn-font-display);
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.15;
   color: var(--toss-black);
 }
 
 .dn-page-title {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
+  font-weight: 700;
   font-size: clamp(2.25rem, 5vw, 3.5rem);
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -484,7 +486,7 @@ body.toss-menu-open {
 }
 
 .toss-footer-brand {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: 2rem;
   color: var(--dn-cream);
   text-decoration: none;
@@ -524,9 +526,9 @@ body.toss-menu-open {
 }
 
 .toss-auth-title {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: clamp(2.25rem, 4vw, 2.75rem);
-  font-weight: 400;
+  font-weight: 700;
   line-height: 1.15;
   color: var(--toss-black);
   letter-spacing: -0.02em;
@@ -808,9 +810,9 @@ select.toss-auth-input {
 }
 
 .admin-dashboard-title {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: clamp(2.25rem, 4.5vw, 3rem);
-  font-weight: 400;
+  font-weight: 700;
   line-height: 1.15;
   color: var(--toss-black);
   letter-spacing: -0.02em;
@@ -863,7 +865,8 @@ select.toss-auth-input {
 }
 
 .admin-stat-value {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
+  font-weight: 700;
   font-size: clamp(1.75rem, 3.2vw, 2.5rem);
   line-height: 1.1;
   color: var(--toss-black);
@@ -952,7 +955,7 @@ select.toss-auth-input {
 }
 
 .admin-card-title {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: 1.5rem;
   font-weight: 400;
   color: var(--toss-black);
@@ -987,7 +990,7 @@ select.toss-auth-input {
 }
 
 .admin-panel-title {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: 1.25rem;
   color: var(--toss-black);
   margin: 0;
@@ -1267,7 +1270,7 @@ select.toss-auth-input {
 }
 
 .admin-empty-title {
-  font-family: var(--dn-font-serif);
+  font-family: var(--dn-font-display);
   font-size: 1.375rem;
   color: var(--toss-black);
   margin-bottom: 0.5rem;
@@ -1293,4 +1296,11 @@ select.toss-auth-input {
 
 .admin-foot a:hover {
   color: var(--toss-black);
+}
+
+/* 큰 제목(h1·h2)과 큰 숫자는 굵게, 카드 이름 같은 작은 제목은 보통 굵기로 둔다 */
+h1.font-display,
+h2.font-display,
+.font-display-strong {
+  font-weight: 700;
 }

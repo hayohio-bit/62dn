@@ -33,7 +33,7 @@ export default function ResetPasswordPage() {
         <ol className="space-y-5">
           {steps.map((text, i) => (
             <li key={text} className="flex gap-4">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-terracotta-50 font-serif text-terracotta-700">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-terracotta-50 font-display text-terracotta-700">
                 {i + 1}
               </span>
               <p className="pt-1 leading-relaxed text-ink-soft">{text}</p>
@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
         </ol>
         <a
           href="mailto:contact@dnplatform.com"
-          className="mt-5 block rounded-2xl border border-ink/10 bg-white px-5 py-4 text-center font-serif text-lg text-ink transition-colors hover:border-terracotta hover:text-terracotta"
+          className="mt-5 block rounded-2xl border border-ink/10 bg-white px-5 py-4 text-center font-display text-lg text-ink transition-colors hover:border-terracotta hover:text-terracotta"
         >
           contact@dnplatform.com
         </a>

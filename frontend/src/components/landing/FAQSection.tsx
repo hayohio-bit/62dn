@@ -12,7 +12,7 @@ export default function FAQSection() {
     <section className="mx-auto grid max-w-[76rem] gap-12 px-6 pb-24 md:grid-cols-12 md:pb-32">
       <Reveal className="md:col-span-4">
         <p className="dn-eyebrow">FAQ</p>
-        <h2 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">
+        <h2 className="mt-4 font-display text-4xl leading-tight md:text-5xl">
           자주 묻는
           <br />
           질문
@@ -30,7 +30,7 @@ export default function FAQSection() {
                 aria-expanded={isOpen}
                 className="flex w-full items-center justify-between gap-6 py-6 text-left"
               >
-                <span className={clsx("font-serif text-xl transition-colors md:text-2xl", isOpen && "text-terracotta")}>
+                <span className={clsx("font-display text-xl transition-colors md:text-2xl", isOpen && "text-terracotta")}>
                   {f.q}
                 </span>
                 <span

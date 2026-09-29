@@ -47,7 +47,7 @@ export default function GuideAdoptionPage() {
       <Reveal className="mt-16 grid gap-6 md:mt-20 md:grid-cols-12">
         <div className="md:col-span-5">
           <p className="dn-eyebrow">For cats</p>
-          <h2 className="mt-3 font-serif text-3xl leading-tight text-ink md:text-4xl">고양이 입양 (보호소 유기묘)</h2>
+          <h2 className="mt-3 font-display text-3xl leading-tight text-ink md:text-4xl">고양이 입양 (보호소 유기묘)</h2>
         </div>
         <div className="md:col-span-7">
           <ol className="flex flex-wrap items-center gap-2 text-sm text-ink" aria-label="고양이 입양 순서">

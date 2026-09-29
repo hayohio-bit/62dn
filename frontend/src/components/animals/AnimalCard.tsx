@@ -75,7 +75,7 @@ export default function AnimalCard({
           )}
         </div>
         <div className="px-1 pt-4">
-          <h3 className="truncate font-serif text-[1.375rem] leading-tight text-ink transition-colors group-hover:text-terracotta md:text-2xl">
+          <h3 className="truncate font-display text-[1.375rem] leading-tight text-ink transition-colors group-hover:text-terracotta md:text-2xl">
             {animal.name || "이름 없음"}
           </h3>
           <p className="mt-1.5 text-sm text-ink-soft">{meta}</p>

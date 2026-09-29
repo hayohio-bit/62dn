@@ -193,14 +193,14 @@ export default function BoardDetailPage() {
               <span className="text-sm text-ink-muted">{boardTypeTitles[board.type]}</span>
               {board.isPinned && <PinnedMark />}
             </div>
-            <h1 className="mt-5 break-keep font-serif text-[2rem] leading-tight tracking-[-0.02em] text-ink md:text-[2.75rem]">
+            <h1 className="mt-5 break-keep font-display text-[2rem] leading-tight tracking-[-0.02em] text-ink md:text-[2.75rem]">
               {board.title}
             </h1>
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-y border-ink/10 py-5">
               <div className="flex items-center gap-3">
                 <NameAvatar name={board.userName} />
                 <div>
-                  <p className="font-serif text-lg leading-tight text-ink">{board.userName || "익명"}</p>
+                  <p className="font-display text-lg leading-tight text-ink">{board.userName || "익명"}</p>
                   <p className="mt-1 text-sm text-ink-muted">
                     <time dateTime={board.createdAt}>{formatBoardDateTime(board.createdAt)}</time>
                     {wasEdited && " · 수정됨"}
@@ -233,7 +233,7 @@ export default function BoardDetailPage() {
         {/* 댓글 */}
         <section aria-labelledby="comments-title" className="mx-auto max-w-3xl px-6 pb-24">
           <div className="rounded-[1.75rem] border border-ink/10 bg-cream-50 p-6 shadow-card md:p-10">
-            <h2 id="comments-title" className="font-serif text-2xl text-ink">
+            <h2 id="comments-title" className="font-display text-2xl text-ink">
               댓글 <span className="text-terracotta">{comments.length}</span>
             </h2>
 
@@ -286,7 +286,7 @@ export default function BoardDetailPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                           <p className="flex flex-wrap items-baseline gap-x-2">
-                            <span className="font-serif text-[1.0625rem] text-ink">{comment.userName || "익명"}</span>
+                            <span className="font-display text-[1.0625rem] text-ink">{comment.userName || "익명"}</span>
                             {comment.userId === board.userId && (
                               <span className="rounded-full bg-sage-50 px-2 py-0.5 text-xs font-semibold text-sage-600">
                                 작성자

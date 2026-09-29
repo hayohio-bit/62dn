@@ -63,7 +63,7 @@ export default function MoreAnimals({ animal, favoriteIds, onFavoriteToggle }: M
       <Reveal className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="dn-eyebrow">{fromShelter ? "Same shelter" : "Waiting now"}</p>
-          <h2 id="more-animals" className="mt-3 font-serif text-3xl leading-tight text-ink md:text-4xl">
+          <h2 id="more-animals" className="mt-3 font-display text-3xl leading-tight text-ink md:text-4xl">
             {fromShelter ? "같은 보호소의 다른 아이들" : `마감이 가까운 다른 ${speciesLabels[species] ?? "아이"}들`}
           </h2>
           {fromShelter && (

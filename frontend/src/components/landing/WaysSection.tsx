@@ -9,7 +9,7 @@ export default function WaysSection() {
       <Reveal className="grid gap-6 md:grid-cols-12">
         <div className="md:col-span-5">
           <p className="dn-eyebrow">How to help</p>
-          <h2 className="mt-4 font-serif text-4xl leading-tight md:text-[3.25rem]">
+          <h2 className="mt-4 font-display text-4xl leading-tight md:text-[3.25rem]">
             마음을 행동으로 옮기는
             <br />세 가지 방법
           </h2>
@@ -27,8 +27,8 @@ export default function WaysSection() {
               to={w.to}
               className="group grid items-center gap-4 border-b border-ink/15 py-8 transition-colors md:grid-cols-12 md:py-10"
             >
-              <span className="font-serif text-lg text-ink-faint md:col-span-1">{w.no}</span>
-              <h3 className="font-serif text-4xl transition-colors group-hover:text-terracotta md:col-span-4 md:text-5xl">
+              <span className="font-display text-lg text-ink-faint md:col-span-1">{w.no}</span>
+              <h3 className="font-display font-display-strong text-4xl transition-colors group-hover:text-terracotta md:col-span-4 md:text-5xl">
                 {w.title}
               </h3>
               <p className="leading-relaxed text-ink-soft md:col-span-5">{w.desc}</p>

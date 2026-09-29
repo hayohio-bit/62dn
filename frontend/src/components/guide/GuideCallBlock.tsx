@@ -111,7 +111,7 @@ export default function GuideCallBlock({ animal, type }: GuideCallBlockProps) {
         </Link>
         <div className="p-6 sm:p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-terracotta">{titles[type]}</p>
-          <h2 id="guide-call-title" className="mt-2 font-serif text-3xl leading-tight text-ink">
+          <h2 id="guide-call-title" className="mt-2 font-display text-3xl leading-tight text-ink">
             {animal.name || "이름 없음"}
           </h2>
           {meta && <p className="mt-1 text-sm text-ink-muted">{meta}</p>}

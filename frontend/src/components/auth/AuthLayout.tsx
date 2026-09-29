@@ -22,7 +22,7 @@ const ease = [0.2, 0.8, 0.2, 1] as const;
 
 /**
  * 인증 화면 공통 레이아웃.
- * 데스크톱은 왼쪽에 사진과 명조 인용문, 오른쪽에 폼을 두는 분할 화면이고, 모바일은 폼만 보여 준다.
+ * 데스크톱은 왼쪽에 사진과 인용문, 오른쪽에 폼을 두는 분할 화면이고, 모바일은 폼만 보여 준다.
  */
 export default function AuthLayout({
   eyebrow,
@@ -52,7 +52,7 @@ export default function AuthLayout({
             <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/15 to-ink/40" aria-hidden />
             <Link
               to="/"
-              className="absolute left-8 top-7 font-serif text-2xl font-bold text-cream-50"
+              className="absolute left-8 top-7 font-display text-2xl font-bold text-cream-50"
               aria-label="62댕냥 홈"
             >
               <Wordmark />
@@ -62,7 +62,7 @@ export default function AuthLayout({
                 initial={reduce ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.9, delay: 0.25, ease }}
-                className="max-w-lg break-keep font-serif text-3xl leading-snug text-cream-50 xl:text-[2.5rem] xl:leading-[1.3]"
+                className="max-w-lg break-keep font-display text-3xl leading-snug text-cream-50 xl:text-[2.5rem] xl:leading-[1.3]"
               >
                 “{quote}”
               </motion.blockquote>

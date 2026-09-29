@@ -172,7 +172,7 @@ export default function BoardWritePage() {
               <input
                 id="board-title"
                 type="text"
-                className="w-full border-0 border-b border-ink/20 bg-transparent px-0 pb-3 pt-1 font-serif text-2xl text-ink placeholder:text-ink-faint focus:border-terracotta focus:outline-none focus:ring-0 md:text-[1.75rem]"
+                className="w-full border-0 border-b border-ink/20 bg-transparent px-0 pb-3 pt-1 font-display text-2xl text-ink placeholder:text-ink-faint focus:border-terracotta focus:outline-none focus:ring-0 md:text-[1.75rem]"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="제목을 입력하세요"

@@ -81,7 +81,7 @@ export default function AdminUserTable({ state, actions }: Props) {
                   <tr key={u.id}>
                     <td className="admin-muted hidden md:table-cell">{u.id}</td>
                     <td className="max-w-[11rem] sm:max-w-none">
-                      <span className="block whitespace-nowrap font-serif text-base">{u.name ?? "-"}</span>
+                      <span className="block whitespace-nowrap font-display text-base">{u.name ?? "-"}</span>
                       <span className="block truncate text-xs text-ink-muted sm:hidden">{u.email}</span>
                     </td>
                     <td className="hidden max-w-[16rem] truncate text-ink-soft sm:table-cell" title={u.email}>

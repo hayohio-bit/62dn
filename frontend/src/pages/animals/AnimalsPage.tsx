@@ -79,7 +79,7 @@ export default function AnimalsPage() {
     if (error) {
       return (
         <div className="rounded-3xl border border-terracotta/25 bg-terracotta-50 px-6 py-14 text-center" role="alert">
-          <p className="font-serif text-2xl text-ink">목록을 불러오지 못했어요</p>
+          <p className="font-display text-2xl text-ink">목록을 불러오지 못했어요</p>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-soft">{error}</p>
         </div>
       );
@@ -90,7 +90,7 @@ export default function AnimalsPage() {
     if (animals.length === 0) {
       return (
         <div className="rounded-3xl border border-dashed border-ink/20 px-6 py-20 text-center">
-          <p className="font-serif text-3xl text-ink">
+          <p className="font-display text-3xl text-ink">
             {viewMode === "recommended" ? "지금은 조건에 맞는 아이가 없어요" : "조건에 맞는 아이가 없어요"}
           </p>
           <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-soft">
@@ -165,7 +165,7 @@ export default function AnimalsPage() {
             </Reveal>
             {viewMode === "all" && !loading && !error && (
               <Reveal delay={0.1} className="hidden md:col-span-4 md:block md:text-right">
-                <p className="font-serif text-5xl leading-none text-ink md:text-6xl">
+                <p className="font-display font-display-strong text-5xl leading-none text-ink md:text-6xl">
                   {apiTotalElements.toLocaleString()}
                   <span className="ml-1 text-2xl md:text-3xl">마리</span>
                 </p>

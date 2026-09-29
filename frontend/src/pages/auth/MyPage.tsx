@@ -62,7 +62,7 @@ function FavoriteCard({ animal }: { animal: Animal }) {
           </span>
         )}
       </div>
-      <p className="mt-3 truncate font-serif text-xl text-ink transition-colors group-hover:text-terracotta">
+      <p className="mt-3 truncate font-display text-xl text-ink transition-colors group-hover:text-terracotta">
         {animal.name}
       </p>
       <p className="mt-0.5 truncate text-sm text-ink-soft">{meta}</p>
@@ -227,7 +227,7 @@ export default function MyPage() {
                   <div className="flex items-center gap-4">
                     <NameAvatar name={me.name} size="lg" />
                     <div className="min-w-0">
-                      <p className="truncate font-serif text-2xl text-ink">{me.name}</p>
+                      <p className="truncate font-display text-2xl text-ink">{me.name}</p>
                       <p className="truncate text-sm text-ink-muted">{me.email}</p>
                     </div>
                   </div>
@@ -243,7 +243,7 @@ export default function MyPage() {
               )}
               {me && editingProfile && (
                 <form onSubmit={saveProfile}>
-                  <p className="mb-5 font-serif text-xl text-ink">정보 수정</p>
+                  <p className="mb-5 font-display text-xl text-ink">정보 수정</p>
                   <div className="toss-auth-field">
                     <label htmlFor="mypage-name" className="toss-auth-label">
                       이름
@@ -299,7 +299,7 @@ export default function MyPage() {
             {/* 나의 선호도 */}
             <section aria-labelledby="mypage-pref" className="rounded-[1.75rem] border border-ink/10 bg-cream-50 p-6 shadow-card md:p-8">
               <div className="mb-5 flex items-baseline justify-between gap-3">
-                <h2 id="mypage-pref" className="font-serif text-xl text-ink">
+                <h2 id="mypage-pref" className="font-display text-xl text-ink">
                   입양 선호 조건
                 </h2>
                 <Link to="/mypage/preferences" className="text-sm font-semibold text-terracotta hover:text-terracotta-700">
@@ -324,7 +324,7 @@ export default function MyPage() {
           {/* 즐겨찾기(찜) */}
           <section aria-labelledby="mypage-fav" className="lg:col-span-8">
             <div className="flex items-end justify-between gap-4 border-b border-ink/15 pb-5">
-              <h2 id="mypage-fav" className="font-serif text-3xl text-ink">
+              <h2 id="mypage-fav" className="font-display text-3xl text-ink">
                 찜한 아이들 {favoriteTotal > 0 && <span className="text-terracotta">{favoriteTotal}</span>}
               </h2>
               <Link to="/animals" className="border-b border-ink/30 pb-0.5 text-[0.9375rem] hover:border-ink">
@@ -343,7 +343,7 @@ export default function MyPage() {
               </div>
             ) : favorites.length === 0 ? (
               <div className="mt-8 rounded-[1.75rem] border border-dashed border-ink/20 px-6 py-16 text-center">
-                <p className="font-serif text-2xl text-ink">아직 찜한 아이가 없어요</p>
+                <p className="font-display text-2xl text-ink">아직 찜한 아이가 없어요</p>
                 <p className="mx-auto mt-3 max-w-sm leading-relaxed text-ink-muted">
                   공고를 둘러보다 마음이 가는 아이의 하트를 눌러 두면 여기에서 다시 볼 수 있어요.
                 </p>
