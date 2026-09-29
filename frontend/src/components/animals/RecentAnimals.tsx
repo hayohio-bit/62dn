@@ -39,6 +39,8 @@ export default function RecentAnimals({ className = "" }: { className?: string }
             <li key={a.id} className="w-[4.5rem] shrink-0">
               <Link
                 to={`/animals/${a.id}`}
+                // 동물 목록 위에 있으므로 상세의 "목록으로"가 뒤로 가기로 필터·페이지를 유지하게 한다
+                state={{ fromList: true }}
                 className="group block text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
               >
                 <span className="relative block h-[4.5rem] w-[4.5rem] overflow-hidden rounded-full bg-cream-200 ring-1 ring-ink/10 transition group-hover:ring-2 group-hover:ring-terracotta">
