@@ -56,9 +56,12 @@ export interface Animal {
   species: Species;
   breed: string;
   name: string;
-  age: number;
-  gender: Gender;
-  size: Size;
+  /** 공공데이터는 나이·성별·크기를 모를 수 있다 */
+  age: number | null;
+  gender: Gender | null;
+  size: Size | null;
+  /** 체중(kg). 크기는 이 값으로 추정한 것이다 */
+  weight?: number | null;
   neutered: boolean;
   status: AnimalStatus;
   noticeStartDate?: string;

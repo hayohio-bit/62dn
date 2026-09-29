@@ -11,6 +11,8 @@ import { useAuthStore } from "@/store/authStore";
 
 interface FavoriteButtonProps {
   animalId: number;
+  /** 목록에서 스크린리더가 어느 동물의 버튼인지 구분할 수 있도록 라벨에 넣는다 */
+  animalName?: string | null;
   isFavorited: boolean;
   onToggle?: (newState: boolean) => void;
   className?: string;
@@ -34,6 +36,7 @@ const HEART =
 
 export default function FavoriteButton({
   animalId,
+  animalName,
   isFavorited,
   onToggle,
   className = "",
@@ -83,7 +86,7 @@ export default function FavoriteButton({
       onClick={handleClick}
       disabled={loading}
       aria-pressed={isAuthenticated ? favorited : undefined}
-      aria-label={!isAuthenticated ? "로그인 후 찜하기" : favorited ? "찜 해제" : "찜하기"}
+      aria-label={`${animalName ? `${animalName} ` : ""}${!isAuthenticated ? "로그인 후 찜하기" : favorited ? "찜 해제" : "찜하기"}`}
       title={!isAuthenticated ? "로그인하면 찜할 수 있어요" : undefined}
       className={clsx(
         "grid shrink-0 place-items-center rounded-full backdrop-blur transition duration-200",

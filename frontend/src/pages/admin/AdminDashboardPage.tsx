@@ -58,7 +58,8 @@ function useDashboardStats(enabled: boolean) {
     Promise.allSettled([
       adminApi.getUsers(0, 1),
       adminApi.getBoards(0, 1),
-      animalApi.getAll({ page: 0, sizeParam: 1 }),
+      // 랜딩·목록과 같은 기준(보호 중, 공고 마감 전)으로 센다
+      animalApi.getAll({ page: 0, sizeParam: 1, status: "PROTECTED" }),
       adminApi.getSyncHistory(0, 1),
     ]).then(([users, boards, animals, sync]) => {
       if (cancelled) return;

@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Animal } from "@/types/entities";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
-import { genderLabels, speciesLabels } from "@/constants/animalLabels";
+import { ageLabel, genderLabels, speciesLabels } from "@/constants/animalLabels";
 
 type CallBlockType = "adoption" | "foster";
 
@@ -88,7 +88,7 @@ interface GuideCallBlockProps {
 
 export default function GuideCallBlock({ animal, type }: GuideCallBlockProps) {
   const phones = Array.from(new Set([animal.chargePhone, animal.shelterPhone].filter((p): p is string => !!p)));
-  const meta = [speciesLabels[animal.species], animal.breed, animal.age != null ? `${animal.age}살` : null, genderLabels[animal.gender]]
+  const meta = [speciesLabels[animal.species], animal.breed, ageLabel(animal.age), animal.gender && genderLabels[animal.gender]]
     .filter(Boolean)
     .join(" · ");
 

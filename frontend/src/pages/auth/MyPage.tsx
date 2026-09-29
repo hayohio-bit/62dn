@@ -10,7 +10,16 @@ import { favoriteApi } from "@/api/favorite";
 import { useAuthStore } from "@/store/authStore";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
 import { NameAvatar } from "@/components/boards/BoardTypeBadge";
-import { ddayTone, formatDday, genderLabels, sizeLabels, speciesLabels } from "@/constants/animalLabels";
+import {
+  ageLabel,
+  ddayBadgeClass,
+  formatDday,
+  genderLabels,
+  isTemporaryName,
+  sizeLabels,
+  speciesLabels,
+} from "@/constants/animalLabels";
+import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 import type { UserResponse } from "@/types/dto";
 import type { Preference, Animal } from "@/types/entities";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -20,19 +29,13 @@ const roleLabels: Record<string, string> = {
   SUPER_ADMIN: "시스템 관리자",
 };
 
-const ddayToneClass = {
-  urgent: "bg-terracotta text-white",
-  soon: "bg-cream-50 text-terracotta-700",
-  normal: "bg-cream-50/90 text-ink-soft",
-} as const;
-
 function FavoriteCard({ animal }: { animal: Animal }) {
   const [imageFailed, setImageFailed] = useState(false);
   const dday = formatDday(animal.daysUntilExpiry);
   const meta = [
     animal.breed || "품종 미상",
-    animal.age != null ? `${animal.age}살` : null,
-    genderLabels[animal.gender],
+    ageLabel(animal.age),
+    animal.gender && genderLabels[animal.gender],
   ]
     .filter(Boolean)
     .join(" · ");
@@ -55,15 +58,16 @@ function FavoriteCard({ animal }: { animal: Animal }) {
           <span
             className={clsx(
               "absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold shadow-sm",
-              ddayToneClass[ddayTone(animal.daysUntilExpiry)],
+              ddayBadgeClass(animal.daysUntilExpiry),
             )}
           >
             {dday}
           </span>
         )}
       </div>
-      <p className="mt-3 truncate font-display text-xl text-ink transition-colors group-hover:text-terracotta">
-        {animal.name}
+      <p className="mt-3 flex min-w-0 items-center gap-2 font-display text-xl text-ink transition-colors group-hover:text-terracotta">
+        <span className="truncate">{animal.name || "이름 없음"}</span>
+        {isTemporaryName(animal) && <TemporaryNameBadge className="text-ink-muted" />}
       </p>
       <p className="mt-0.5 truncate text-sm text-ink-soft">{meta}</p>
       {animal.shelterName && <p className="mt-0.5 truncate text-xs text-ink-muted">{animal.shelterName}</p>}

@@ -7,16 +7,17 @@ import clsx from "clsx";
 import FavoriteButton from "@/components/animals/FavoriteButton";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
 import Reveal from "@/components/motion/Reveal";
-import { ddayTone, formatDday, genderLabels, sizeLabels, speciesLabels } from "@/constants/animalLabels";
+import {
+  ageLabel,
+  ddayBadgeClass,
+  formatDday,
+  genderLabels,
+  isTemporaryName,
+  sizeLabels,
+  speciesLabels,
+} from "@/constants/animalLabels";
+import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 import type { Animal } from "@/types/entities";
-
-const ddayBadgeClass = (days: number | null | undefined) => {
-  if (days != null && days < 0) return "bg-ink/70 text-cream";
-  const tone = ddayTone(days);
-  if (tone === "urgent") return "bg-terracotta text-white";
-  if (tone === "soon") return "bg-cream-50 text-terracotta";
-  return "bg-cream-50/90 text-ink";
-};
 
 export default function AnimalCard({
   animal,
@@ -34,9 +35,9 @@ export default function AnimalCard({
 }) {
   const dday = formatDday(animal.daysUntilExpiry);
   const meta = [
-    animal.age != null ? `${animal.age}살` : "나이 미상",
-    genderLabels[animal.gender] ?? "성별 미상",
-    sizeLabels[animal.size],
+    ageLabel(animal.age) ?? "나이 미상",
+    (animal.gender && genderLabels[animal.gender]) ?? "성별 미상",
+    animal.size && sizeLabels[animal.size],
   ]
     .filter(Boolean)
     .join(" · ");
@@ -75,8 +76,9 @@ export default function AnimalCard({
           )}
         </div>
         <div className="px-1 pt-4">
-          <h3 className="truncate font-display text-[1.375rem] leading-tight text-ink transition-colors group-hover:text-terracotta md:text-2xl">
-            {animal.name || "이름 없음"}
+          <h3 className="flex min-w-0 items-center gap-2 font-display text-[1.375rem] leading-tight text-ink transition-colors group-hover:text-terracotta md:text-2xl">
+            <span className="truncate">{animal.name || "이름 없음"}</span>
+            {isTemporaryName(animal) && <TemporaryNameBadge className="text-ink-muted" />}
           </h3>
           <p className="mt-1.5 text-sm text-ink-soft">{meta}</p>
           {breed && <p className="mt-0.5 truncate text-sm text-ink-muted">{breed}</p>}
@@ -93,7 +95,13 @@ export default function AnimalCard({
       </Link>
       {/* 링크 안에 버튼을 넣으면 중첩된 대화형 요소가 되므로 카드 위에 따로 겹쳐 둔다 */}
       <div className="absolute right-3 top-3 z-10">
-        <FavoriteButton animalId={animal.id} isFavorited={favorited} onToggle={onFavoriteToggle} size="md" />
+        <FavoriteButton
+          animalId={animal.id}
+          animalName={animal.name}
+          isFavorited={favorited}
+          onToggle={onFavoriteToggle}
+          size="md"
+        />
       </div>
     </Reveal>
   );

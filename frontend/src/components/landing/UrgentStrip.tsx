@@ -4,7 +4,8 @@ import clsx from "clsx";
 import type { AnimalResponse, AnimalStatsResponse } from "@/types/dto";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
 import Reveal from "@/components/motion/Reveal";
-import { ddayTone, formatDday, genderLabels, speciesLabels } from "@/constants/animalLabels";
+import { ageLabel, ddayBadgeClass, formatDday, genderLabels, isTemporaryName, speciesLabels } from "@/constants/animalLabels";
+import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 
 interface Props {
   animals: AnimalResponse[];
@@ -82,7 +83,6 @@ export default function UrgentStrip({ animals, stats }: Props) {
       >
         {animals.map((a, i) => {
           const dday = formatDday(a.daysUntilExpiry);
-          const tone = ddayTone(a.daysUntilExpiry);
           return (
             <Reveal key={a.id} delay={Math.min(i, 5) * 0.06} className="w-[15.5rem] shrink-0 snap-start md:w-[16.5rem]">
               <Link to={`/animals/${a.id}`} className="group block">
@@ -101,7 +101,7 @@ export default function UrgentStrip({ animals, stats }: Props) {
                     <span
                       className={clsx(
                         "absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold",
-                        tone === "urgent" ? "bg-terracotta text-white" : "bg-cream text-terracotta",
+                        ddayBadgeClass(a.daysUntilExpiry),
                       )}
                     >
                       {dday}
@@ -109,11 +109,14 @@ export default function UrgentStrip({ animals, stats }: Props) {
                   )}
                 </div>
                 <div className="mt-4 flex items-baseline justify-between gap-3">
-                  <h3 className="font-display text-2xl">{a.name || "이름 없음"}</h3>
+                  <h3 className="flex min-w-0 items-center gap-2 font-display text-2xl">
+                    <span className="truncate">{a.name || "이름 없음"}</span>
+                    {isTemporaryName(a) && <TemporaryNameBadge className="text-cream/80" />}
+                  </h3>
                   <span className="truncate text-sm text-cream/70">{a.shelterName}</span>
                 </div>
                 <p className="text-sm text-cream/60">
-                  {[speciesLabels[a.species], a.breed, a.age != null ? `${a.age}살` : null, genderLabels[a.gender]]
+                  {[speciesLabels[a.species], a.breed, ageLabel(a.age), a.gender && genderLabels[a.gender]]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>

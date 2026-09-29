@@ -16,13 +16,18 @@ import { CallInquiryTip } from "@/components/guide/GuideCallBlock";
 import Reveal from "@/components/motion/Reveal";
 import MoreAnimals from "@/components/animals/MoreAnimals";
 import {
+  ageLabel,
+  ddayBadgeClass,
   ddayTone,
   formatDday,
   genderLabels,
+  isTemporaryName,
+  neuteredLabel,
   sizeLabels,
   speciesLabels,
   statusLabels,
 } from "@/constants/animalLabels";
+import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -137,7 +142,7 @@ export default function AnimalDetailPage() {
   // 탭 제목 예: "보리 · 믹스견 2살 | 62댕냥"
   useDocumentTitle(
     animal
-      ? [animal.name || "이름 없음", [animal.breed, animal.age != null ? `${animal.age}살` : null].filter(Boolean).join(" ")]
+      ? [animal.name || "이름 없음", [animal.breed, ageLabel(animal.age)].filter(Boolean).join(" ")]
           .filter(Boolean)
           .join(" · ")
       : null,
@@ -187,6 +192,7 @@ export default function AnimalDetailPage() {
   const name = animal.name || "이름 없음";
   const dday = formatDday(animal.daysUntilExpiry);
   const tone = ddayTone(animal.daysUntilExpiry);
+  const temporaryName = isTemporaryName(animal);
   const expired = animal.daysUntilExpiry != null && animal.daysUntilExpiry < 0;
   // 담당자 번호와 보호소 번호가 같은 경우가 많으므로 한 번만 보여 준다
   const phones = Array.from(new Set([animal.chargePhone, animal.shelterPhone].filter((p): p is string => !!p)));
@@ -196,14 +202,23 @@ export default function AnimalDetailPage() {
   );
   const hasLocation = !!animal.shelterAddress || (animal.shelterLatitude != null && animal.shelterLongitude != null);
 
+  // 공공데이터의 크기는 공고의 체중으로 추정한 값이라 "추정"을 붙인다
+  const sizeText = animal.size ? `${sizeLabels[animal.size]}${temporaryName ? "(추정)" : ""}` : null;
+  const weightText = animal.weight != null ? `${animal.weight}kg` : null;
+  const sizeAndWeight = [sizeText, weightText].filter(Boolean).join(" · ") || "미상";
+
   const facts: { label: string; value: string }[] = [
     { label: "종류", value: speciesLabels[animal.species] ?? "미상" },
     { label: "품종", value: animal.breed || "미상" },
-    { label: "나이", value: animal.age != null ? `${animal.age}살` : "미상" },
-    { label: "성별", value: genderLabels[animal.gender] ?? "미상" },
-    { label: "크기", value: sizeLabels[animal.size] ?? "미상" },
-    { label: "중성화", value: animal.neutered ? "완료" : "안 함" },
+    { label: "나이", value: ageLabel(animal.age) ?? "미상" },
+    { label: "성별", value: (animal.gender && genderLabels[animal.gender]) ?? "미상" },
+    { label: "크기 · 체중", value: sizeAndWeight },
+    { label: "중성화", value: neuteredLabel(animal) },
   ];
+  // 임시 이름은 실제 이름처럼 전달되지 않도록 품종으로 소개하고 이름은 괄호로 덧붙인다
+  const shareIntro = temporaryName
+    ? `${animal.breed || speciesLabels[animal.species] || "보호 중인 아이"} 한 마리가 새 가족을 기다리고 있어요. (임시 이름: ${name})`
+    : `${withJosa(name, "이", "가")} 새 가족을 기다리고 있어요.`;
   const noticeStart = formatDate(animal.noticeStartDate);
   const noticeEnd = formatDate(animal.noticeEndDate);
   const description = animal.description?.replace(/\s*\[특징\]/g, "\n\n[특징]");
@@ -264,7 +279,7 @@ export default function AnimalDetailPage() {
                   <span
                     className={clsx(
                       "pointer-events-none absolute left-4 top-4 rounded-full px-3.5 py-1.5 text-sm font-bold tabular-nums shadow-sm",
-                      expired ? "bg-ink/70 text-cream" : tone === "urgent" ? "bg-terracotta text-white" : "bg-cream-50 text-terracotta",
+                      ddayBadgeClass(animal.daysUntilExpiry),
                     )}
                   >
                     {dday}
@@ -285,14 +300,21 @@ export default function AnimalDetailPage() {
                 <div className="min-w-0">
                   <p className="dn-eyebrow">{statusLabels[animal.status] ?? "보호 중"}</p>
                   <h1 className="dn-display mt-3 break-words text-5xl md:text-6xl">{name}</h1>
+                  {temporaryName && (
+                    <p className="mt-3 flex items-center gap-2 text-sm text-ink-muted">
+                      <TemporaryNameBadge />
+                      공고에 이름이 없어 62댕냥이 붙인 이름이에요.
+                    </p>
+                  )}
                 </div>
                 <div className="mt-1 flex shrink-0 gap-2">
                   <ShareButton
                     title={`${name} | 62댕냥`}
-                    text={`${withJosa(name, "이", "가")} 새 가족을 기다리고 있어요.${dday && !expired ? ` 공고 마감 ${dday}` : ""}`}
+                    text={`${shareIntro}${dday && !expired ? ` 공고 마감 ${dday}` : ""}`}
                   />
                   <FavoriteButton
                     animalId={animal.id}
+                    animalName={name}
                     isFavorited={favoriteIds.includes(animal.id)}
                     onToggle={(added) => toggleFavorite(animal.id, added)}
                     size="lg"
@@ -301,7 +323,7 @@ export default function AnimalDetailPage() {
                 </div>
               </div>
               <p className="mt-3 text-ink-soft">
-                {[animal.breed, animal.age != null ? `${animal.age}살` : null, genderLabels[animal.gender]].filter(Boolean).join(" · ")}
+                {[animal.breed, ageLabel(animal.age), animal.gender && genderLabels[animal.gender]].filter(Boolean).join(" · ")}
               </p>
 
               {(noticeStart || noticeEnd) && (
@@ -310,7 +332,7 @@ export default function AnimalDetailPage() {
                     공고 기간 {noticeStart} – {noticeEnd}
                   </span>
                   {dday && !expired && (
-                    <span className={clsx("font-semibold", tone === "normal" ? "text-ink-soft" : "text-terracotta")}>
+                    <span className={clsx("font-semibold", tone === "normal" ? "text-ink-soft" : "text-terracotta-700")}>
                       · 마감까지 {animal.daysUntilExpiry === 0 ? "오늘" : `${animal.daysUntilExpiry}일`}
                     </span>
                   )}

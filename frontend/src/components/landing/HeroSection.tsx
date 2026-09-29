@@ -2,7 +2,8 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import type { AnimalResponse, AnimalStatsResponse } from "@/types/dto";
-import { formatDday, genderLabels } from "@/constants/animalLabels";
+import { ageLabel, ddayBadgeClass, formatDday, genderLabels, isTemporaryName } from "@/constants/animalLabels";
+import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 import { heroStats } from "@/constants/landingContent";
 
 interface Props {
@@ -159,13 +160,20 @@ export default function HeroSection({ featured, stats }: Props) {
                 className="block rounded-2xl bg-white/90 p-5 shadow-lift backdrop-blur transition hover:-translate-y-1"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-display text-xl">{featured.name || "이름 없음"}</span>
+                  <span className="flex min-w-0 items-center gap-2 font-display text-xl">
+                    <span className="truncate">{featured.name || "이름 없음"}</span>
+                    {isTemporaryName(featured) && <TemporaryNameBadge className="text-ink-muted" />}
+                  </span>
                   {dday && (
-                    <span className="rounded-full bg-terracotta px-2.5 py-0.5 text-xs font-bold text-white">{dday}</span>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${ddayBadgeClass(featured.daysUntilExpiry)}`}
+                    >
+                      {dday}
+                    </span>
                   )}
                 </div>
                 <p className="mt-1 text-sm text-ink-muted">
-                  {[featured.breed, featured.age != null ? `${featured.age}살` : null, genderLabels[featured.gender]]
+                  {[featured.breed, ageLabel(featured.age), featured.gender && genderLabels[featured.gender]]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>

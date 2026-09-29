@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
-import { ddayTone, formatDday } from "@/constants/animalLabels";
+import { ddayTextClass, formatDday } from "@/constants/animalLabels";
 import { clearRecentAnimals, daysUntil, getRecentAnimals } from "@/lib/recentAnimals";
 
 export default function RecentAnimals({ className = "" }: { className?: string }) {
@@ -53,10 +53,7 @@ export default function RecentAnimals({ className = "" }: { className?: string }
                 <span className="mt-2 block truncate text-sm text-ink group-hover:text-terracotta">{a.name || "이름 없음"}</span>
                 {dday && (
                   <span
-                    className={clsx(
-                      "block text-[0.6875rem] font-semibold tabular-nums",
-                      ddayTone(days) === "normal" ? "text-ink-muted" : "text-terracotta",
-                    )}
+                    className={clsx("block text-[0.6875rem] font-semibold tabular-nums", ddayTextClass(days))}
                   >
                     {dday}
                   </span>
