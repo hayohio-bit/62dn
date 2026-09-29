@@ -6,6 +6,7 @@ import com.dnproject.platform.domain.constant.Size;
 import com.dnproject.platform.domain.constant.Species;
 
 import com.dnproject.platform.dto.response.AnimalResponse;
+import com.dnproject.platform.dto.response.AnimalStatsResponse;
 import com.dnproject.platform.dto.response.ApiResponse;
 import com.dnproject.platform.dto.response.PageResponse;
 import com.dnproject.platform.exception.UnauthorizedException;
@@ -91,6 +92,12 @@ public class AnimalController {
     public ApiResponse<AnimalResponse> getById(@PathVariable Long id) {
         AnimalResponse data = animalService.findById(id);
         return ApiResponse.success("조회 성공", data);
+    }
+
+    @Operation(summary = "실시간 현황: 공고 중인 동물·일주일 안에 공고가 끝나는 동물·보호소 수 (랜딩 페이지용)")
+    @GetMapping("/stats")
+    public ApiResponse<AnimalStatsResponse> getStats() {
+        return ApiResponse.success("조회 성공", animalService.getStats());
     }
 
     @Operation(summary = "안락사 D-Day 임박 동물 목록 (렌딩 페이지용)")

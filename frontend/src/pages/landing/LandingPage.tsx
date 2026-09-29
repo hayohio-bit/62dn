@@ -9,7 +9,7 @@ import StoriesSection from "@/components/landing/StoriesSection";
 import FAQSection from "@/components/landing/FAQSection";
 import FinalCTA from "@/components/landing/FinalCTA";
 import { animalApi } from "@/api";
-import type { AnimalResponse } from "@/types/dto";
+import type { AnimalResponse, AnimalStatsResponse } from "@/types/dto";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 /**
@@ -18,6 +18,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 export default function LandingPage() {
   useDocumentTitle();
   const [urgent, setUrgent] = useState<AnimalResponse[]>([]);
+  const [stats, setStats] = useState<AnimalStatsResponse | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,6 +30,14 @@ export default function LandingPage() {
       .catch(() => {
         // 마감 임박 목록이 없어도 랜딩은 그대로 보여 준다
       });
+    animalApi
+      .getStats()
+      .then((data) => {
+        if (!cancelled) setStats(data ?? null);
+      })
+      .catch(() => {
+        // 현황을 불러오지 못하면 숫자 없는 문구를 보여 준다
+      });
     return () => {
       cancelled = true;
     };
@@ -38,8 +47,8 @@ export default function LandingPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
-        <HeroSection featured={urgent[0]} urgentCount={urgent.length} />
-        <UrgentStrip animals={urgent} />
+        <HeroSection featured={urgent[0]} stats={stats} />
+        <UrgentStrip animals={urgent} stats={stats} />
         <WaysSection />
         <RealitySection />
         <StoriesSection />

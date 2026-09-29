@@ -1,13 +1,14 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
-import type { AnimalResponse } from "@/types/dto";
+import type { AnimalResponse, AnimalStatsResponse } from "@/types/dto";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
 import Reveal from "@/components/motion/Reveal";
 import { ddayTone, formatDday, genderLabels, speciesLabels } from "@/constants/animalLabels";
 
 interface Props {
   animals: AnimalResponse[];
+  stats: AnimalStatsResponse | null;
 }
 
 function Arrow({ dir }: { dir: "left" | "right" }) {
@@ -19,7 +20,7 @@ function Arrow({ dir }: { dir: "left" | "right" }) {
 }
 
 /** 공고 마감이 가까운 아이들 (어두운 띠, 가로 스크롤) */
-export default function UrgentStrip({ animals }: Props) {
+export default function UrgentStrip({ animals, stats }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
 
   if (animals.length === 0) return null;
@@ -42,6 +43,13 @@ export default function UrgentStrip({ animals }: Props) {
             <p className="mt-3 max-w-xl text-cream/60">
               공고 기간이 끝나면 보호소 사정에 따라 안락사가 결정될 수 있어요. 한 번 더 눈여겨봐 주세요.
             </p>
+            {stats && stats.protectedCount > 0 && (
+              <p className="mt-5 text-sm text-cream/80">
+                지금 전국 <strong className="font-semibold text-cream">{stats.shelterCount.toLocaleString()}곳</strong>의
+                보호소에서 <strong className="font-semibold text-cream">{stats.protectedCount.toLocaleString()}마리</strong>가
+                가족을 기다리고 있어요.
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <button

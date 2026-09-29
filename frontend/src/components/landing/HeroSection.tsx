@@ -1,19 +1,29 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import type { AnimalResponse } from "@/types/dto";
+import type { AnimalResponse, AnimalStatsResponse } from "@/types/dto";
 import { formatDday, genderLabels } from "@/constants/animalLabels";
 import { heroStats } from "@/constants/landingContent";
 
 interface Props {
   /** 공고 마감이 가장 가까운 동물 (없으면 카드 대신 안내 문구를 보여 준다) */
   featured?: AnimalResponse;
-  urgentCount: number;
+  /** 실시간 현황 (불러오기 전이거나 실패하면 null) */
+  stats: AnimalStatsResponse | null;
 }
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
-export default function HeroSection({ featured, urgentCount }: Props) {
+/** 히어로 상단 알림 문구: 일주일 안에 공고가 끝나는 아이가 있으면 그 수를, 없으면 공고 중인 아이 수를 보여 준다 */
+function liveMessage(stats: AnimalStatsResponse | null) {
+  if (stats && stats.endingWithinWeekCount > 0) {
+    return `일주일 안에 공고가 끝나는 아이 ${stats.endingWithinWeekCount.toLocaleString()}마리`;
+  }
+  if (stats && stats.protectedCount > 0) return `지금 ${stats.protectedCount.toLocaleString()}마리가 가족을 기다려요`;
+  return "매일 새로운 공고가 올라와요";
+}
+
+export default function HeroSection({ featured, stats }: Props) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
@@ -42,7 +52,7 @@ export default function HeroSection({ featured, urgentCount }: Props) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-terracotta opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-terracotta" />
             </span>
-            {urgentCount > 0 ? `공고 마감을 앞둔 아이 ${urgentCount}마리` : "매일 새로운 공고가 올라와요"}
+            {liveMessage(stats)}
           </motion.p>
 
           <h1 className="dn-display mt-7 text-[3.25rem] leading-[1.08] sm:text-[4.25rem] lg:text-[4.75rem]">

@@ -8,6 +8,7 @@ import com.dnproject.platform.domain.constant.Size;
 import com.dnproject.platform.domain.constant.Species;
 
 import com.dnproject.platform.dto.response.AnimalResponse;
+import com.dnproject.platform.dto.response.AnimalStatsResponse;
 import com.dnproject.platform.dto.response.PageResponse;
 import com.dnproject.platform.exception.NotFoundException;
 import com.dnproject.platform.dto.response.PreferenceResponse;
@@ -68,6 +69,20 @@ public class AnimalService {
                 .stream()
                 .map(animalMapper::toResponse)
                 .toList();
+    }
+
+    /**
+     * 랜딩 실시간 현황. 일주일 안은 오늘(D-Day)부터 7일 뒤(D-7)까지로, 목록의 D-day 강조 기준과 같다.
+     */
+    @Transactional(readOnly = true)
+    public AnimalStatsResponse getStats() {
+        LocalDate today = LocalDate.now();
+        return AnimalStatsResponse.builder()
+                .protectedCount(animalRepository.countByStatus(AnimalStatus.PROTECTED))
+                .endingWithinWeekCount(animalRepository.countByStatusAndNoticeEndDateBetween(
+                        AnimalStatus.PROTECTED, today, today.plusDays(7)))
+                .shelterCount(animalRepository.countSheltersWithStatus(AnimalStatus.PROTECTED))
+                .build();
     }
 
     /**

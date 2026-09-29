@@ -8,6 +8,7 @@ import type {
   AnimalListRequest,
   AnimalResponse,
   AnimalListResponse,
+  AnimalStatsResponse,
   ApiResponse,
 } from "@/types/dto";
 
@@ -43,6 +44,14 @@ export const animalApi = {
       "/animals/urgent",
       { params: { limit } }
     );
+    return response.data.data;
+  },
+
+  /**
+   * 실시간 현황 (랜딩 페이지용): 공고 중인 동물 수, 일주일 안에 공고가 끝나는 동물 수, 보호소 수
+   */
+  getStats: async () => {
+    const response = await axiosInstance.get<ApiResponse<AnimalStatsResponse>>("/animals/stats");
     return response.data.data;
   },
 };

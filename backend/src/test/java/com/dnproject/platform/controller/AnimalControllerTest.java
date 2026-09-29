@@ -2,6 +2,7 @@ package com.dnproject.platform.controller;
 
 import com.dnproject.platform.domain.constant.Gender;
 import com.dnproject.platform.dto.response.AnimalResponse;
+import com.dnproject.platform.dto.response.AnimalStatsResponse;
 import com.dnproject.platform.dto.response.PageResponse;
 import com.dnproject.platform.exception.GlobalExceptionHandler;
 import com.dnproject.platform.service.AnimalService;
@@ -26,6 +27,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -108,5 +110,17 @@ class AnimalControllerTest {
 
         verify(animalService).findAll(isNull(), isNull(), isNull(), eq(Gender.FEMALE), isNull(), isNull(),
                 isNull(), isNull(), any());
+    }
+
+    @Test
+    @DisplayName("실시간 현황은 목록 조회 경로({id})가 아닌 집계로 응답한다")
+    void stats() throws Exception {
+        when(animalService.getStats()).thenReturn(new AnimalStatsResponse(120, 18, 9));
+
+        mockMvc.perform(get("/api/animals/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.protectedCount").value(120))
+                .andExpect(jsonPath("$.data.endingWithinWeekCount").value(18))
+                .andExpect(jsonPath("$.data.shelterCount").value(9));
     }
 }

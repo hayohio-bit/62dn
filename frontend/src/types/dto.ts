@@ -74,6 +74,16 @@ export interface FindEmailRequest {
 }
 
 // ========== Animal DTOs ==========
+/** 랜딩 실시간 현황 */
+export interface AnimalStatsResponse {
+  /** 지금 보호 중(공고 중)인 동물 수 */
+  protectedCount: number;
+  /** 오늘(D-Day)부터 D-7 사이에 공고가 끝나는 동물 수 */
+  endingWithinWeekCount: number;
+  /** 보호 중인 동물이 있는 보호소 수 */
+  shelterCount: number;
+}
+
 export interface AnimalListRequest {
   species?: "DOG" | "CAT";
   /** 동물 크기 필터 (API param: animalSize, size와 충돌 방지) */
