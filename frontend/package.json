@@ -8,6 +8,7 @@
     "dev": "vite",
     "prebuild": "node scripts/build-data/ensure-snapshot.mjs",
     "build": "tsc && vite build",
+    "postbuild": "node scripts/copy-404.mjs",
     "test": "vitest run",
     "data:fetch": "node scripts/build-data/fetch-snapshot.mjs",
     "data:demo": "node scripts/build-data/demo-snapshot.mjs",

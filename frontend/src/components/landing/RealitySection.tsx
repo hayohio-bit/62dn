@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { animate, useInView, useReducedMotion } from "framer-motion";
 import Reveal from "@/components/motion/Reveal";
 import { realityStats, statsSources } from "@/constants/landingContent";
+import { assetUrl } from "@/lib/assetUrl";
 
 /** 화면에 들어오면 0부터 목표 숫자까지 올라간다 */
 function CountUp({ to, decimals = 0 }: { to: number; decimals?: number }) {
@@ -31,7 +32,7 @@ export default function RealitySection() {
         <Reveal className="relative md:col-span-6">
           <div className="overflow-hidden rounded-[1.75rem]">
             <img
-              src="/hero-three-left-behind.webp"
+              src={assetUrl("hero-three-left-behind.webp")}
               alt="텅 빈 보호소 견사에 홀로 앉아 있는 개"
               loading="lazy"
               className="aspect-[4/3] w-full object-cover grayscale-[35%]"

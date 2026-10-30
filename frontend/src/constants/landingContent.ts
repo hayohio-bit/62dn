@@ -1,4 +1,6 @@
 /** 랜딩 페이지 문구·데이터 */
+import { assetUrl } from "@/lib/assetUrl";
+
 
 /**
  * 통계 출처 (2026년 9월 확인)
@@ -61,19 +63,19 @@ export const beforeAdopt = [
   {
     title: "오래 함께할 수 있나요?",
     desc: "강아지와 고양이는 오랜 시간 가족으로 살아요. 이사나 결혼, 출산처럼 생활이 바뀌어도 끝까지 함께할 수 있는지 먼저 생각해 주세요.",
-    image: "/success-story-1.webp",
+    image: assetUrl("success-story-1.webp"),
     alt: "바닷가에서 웃고 있는 개",
   },
   {
     title: "가족 모두 같은 마음인가요?",
     desc: "함께 사는 사람 모두가 동의했는지, 동물 알레르기가 있는 사람은 없는지 확인해 주세요. 돌봄을 누가 맡을지도 미리 정해 두면 좋아요.",
-    image: "/success-story-2.webp",
+    image: assetUrl("success-story-2.webp"),
     alt: "상자에 앞발을 올린 턱시도 고양이",
   },
   {
     title: "시간과 비용을 준비했나요?",
     desc: "매일의 산책과 놀이, 사료와 모래, 예방접종과 병원비가 꾸준히 필요해요. 보호소에 입양 비용과 조건도 함께 물어보세요.",
-    image: "/success-story-3.webp",
+    image: assetUrl("success-story-3.webp"),
     alt: "노란 배경 앞에 선 치즈 고양이",
   },
 ];

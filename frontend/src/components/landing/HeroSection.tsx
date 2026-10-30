@@ -6,6 +6,7 @@ import { ageLabel, ddayBadgeClass, formatDday, genderLabels, isTemporaryName } f
 import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 import QuickFind from "@/components/landing/QuickFind";
 import { heroStats } from "@/constants/landingContent";
+import { assetUrl } from "@/lib/assetUrl";
 
 interface Props {
   /** 공고 마감이 가장 가까운 동물 (없으면 카드 대신 안내 문구를 보여 준다) */
@@ -123,7 +124,7 @@ export default function HeroSection({ featured, stats }: Props) {
             className="absolute right-0 top-0 h-[78%] w-[72%] overflow-hidden rounded-[999px_999px_28px_28px] shadow-lift"
           >
             <img
-              src="/images/landing/hero-dog.webp"
+              src={assetUrl("images/landing/hero-dog.webp")}
               alt="꽃을 물고 앉아 있는 골든 리트리버"
               className="h-full w-full object-cover"
             />
@@ -136,7 +137,7 @@ export default function HeroSection({ featured, stats }: Props) {
             transition={{ duration: 1, delay: 0.25, ease }}
             className="absolute bottom-0 left-0 h-[46%] w-[44%] overflow-hidden rounded-[1.75rem] ring-8 ring-cream"
           >
-            <img src="/images/landing/hero-cat.webp" alt="턱시도 고양이" className="h-full w-full object-cover" />
+            <img src={assetUrl("images/landing/hero-cat.webp")} alt="턱시도 고양이" className="h-full w-full object-cover" />
           </motion.div>
 
           <motion.div

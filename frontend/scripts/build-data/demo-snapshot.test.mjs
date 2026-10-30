@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildDemoSnapshot } from "./demo-snapshot.mjs";
 import { CAT_NAMES, DOG_NAMES } from "./transform.mjs";
-import { addDays, koreanToday } from "./snapshot-file.mjs";
+import { addDays, assertNotEmpty, koreanToday } from "./snapshot-file.mjs";
 
 const TODAY = "2026-10-30";
 
@@ -60,5 +60,12 @@ describe("날짜 계산", () => {
     expect(addDays("2026-10-30", 2)).toBe("2026-11-01");
     expect(addDays("2026-01-01", -1)).toBe("2025-12-31");
     expect(addDays("2026-10-30", 0)).toBe("2026-10-30");
+  });
+});
+
+describe("빈 스냅샷 보호", () => {
+  it("동물이 한 마리도 없으면 저장하지 않고 실패한다", () => {
+    expect(() => assertNotEmpty({ animals: [], shelters: [] })).toThrow("한 마리도 받지 못했습니다");
+    expect(() => assertNotEmpty(buildDemoSnapshot(TODAY, "t"))).not.toThrow();
   });
 });
