@@ -127,6 +127,19 @@ describe("동물 목록 조회", () => {
     expect(ids(queryAnimals(s, { sort: "noticeEndDate,desc" }, TODAY))).toEqual([1, 5, 2, 3]);
   });
 
+  it("방향을 적지 않으면 백엔드 계약대로 내림차순이고, 토큰의 공백은 무시한다", () => {
+    expect(ids(queryAnimals(s, { sort: "noticeStartDate" }, TODAY))).toEqual([1, 5, 2, 3]);
+    expect(ids(queryAnimals(s, { sort: " noticeEndDate , ASC " }, TODAY))).toEqual([2, 1, 5, 3]);
+    expect(ids(queryAnimals(s, { sort: "noticeEndDate,dsc" }, TODAY))).toEqual([1, 5, 2, 3]);
+  });
+
+  it("URL에서 온 잘못된 페이지 값과 공백 섞인 지역 값은 기본값으로 처리한다", () => {
+    expect(queryAnimals(s, { page: -2, sizeParam: 0 }, TODAY)).toMatchObject({ page: 0, size: 10, totalPages: 1 });
+    expect(queryAnimals(s, { page: Number.NaN, sizeParam: Number.NaN }, TODAY)).toMatchObject({ page: 0, size: 10 });
+    expect(ids(queryAnimals(s, { region: " 경기 ", sigungu: "  " }, TODAY))).toEqual([2]);
+    expect(queryShelters(snap([]), { page: -1, size: 0 })).toMatchObject({ page: 0, size: 10 });
+  });
+
   it("페이지는 sizeParam 단위로 자르고 기본 크기는 10이다", () => {
     const first = queryAnimals(s, { page: 0, sizeParam: 3 }, TODAY);
     expect(first).toMatchObject({ page: 0, size: 3, totalElements: 4, totalPages: 2 });
@@ -147,7 +160,7 @@ describe("마감 임박과 실시간 현황", () => {
   const s = snap([
     animal(1, { noticeEndDate: "2026-11-02" }),
     animal(2, { noticeEndDate: "2026-10-30" }),
-    animal(3, { noticeEndDate: "2026-11-01", imageUrl: null }),
+    animal(3, { noticeEndDate: "2026-11-01", imageUrl: "" }),
     animal(4, { noticeEndDate: "2026-11-06", status: "FOSTERING" }),
     animal(5, { noticeEndDate: null }),
     animal(6, { noticeEndDate: "2027-10-30", shelterId: 2 }),

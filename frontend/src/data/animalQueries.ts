@@ -56,11 +56,27 @@ export function toAnimal(animal: SnapshotAnimal, shelter: SnapshotShelter | unde
   };
 }
 
+/** "필드,방향". 허용되지 않은 필드는 기본 정렬, 방향을 적지 않으면 백엔드 계약대로 내림차순 (AnimalController.toListSort) */
 function parseSort(sort: string | undefined): [SortField, "asc" | "desc"] {
   if (!sort) return DEFAULT_SORT;
-  const [field, dir] = sort.split(",");
+  const [field, dir] = sort.split(",").map((s) => s.trim());
   if (!(SORT_FIELDS as readonly string[]).includes(field)) return DEFAULT_SORT;
-  return [field as SortField, dir?.toLowerCase() === "desc" ? "desc" : "asc"];
+  return [field as SortField, dir?.toLowerCase() === "asc" ? "asc" : "desc"];
+}
+
+/** URL에서 온 값이라 숫자가 아니거나 범위 밖일 수 있다. 그때는 기본값으로 돌린다 */
+function pageNumber(page: number | undefined): number {
+  return Number.isInteger(page) && (page as number) >= 0 ? (page as number) : 0;
+}
+
+function pageSize(size: number | undefined): number {
+  return Number.isInteger(size) && (size as number) >= 1 ? (size as number) : DEFAULT_PAGE_SIZE;
+}
+
+/** 빈 문자열·공백만 있는 필터 값은 "필터 없음"으로 본다 (AnimalService.findAll의 trim·isBlank) */
+function trimmed(value: string | undefined): string | undefined {
+  const v = value?.trim();
+  return v ? v : undefined;
 }
 
 /** 값이 없는 동물은 방향과 상관없이 뒤로(NULLS LAST), 같은 값은 id 오름차순 */
@@ -98,7 +114,9 @@ function includesIgnoreCase(haystack: string | null | undefined, needle: string)
 
 export function queryAnimals(snapshot: Snapshot, request: AnimalListRequest, today: string): PageResponse<Animal> {
   const shelters = shelterMap(snapshot);
-  const search = request.search?.trim().toLowerCase();
+  const search = trimmed(request.search)?.toLowerCase();
+  const region = trimmed(request.region);
+  const sigungu = trimmed(request.sigungu);
 
   const matched = snapshot.animals.filter((a) => {
     if (!isOpen(a, today)) return false;
@@ -108,8 +126,8 @@ export function queryAnimals(snapshot: Snapshot, request: AnimalListRequest, tod
     if (request.status && a.status !== request.status) return false;
     if (request.shelterId != null && a.shelterId !== request.shelterId) return false;
     const shelter = shelters.get(a.shelterId);
-    if (request.region && shelter?.regionSido !== request.region) return false;
-    if (request.sigungu && shelter?.regionSigungu !== request.sigungu) return false;
+    if (region && shelter?.regionSido !== region) return false;
+    if (sigungu && shelter?.regionSigungu !== sigungu) return false;
     if (search) {
       const nameMatches = !isTemporaryName(a) && includesIgnoreCase(a.name, search);
       if (!includesIgnoreCase(a.breed, search) && !includesIgnoreCase(shelter?.name, search) && !nameMatches) return false;
@@ -120,7 +138,7 @@ export function queryAnimals(snapshot: Snapshot, request: AnimalListRequest, tod
   const [field, dir] = parseSort(request.sort);
   matched.sort(compareBy(field, dir));
 
-  const page = paginate(matched, request.page ?? 0, request.sizeParam ?? DEFAULT_PAGE_SIZE);
+  const page = paginate(matched, pageNumber(request.page), pageSize(request.sizeParam));
   return { ...page, content: page.content.map((a) => toAnimal(a, shelters.get(a.shelterId), today)) };
 }
 
@@ -135,7 +153,7 @@ export function urgentAnimals(snapshot: Snapshot, limit: number, today: string):
   const shelters = shelterMap(snapshot);
   const until = addYears(today, 1);
   return snapshot.animals
-    .filter((a) => a.imageUrl != null && a.status === "PROTECTED" && endsBetween(a, today, until))
+    .filter((a) => !!a.imageUrl && a.status === "PROTECTED" && endsBetween(a, today, until))
     .sort(compareBy("noticeEndDate", "asc"))
     .slice(0, limit)
     .map((a) => toAnimal(a, shelters.get(a.shelterId), today));
@@ -179,7 +197,7 @@ export function queryShelters(snapshot: Snapshot, query: ShelterQuery): PageResp
     .filter((s) => !query.regionSido || s.regionSido === query.regionSido)
     .filter((s) => !keyword || includesIgnoreCase(s.name, keyword) || includesIgnoreCase(s.address, keyword))
     .sort((a, b) => b.id - a.id);
-  const page = paginate(matched, query.page ?? 0, query.size ?? DEFAULT_PAGE_SIZE);
+  const page = paginate(matched, pageNumber(query.page), pageSize(query.size));
   return { ...page, content: page.content.map(toShelter) };
 }
 

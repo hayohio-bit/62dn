@@ -147,7 +147,9 @@ export function useAnimals() {
         if (viewMode === "recommended") {
           message = "추천 목록을 불러오는데 실패했습니다. 로그인 후 선호도를 설정해 주세요.";
         } else if (errStatus == null) {
-          message = "동물 목록을 불러올 수 없습니다. 서버에 연결할 수 있는지 확인해 주세요.";
+          // 스냅샷 파일을 받지 못한 경우(정적 데이터) 또는 네트워크 오류
+          const reason = err instanceof Error && err.message ? ` (${err.message})` : "";
+          message = `동물 목록을 불러올 수 없습니다.${reason}`;
         } else if (errStatus >= 500) {
           message = serverMessage ? `서버 오류: ${serverMessage}` : "동물 목록을 불러오는데 실패했습니다. (서버 오류)";
         } else {
