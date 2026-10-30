@@ -1,32 +1,6 @@
 /**
- * Backend Entity 타입 정의
- * 스프링 부트 JPA Entity와 일치
+ * 동물·보호소 화면 타입. 백엔드 응답과 같은 모양을 정적 스냅샷에서 만들어 쓴다 (data/animalQueries.ts)
  */
-
-export type Role = "USER" | "SUPER_ADMIN";
-
-export interface User {
-  id: number;
-  email: string;
-  name: string;
-  phone: string;
-  role: Role;
-  address?: string;
-  createdAt: string;
-}
-
-export interface Preference {
-  id: number;
-  userId: number;
-  species?: Species;
-  minAge?: number;
-  maxAge?: number;
-  size?: Size;
-  /** 선호 지역 복수 (시·도 단위) */
-  regions?: string[];
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 export type Species = "DOG" | "CAT";
 export type Gender = "MALE" | "FEMALE";
@@ -69,31 +43,6 @@ export interface Animal {
   daysUntilExpiry?: number;
   imageUrl?: string;
   description?: string;
-  createdAt: string;
-}
-
-export type BoardType = "NOTICE" | "FAQ" | "FREE";
-
-export interface Board {
-  id: number;
-  userId: number;
-  userName?: string;
-  shelterId?: number;
-  type: BoardType;
-  title: string;
-  content: string;
-  views: number;
-  isPinned: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface Comment {
-  id: number;
-  boardId: number;
-  userId: number;
-  userName?: string;
-  content: string;
   createdAt: string;
 }
 

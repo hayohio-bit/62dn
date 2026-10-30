@@ -1,15 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import axios from "axios";
-import { animalApi, preferenceApi, favoriteApi } from "@/api";
-import { useAuthStore } from "@/store/authStore";
+import { animalApi, preferenceApi } from "@/api";
+import { usePreference } from "@/hooks/usePreference";
 import type { Animal } from "@/types/entities";
 import type { PreferenceRequest } from "@/types/dto";
 
 export type ViewMode = "all" | "recommended";
 
 export function useAnimals() {
-  const { isAuthenticated } = useAuthStore();
+  const { preference, savePreference } = usePreference();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // --- URL searchParams에서 상태 읽기 ---
@@ -28,11 +27,9 @@ export function useAnimals() {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("all");
   const [search, setSearch] = useState("");
-  const [preference, setPreference] = useState<PreferenceRequest | null>(null);
   const [showPreferenceModal, setShowPreferenceModal] = useState(false);
   const [apiAnimals, setApiAnimals] = useState<Animal[]>([]);
   const [apiTotalElements, setApiTotalElements] = useState(0);
-  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
   const totalPages = Math.ceil(apiTotalElements / pageSize) || 1;
 
@@ -72,42 +69,17 @@ export function useAnimals() {
   const setSort = useCallback((v: string) => updateParams({ sort: v, page: "0" }), [updateParams]);
   const setPageSize = useCallback((s: number) => updateParams({ pageSize: String(s), page: "0" }), [updateParams]);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setFavoriteIds([]);
-      return;
-    }
-    favoriteApi.getMyFavoriteIds().then(setFavoriteIds).catch(() => setFavoriteIds([]));
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setPreference(null);
-      return;
-    }
-    preferenceApi.getMy().then((data) => {
-      if (data) {
-        setPreference({
-          species: data.species ?? undefined,
-          minAge: data.minAge ?? undefined,
-          maxAge: data.maxAge ?? undefined,
-          size: data.size ?? undefined,
-          regions: data.regions ?? [],
-        });
-      } else {
-        setPreference(null);
-      }
-    }).catch(() => setPreference(null));
-  }, [isAuthenticated]);
-
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
     const id = setTimeout(() => setDebouncedSearch(search.trim()), 400);
     return () => clearTimeout(id);
   }, [search]);
 
+  // 일반 보기에서는 선호 조건이 바뀌어도(다른 탭에서 저장 등) 목록을 다시 받지 않는다
+  const recommendPreference = viewMode === "recommended" ? preference : null;
+
   useEffect(() => {
-    if (viewMode === "recommended" && !isAuthenticated) {
+    if (viewMode === "recommended" && !recommendPreference) {
       setApiAnimals([]);
       setApiTotalElements(0);
       setLoading(false);
@@ -140,22 +112,9 @@ export function useAnimals() {
         }
       } catch (err: unknown) {
         if (cancelled) return;
-        const response = axios.isAxiosError<{ message?: string }>(err) ? err.response : undefined;
-        const errStatus = response?.status;
-        const serverMessage = response?.data?.message;
-        let message: string;
-        if (viewMode === "recommended") {
-          message = "추천 목록을 불러오는데 실패했습니다. 로그인 후 선호도를 설정해 주세요.";
-        } else if (errStatus == null) {
-          // 스냅샷 파일을 받지 못한 경우(정적 데이터) 또는 네트워크 오류
-          const reason = err instanceof Error && err.message ? ` (${err.message})` : "";
-          message = `동물 목록을 불러올 수 없습니다.${reason}`;
-        } else if (errStatus >= 500) {
-          message = serverMessage ? `서버 오류: ${serverMessage}` : "동물 목록을 불러오는데 실패했습니다. (서버 오류)";
-        } else {
-          message = serverMessage ? `동물 목록을 불러오는데 실패했습니다. (${serverMessage})` : "동물 목록을 불러오는데 실패했습니다.";
-        }
-        setError(message);
+        // 스냅샷 파일(public/data/snapshot.json)을 받지 못한 경우가 대부분이라 원인(HTTP 상태 등)을 함께 안내한다
+        const reason = err instanceof Error && err.message ? ` (${err.message})` : "";
+        setError(`${viewMode === "recommended" ? "추천" : "동물"} 목록을 불러올 수 없습니다.${reason}`);
         setApiAnimals([]);
         setApiTotalElements(0);
       } finally {
@@ -166,7 +125,7 @@ export function useAnimals() {
     return () => {
       cancelled = true;
     };
-  }, [viewMode, page, pageSize, species, size, gender, status, region, sigungu, sort, debouncedSearch, isAuthenticated]);
+  }, [viewMode, page, pageSize, species, size, gender, status, region, sigungu, sort, debouncedSearch, recommendPreference]);
 
   // 검색어가 실제로 바뀐 경우에만 첫 페이지로 이동한다.
   // setPage는 URL이 바뀔 때마다 새로 만들어지므로, 의존성 변화만으로 실행하면
@@ -178,16 +137,11 @@ export function useAnimals() {
     setPage(0);
   }, [debouncedSearch, setPage]);
 
-  const handleSavePreference = async (pref: PreferenceRequest) => {
-    try {
-      await preferenceApi.update(pref);
-      setPreference(pref);
-      setViewMode("recommended");
-      setShowPreferenceModal(false);
-      setPage(0);
-    } catch {
-      alert("선호도 저장에 실패했습니다. 다시 시도해 주세요.");
-    }
+  const handleSavePreference = (pref: PreferenceRequest) => {
+    savePreference(pref);
+    setViewMode("recommended");
+    setShowPreferenceModal(false);
+    setPage(0);
   };
 
   const resetFilters = () => {
@@ -199,12 +153,12 @@ export function useAnimals() {
   return {
     state: {
       loading, error, viewMode, search, species, size, gender, status, region, sigungu,
-      sort, page, pageSize, preference, showPreferenceModal, favoriteIds,
+      sort, page, pageSize, preference, showPreferenceModal,
       animals: apiAnimals, totalPages, apiTotalElements
     },
     actions: {
       setViewMode, setSearch, setSpecies, setSize, setGender, setStatus, setRegion, setSigungu,
-      setSort, setPage, setPageSize, setShowPreferenceModal, setFavoriteIds, handleSavePreference, resetFilters
+      setSort, setPage, setPageSize, setShowPreferenceModal, handleSavePreference, resetFilters
     }
   };
 }

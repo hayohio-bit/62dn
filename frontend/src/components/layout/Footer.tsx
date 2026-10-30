@@ -7,7 +7,7 @@ const columns = [
     links: [
       { to: "/animals", label: "가족 찾기" },
       { to: "/support", label: "봉사·기부" },
-      { to: "/boards", label: "게시판" },
+      { to: "/mypage", label: "찜한 아이들" },
     ],
   },
   {
@@ -15,7 +15,7 @@ const columns = [
     links: [
       { to: "/guide/adoption", label: "입양 절차" },
       { to: "/guide/foster", label: "임시보호 절차" },
-      { to: "/boards?type=FAQ", label: "자주 묻는 질문" },
+      { to: "/#faq", label: "자주 묻는 질문" },
     ],
   },
   {
@@ -23,7 +23,6 @@ const columns = [
     links: [
       { to: "/privacy", label: "개인정보처리방침" },
       { to: "/terms", label: "이용약관" },
-      { to: "/admin/login", label: "관리자 로그인" },
     ],
   },
 ];

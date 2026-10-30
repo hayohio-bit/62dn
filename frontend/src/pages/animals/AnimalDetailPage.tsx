@@ -3,7 +3,6 @@ import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import clsx from "clsx";
 import { animalApi } from "@/api";
-import { useFavoriteIds } from "@/hooks/useFavoriteIds";
 import { recordRecentAnimal } from "@/lib/recentAnimals";
 import type { Animal } from "@/types/entities";
 import Header from "@/components/layout/Header";
@@ -135,7 +134,6 @@ export default function AnimalDetailPage() {
   const reduce = useReducedMotion();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
-  const { favoriteIds, toggle: toggleFavorite } = useFavoriteIds();
   const [imageModalOpen, setImageModalOpen] = useState(false);
   // 목록에서 들어왔으면 뒤로 가기로 돌아가 필터·페이지·스크롤 위치를 그대로 유지한다
   const cameFromList = (location.state as { fromList?: boolean } | null)?.fromList === true;
@@ -315,8 +313,6 @@ export default function AnimalDetailPage() {
                   <FavoriteButton
                     animalId={animal.id}
                     animalName={name}
-                    isFavorited={favoriteIds.includes(animal.id)}
-                    onToggle={(added) => toggleFavorite(animal.id, added)}
                     size="lg"
                     className="border border-ink/10"
                   />
@@ -499,7 +495,7 @@ export default function AnimalDetailPage() {
             </Reveal>
           )}
 
-          <MoreAnimals animal={animal} favoriteIds={favoriteIds} onFavoriteToggle={toggleFavorite} />
+          <MoreAnimals animal={animal} />
         </div>
       </main>
       <Footer />

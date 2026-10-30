@@ -10,7 +10,6 @@ import KakaoMap from "@/components/map/KakaoMap";
 import Pagination from "@/components/list/Pagination";
 import AnimalCard, { AnimalCardSkeletonGrid } from "@/components/animals/AnimalCard";
 import { speciesLabels } from "@/constants/animalLabels";
-import { useFavoriteIds } from "@/hooks/useFavoriteIds";
 import type { Animal, PublicShelterResponse, Species } from "@/types/entities";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
@@ -52,7 +51,6 @@ export default function ShelterPage() {
   const [total, setTotal] = useState(0);
   const [animalsLoading, setAnimalsLoading] = useState(true);
   const [animalsError, setAnimalsError] = useState(false);
-  const { favoriteIds, toggle } = useFavoriteIds();
   useDocumentTitle(shelterState === "notFound" ? "보호소를 찾을 수 없음" : shelter?.name);
 
   useEffect(() => {
@@ -244,8 +242,6 @@ export default function ShelterPage() {
                             key={animal.id}
                             animal={animal}
                             index={i}
-                            favorited={favoriteIds.includes(animal.id)}
-                            onFavoriteToggle={(added) => toggle(animal.id, added)}
                           />
                         ))}
                       </div>

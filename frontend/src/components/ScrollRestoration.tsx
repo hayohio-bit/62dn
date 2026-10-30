@@ -1,6 +1,19 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
+/** /#faq 처럼 해시가 있으면 그 영역으로 이동한다. 잘못된 퍼센트 인코딩은 무시한다 */
+function scrollToHash(hash: string) {
+  if (!hash) return false;
+  let id: string;
+  try {
+    id = decodeURIComponent(hash.slice(1));
+  } catch {
+    return false;
+  }
+  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView());
+  return true;
+}
+
 /**
  * 스크롤 복원 컴포넌트
  * - 버튼/링크로 이동(PUSH/REPLACE): 상단으로 스크롤
@@ -64,14 +77,18 @@ export default function ScrollRestoration() {
       const savedPosition = scrollPositions.current[location.key];
       if (savedPosition !== undefined) {
         window.scrollTo(0, savedPosition);
+      } else {
+        // 주소 직접 입력·북마크로 처음 연 경우(저장된 위치 없음)에도 해시 영역으로 이동한다
+        scrollToHash(location.hash);
       }
     } else {
       window.scrollTo(0, 0);
       lastScrollY.current = 0;
+      scrollToHash(location.hash);
     }
 
     prevKey.current = location.key;
-  }, [location.key, navigationType]);
+  }, [location.key, location.hash, navigationType]);
 
   // 비동기로 렌더되는 목록(API 등)은 DOM이 늦게 채워지므로, 한 번 더 복원 (스크롤은 이미 맞춰져 있으면 변화 없음)
   useEffect(() => {

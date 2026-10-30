@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import ListSearch from "@/components/list/ListSearch";
 import Pagination from "@/components/list/Pagination";
@@ -14,7 +13,6 @@ import Reveal from "@/components/motion/Reveal";
 import { REGION_SIDO_OPTIONS, SIGUNGU_BY_SIDO } from "@/constants/regions";
 import { genderLabels, sizeLabels, speciesLabels } from "@/constants/animalLabels";
 import { useAnimals } from "@/hooks/useAnimals";
-import { useAuthStore } from "@/store/authStore";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const PAGE_SIZE_OPTIONS = [8, 12, 20];
@@ -33,19 +31,17 @@ function formatAgeRange(min?: number, max?: number) {
 
 export default function AnimalsPage() {
   useDocumentTitle("새 가족을 기다리는 아이들");
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
   const { state, actions } = useAnimals();
 
   const {
     loading, error, viewMode, search, species, size, gender, region, sigungu, sort,
-    page, pageSize, preference, showPreferenceModal, favoriteIds,
+    page, pageSize, preference, showPreferenceModal,
     animals, totalPages, apiTotalElements,
   } = state;
 
   const {
     setViewMode, setSearch, setSpecies, setSize, setGender, setRegion, setSigungu, setSort,
-    setPage, setPageSize, setShowPreferenceModal, setFavoriteIds, handleSavePreference, resetFilters,
+    setPage, setPageSize, setShowPreferenceModal, handleSavePreference, resetFilters,
   } = actions;
 
   const hasFilter = !!(search || species || size || gender || region || sigungu);
@@ -54,11 +50,7 @@ export default function AnimalsPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const openRecommended = () => {
-    // 추천은 로그인한 사용자의 선호도로 계산되므로, 비로그인 상태면 로그인 후 이 화면으로 돌아오게 한다
-    if (!isAuthenticated) {
-      navigate("/login", { state: { from: "/animals" } });
-      return;
-    }
+    // 추천은 이 브라우저에 저장한 선호 조건으로 계산한다. 조건이 없으면 먼저 고르게 한다
     if (!preference) setShowPreferenceModal(true);
     else {
       setViewMode("recommended");
@@ -121,10 +113,6 @@ export default function AnimalsPage() {
               key={animal.id}
               animal={animal}
               index={i}
-              favorited={favoriteIds.includes(animal.id)}
-              onFavoriteToggle={(added) =>
-                setFavoriteIds((prev) => (added ? [...prev, animal.id] : prev.filter((id) => id !== animal.id)))
-              }
             />
           ))}
         </div>
@@ -197,15 +185,6 @@ export default function AnimalsPage() {
                 onClick={openRecommended}
               >
                 나를 위한 추천
-                {!isAuthenticated && (
-                  <>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                      <rect x="5" y="11" width="14" height="10" rx="2" />
-                      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                    </svg>
-                    <span className="sr-only">(로그인 필요)</span>
-                  </>
-                )}
               </button>
             </div>
             {viewMode === "all" && (

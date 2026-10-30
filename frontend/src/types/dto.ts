@@ -1,75 +1,16 @@
 /**
- * Backend Request/Response DTO 타입
- * 스프링 부트 Controller와 통신할 때 사용
+ * 화면과 조회 함수(data/animalQueries.ts)가 주고받는 요청·응답 타입
  */
 
-import type {
-  Animal,
-  Board,
-  Comment,
-  Preference,
-  BoardType,
-} from "./entities";
+import type { Animal } from "./entities";
 
 // ========== Common ==========
-export interface ApiResponse<T> {
-  status: number;
-  message: string;
-  data: T;
-  timestamp: string;
-}
-
 export interface PageResponse<T> {
   content: T[];
   page: number;
   size: number;
   totalElements: number;
   totalPages: number;
-}
-
-export interface ErrorResponse {
-  status: number;
-  message: string;
-  errors?: Record<string, string[]>;
-  timestamp: string;
-}
-
-// ========== Auth DTOs ==========
-export interface SignupRequest {
-  email: string;
-  password: string;
-  name: string;
-  phone: string;
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface TokenResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  user: UserResponse;
-}
-
-export interface UserResponse {
-  id: number;
-  email: string;
-  name: string;
-  role: string;
-  createdAt?: string;
-}
-
-export interface UpdateMeRequest {
-  name?: string;
-  email?: string;
-}
-
-export interface FindEmailRequest {
-  name: string;
-  phone: string;
 }
 
 // ========== Animal DTOs ==========
@@ -105,29 +46,6 @@ export interface AnimalListRequest {
 }
 
 export type AnimalResponse = Animal;
-export type AnimalListResponse = PageResponse<Animal>;
-
-// ========== Board DTOs ==========
-export interface BoardCreateRequest {
-  type: BoardType;
-  title: string;
-  content: string;
-  shelterId?: number;
-}
-
-export interface BoardListRequest {
-  type?: BoardType;
-  page?: number;
-  size?: number;
-}
-
-export interface CommentCreateRequest {
-  content: string;
-}
-
-export type BoardResponse = Board;
-export type BoardListResponse = PageResponse<Board>;
-export type CommentResponse = Comment;
 
 // ========== Preference DTOs ==========
 export interface PreferenceRequest {
@@ -138,5 +56,3 @@ export interface PreferenceRequest {
   /** 선호 지역 복수 (시·도 단위, 예: ["서울", "경기"]) */
   regions?: string[];
 }
-
-export type PreferenceResponse = Preference;
