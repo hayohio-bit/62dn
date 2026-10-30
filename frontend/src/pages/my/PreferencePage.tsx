@@ -4,8 +4,7 @@ import clsx from "clsx";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Reveal from "@/components/motion/Reveal";
-import { preferenceApi } from "@/api/preference";
-import { useAuthStore } from "@/store/authStore";
+import { usePreference } from "@/hooks/usePreference";
 import { REGION_SIDO_OPTIONS } from "@/constants/regions";
 import type { PreferenceRequest } from "@/types/dto";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -86,42 +85,14 @@ function ChoiceGroup<T extends string>({
 export default function PreferencePage() {
   useDocumentTitle("입양 선호 조건");
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
-  const [species, setSpecies] = useState<string>("");
-  const [minAge, setMinAge] = useState<string>("");
-  const [maxAge, setMaxAge] = useState<string>("");
-  const [size, setSize] = useState<string>("");
-  const [regions, setRegions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { preference, savePreference } = usePreference();
+  const [species, setSpecies] = useState<string>(preference?.species ?? "");
+  const [minAge, setMinAge] = useState<string>(preference?.minAge != null ? String(preference.minAge) : "");
+  const [maxAge, setMaxAge] = useState<string>(preference?.maxAge != null ? String(preference.maxAge) : "");
+  const [size, setSize] = useState<string>(preference?.size ?? "");
+  const [regions, setRegions] = useState<string[]>(preference?.regions ?? []);
   const [error, setError] = useState("");
   const errorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login", { replace: true, state: { from: "/mypage/preferences" } });
-      return;
-    }
-    preferenceApi
-      .getMy()
-      .then((data) => {
-        if (data) {
-          setSpecies(data.species ?? "");
-          setMinAge(data.minAge != null ? String(data.minAge) : "");
-          setMaxAge(data.maxAge != null ? String(data.maxAge) : "");
-          setSize(data.size ?? "");
-          setRegions(data.regions ?? []);
-        }
-      })
-      .catch(() => {
-        setSpecies("");
-        setMinAge("");
-        setMaxAge("");
-        setSize("");
-        setRegions([]);
-      })
-      .finally(() => setLoading(false));
-  }, [isAuthenticated, navigate]);
 
   // 저장 버튼은 폼 아래에 있으므로 오류 문구가 폼 위에 나타나면 화면을 그쪽으로 옮긴다
   useEffect(() => {
@@ -132,7 +103,7 @@ export default function PreferencePage() {
     setRegions((prev) => (prev.includes(value) ? prev.filter((r) => r !== value) : [...prev, value]));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     const min = minAge.trim() ? parseInt(minAge, 10) : undefined;
@@ -142,23 +113,14 @@ export default function PreferencePage() {
       setError("최소 나이가 최대 나이보다 클 수 없습니다.");
       return;
     }
-    setSaving(true);
-    try {
-      const payload: PreferenceRequest = {};
-      if (species === "DOG" || species === "CAT") payload.species = species;
-      if (min != null && !Number.isNaN(min)) payload.minAge = min;
-      if (max != null && !Number.isNaN(max)) payload.maxAge = max;
-      if (size === "SMALL" || size === "MEDIUM" || size === "LARGE") payload.size = size;
-      if (regions.length > 0) payload.regions = regions.filter((r) => r.trim());
-      await preferenceApi.update(payload);
-      alert("저장되었습니다.");
-      navigate("/mypage");
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? "선호도 저장에 실패했습니다.");
-    } finally {
-      setSaving(false);
-    }
+    const payload: PreferenceRequest = {};
+    if (species === "DOG" || species === "CAT") payload.species = species;
+    if (min != null && !Number.isNaN(min)) payload.minAge = min;
+    if (max != null && !Number.isNaN(max)) payload.maxAge = max;
+    if (size === "SMALL" || size === "MEDIUM" || size === "LARGE") payload.size = size;
+    if (regions.length > 0) payload.regions = regions.filter((r) => r.trim());
+    savePreference(payload);
+    navigate("/mypage");
   };
 
   const ageInputClass =
@@ -184,9 +146,7 @@ export default function PreferencePage() {
             </p>
           </Reveal>
 
-          {loading ? (
-            <div className="mt-10 h-96 animate-pulse rounded-[1.75rem] bg-ink/5" aria-hidden />
-          ) : (
+          {(
             <form
               onSubmit={handleSubmit}
               className="mt-10 rounded-[1.75rem] border border-ink/10 bg-cream-50 p-6 shadow-card md:p-10"
@@ -280,8 +240,8 @@ export default function PreferencePage() {
                 <Link to="/mypage" className="toss-btn toss-btn-outline">
                   취소
                 </Link>
-                <button type="submit" disabled={saving} className="toss-btn toss-btn-accent disabled:opacity-50">
-                  {saving ? "저장 중..." : "조건 저장하기"}
+                <button type="submit" className="toss-btn toss-btn-accent">
+                  조건 저장하기
                 </button>
               </div>
             </form>

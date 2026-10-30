@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import clsx from "clsx";
-import { useAuthStore } from "@/store/authStore";
-import { authApi } from "@/api/auth";
 import Wordmark from "@/components/layout/Wordmark";
 
 const navItems = [
   { to: "/animals", label: "가족 찾기" },
   { to: "/guide/adoption", label: "입양·임시보호 안내" },
   { to: "/support", label: "봉사·기부" },
-  { to: "/boards", label: "게시판" },
+  { to: "/mypage", label: "찜한 아이들" },
 ];
 
 function HamburgerIcon({ open }: { open: boolean }) {
@@ -32,20 +30,11 @@ function HamburgerIcon({ open }: { open: boolean }) {
 }
 
 export default function Header() {
-  const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuthStore();
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const lastYRef = useRef(0);
   const tickingRef = useRef(false);
-
-  const handleLogout = () => {
-    authApi.logout().catch(() => {});
-    logout();
-    setMenuOpen(false);
-    navigate("/", { replace: true });
-  };
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -115,33 +104,6 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2 shrink-0">
-          <div className="hidden md:flex items-center gap-1">
-            {isAuthenticated ? (
-              <>
-                {user?.role === "SUPER_ADMIN" && (
-                  <Link to="/admin" className="toss-btn toss-btn-ghost">
-                    관리자
-                  </Link>
-                )}
-                <Link to="/mypage" className="toss-btn toss-btn-ghost">
-                  마이페이지
-                </Link>
-                <button type="button" onClick={handleLogout} className="toss-btn toss-btn-primary ml-1">
-                  로그아웃
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="toss-btn toss-btn-ghost">
-                  로그인
-                </Link>
-                <Link to="/signup" className="toss-btn toss-btn-primary ml-1">
-                  함께하기
-                </Link>
-              </>
-            )}
-          </div>
-
           <button
             type="button"
             className="toss-hamburger md:hidden"
@@ -170,32 +132,6 @@ export default function Header() {
                 </Link>
               ))}
             </nav>
-            <div className="toss-menu-actions">
-              {isAuthenticated ? (
-                <>
-                  {user?.role === "SUPER_ADMIN" && (
-                    <Link to="/admin" className="toss-menu-link toss-menu-link--admin" onClick={closeMenu}>
-                      관리자
-                    </Link>
-                  )}
-                  <Link to="/mypage" className="toss-menu-btn toss-menu-btn--logout" onClick={closeMenu}>
-                    마이페이지
-                  </Link>
-                  <button type="button" onClick={handleLogout} className="toss-menu-btn toss-menu-btn--logout">
-                    로그아웃
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="toss-menu-btn toss-menu-btn--logout" onClick={closeMenu}>
-                    로그인
-                  </Link>
-                  <Link to="/signup" className="toss-menu-btn toss-menu-btn--signup" onClick={closeMenu}>
-                    함께하기
-                  </Link>
-                </>
-              )}
-            </div>
           </div>
         </>,
         document.body,

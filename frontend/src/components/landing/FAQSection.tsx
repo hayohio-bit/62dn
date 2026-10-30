@@ -9,7 +9,7 @@ export default function FAQSection() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="mx-auto grid max-w-[76rem] gap-12 px-6 pb-24 md:grid-cols-12 md:pb-32">
+    <section id="faq" className="mx-auto grid max-w-[76rem] scroll-mt-24 gap-12 px-6 pb-24 md:grid-cols-12 md:pb-32">
       <Reveal className="md:col-span-4">
         <p className="dn-eyebrow">FAQ</p>
         <h2 className="mt-4 font-display text-4xl leading-tight md:text-5xl">

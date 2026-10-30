@@ -4,7 +4,7 @@
  * - 검색: 품종·보호소명 부분 일치, 이름은 임시 이름(유기번호 있음)이 아닐 때만. 대소문자 무시
  * - 정렬: noticeEndDate·noticeStartDate·createdAt만 허용, 그 외는 noticeEndDate asc. 값 없는 동물은 뒤로, 같은 값은 id 오름차순
  */
-import type { AnimalListRequest, AnimalStatsResponse, PageResponse } from "@/types/dto";
+import type { AnimalListRequest, AnimalStatsResponse, PageResponse, PreferenceRequest } from "@/types/dto";
 import type { Animal, PublicShelterResponse } from "@/types/entities";
 import type { Snapshot, SnapshotAnimal, SnapshotShelter } from "@/types/snapshot";
 import { isTemporaryName } from "@/constants/animalLabels";
@@ -140,6 +140,52 @@ export function queryAnimals(snapshot: Snapshot, request: AnimalListRequest, tod
 
   const page = paginate(matched, pageNumber(request.page), pageSize(request.sizeParam));
   return { ...page, content: page.content.map((a) => toAnimal(a, shelters.get(a.shelterId), today)) };
+}
+
+/**
+ * 선호 조건 기반 추천 (AnimalRepository.findRecommended, AnimalService.recommend).
+ * 사진이 있고 보호 중(PROTECTED)이며 공고 중인 동물 중 종류·나이 범위(양 끝 포함, 나이를 모르면 제외)·크기·보호소 시/도(복수)가 맞는 동물을
+ * 최근 등록순으로 보여 준다. 선호 조건이 없으면 빈 목록이다.
+ */
+export function recommendAnimals(
+  snapshot: Snapshot,
+  preference: PreferenceRequest | null,
+  paging: { page?: number; size?: number },
+  today: string,
+): PageResponse<Animal> {
+  const shelters = shelterMap(snapshot);
+  const regions = preference?.regions?.map((r) => r.trim()).filter(Boolean);
+  const matched = preference
+    ? snapshot.animals.filter((a) => {
+        if (!a.imageUrl || a.status !== "PROTECTED" || !isOpen(a, today)) return false;
+        if (preference.species && a.species !== preference.species) return false;
+        if (preference.size && a.size !== preference.size) return false;
+        if (preference.minAge != null && (a.age == null || a.age < preference.minAge)) return false;
+        if (preference.maxAge != null && (a.age == null || a.age > preference.maxAge)) return false;
+        if (regions?.length) {
+          const sido = shelters.get(a.shelterId)?.regionSido;
+          if (!sido || !regions.includes(sido)) return false;
+        }
+        return true;
+      })
+    : [];
+  matched.sort(compareBy("createdAt", "desc"));
+  const page = paginate(matched, pageNumber(paging.page), pageSize(paging.size));
+  return { ...page, content: page.content.map((a) => toAnimal(a, shelters.get(a.shelterId), today)) };
+}
+
+/**
+ * id 목록으로 동물을 찾는다 (찜 목록용). 목록의 순서를 유지하고, 스냅샷에 없거나 공고가 끝난 동물은 빼서 그 수를 missing으로 알린다.
+ */
+export function findAnimals(snapshot: Snapshot, ids: number[], today: string): { animals: Animal[]; missing: number } {
+  const shelters = shelterMap(snapshot);
+  const byId = new Map(snapshot.animals.map((a) => [a.id, a]));
+  const animals: Animal[] = [];
+  for (const id of ids) {
+    const a = byId.get(id);
+    if (a && isOpen(a, today)) animals.push(toAnimal(a, shelters.get(a.shelterId), today));
+  }
+  return { animals, missing: ids.length - animals.length };
 }
 
 export function findAnimal(snapshot: Snapshot, id: number, today: string): Animal | null {

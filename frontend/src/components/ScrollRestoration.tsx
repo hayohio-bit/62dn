@@ -68,10 +68,15 @@ export default function ScrollRestoration() {
     } else {
       window.scrollTo(0, 0);
       lastScrollY.current = 0;
+      // /#faq 처럼 해시가 있으면 그 영역으로 이동한다 (화면이 그려진 뒤 요소를 찾는다)
+      if (location.hash) {
+        const id = decodeURIComponent(location.hash.slice(1));
+        requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView());
+      }
     }
 
     prevKey.current = location.key;
-  }, [location.key, navigationType]);
+  }, [location.key, location.hash, navigationType]);
 
   // 비동기로 렌더되는 목록(API 등)은 DOM이 늦게 채워지므로, 한 번 더 복원 (스크롤은 이미 맞춰져 있으면 변화 없음)
   useEffect(() => {

@@ -15,11 +15,9 @@ const MAX_CARDS = 4;
 
 interface MoreAnimalsProps {
   animal: Animal;
-  favoriteIds: number[];
-  onFavoriteToggle: (animalId: number, added: boolean) => void;
 }
 
-export default function MoreAnimals({ animal, favoriteIds, onFavoriteToggle }: MoreAnimalsProps) {
+export default function MoreAnimals({ animal }: MoreAnimalsProps) {
   const [result, setResult] = useState<{ source: "shelter" | "species"; animals: Animal[] } | null>(null);
   const { id, shelterId, species } = animal;
 
@@ -87,8 +85,6 @@ export default function MoreAnimals({ animal, favoriteIds, onFavoriteToggle }: M
             animal={a}
             index={i}
             fromList={false}
-            favorited={favoriteIds.includes(a.id)}
-            onFavoriteToggle={(added) => onFavoriteToggle(a.id, added)}
           />
         ))}
       </div>

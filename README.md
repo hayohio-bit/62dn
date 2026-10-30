@@ -17,15 +17,11 @@
 | --- | --- |
 | <img src="assets/screenshots/shelter.webp" alt="보호소 페이지" width="420"> | <img src="assets/screenshots/support.webp" alt="봉사·기부 안내" width="420"> |
 
-| 게시판 | 마이페이지 |
-| --- | --- |
-| <img src="assets/screenshots/boards.webp" alt="게시판" width="420"> | <img src="assets/screenshots/mypage.webp" alt="마이페이지" width="420"> |
+| 모바일 |
+| --- |
+| <img src="assets/screenshots/mobile.webp" alt="모바일 동물 목록" width="220"> |
 
-| 관리자 대시보드 | 모바일 |
-| --- | --- |
-| <img src="assets/screenshots/admin.webp" alt="관리자 대시보드" width="420"> | <img src="assets/screenshots/mobile.webp" alt="모바일 동물 목록" width="220"> |
-
-> 스크린샷은 `local` 프로필의 데모 데이터로 찍었습니다. 동물 사진은 Unsplash 이미지입니다.
+> 스크린샷은 데모 데이터로 찍었습니다. 동물 사진은 Unsplash 이미지입니다. 게시판·마이페이지·관리자 화면은 정적 버전 전환으로 없어졌습니다. 백엔드가 있는 이전 버전은 `legacy/spring-backend` 브랜치에 있습니다.
 
 ## 주요 기능
 
@@ -33,14 +29,11 @@
 - 동물 상세: 보호소·담당자 연락처, 지도, 입양·임시보호 절차 안내, 공유하기, 같은 보호소의 다른 아이들
 - 보호소 페이지: 보호소 연락처·길찾기와 그 보호소에서 공고 중인 동물 목록
 - 최근 본 아이들: 로그인 없이 브라우저에 기록해 목록 상단에 표시
-- 나를 위한 추천: 회원이 저장한 선호 조건(종류, 나이, 크기, 지역)에 맞는 동물 추천
-- 관심 동물(찜) 저장
+- 나를 위한 추천: 이 브라우저에 저장한 선호 조건(종류, 나이, 크기, 지역)에 맞는 동물을 최근 등록순으로 추천
+- 찜한 아이들: 로그인 없이 하트로 저장하고 "찜한 아이들" 화면에서 모아 보기. 찜과 선호 조건은 브라우저(localStorage)에 저장되어 기기마다 따로입니다
 - 랜딩: 종류·지역 빠른 찾기, 실시간 현황(공고 중인 동물 수, 일주일 안에 공고가 끝나는 동물 수, 보호소 수), 농림축산식품부 2025년 조사 통계(출처 표기)
 - 공공데이터 표시 원칙: 공고에 없는 이름은 "임시 이름"으로, 체중으로 추정한 크기는 "(추정)"으로, 확인되지 않은 중성화는 "보호소 확인 필요"로 표시
 - 봉사·기부 안내: 보호소 검색과 전화 연결 안내
-- 게시판: 공지사항·FAQ·자유게시판, 댓글
-- 회원: 이메일 가입·로그인, 카카오·구글 로그인, 이메일 찾기
-- 관리자: 회원 관리, 게시글 고정·삭제, 공공데이터 수동 동기화와 동기화 이력
 
 ## 기술 스택
 
@@ -52,29 +45,17 @@
 | 외부 연동 | 공공데이터포털 농림축산식품부 구조동물 조회 API, 카카오 지도, 카카오·구글 OAuth |
 | 인프라 | AWS EC2 + RDS, Nginx, GitHub Actions, Terraform |
 
-## 빠른 시작 (MySQL 없이 데모 실행)
+## 빠른 시작 (백엔드 없이 데모 실행)
 
-요구사항: Java 21, Node.js 20 이상
+요구사항: Node.js 20 이상. 프론트엔드는 백엔드 없이 `public/data/snapshot.json`만 읽으며, 파일이 없으면 데모 데이터(보호소 6곳, 동물 20마리)를 만듭니다.
 
 ```bash
-# 1) 백엔드: H2 인메모리 DB와 데모 데이터로 실행 (http://localhost:8080)
-cd backend
-./gradlew bootRun --args='--spring.profiles.active=local'
-
-# 2) 프론트엔드: 다른 터미널에서 실행 (http://localhost:5173, /api 요청은 8080으로 프록시)
 cd frontend
 npm ci
-npm run dev
+npm run dev   # http://localhost:5173
 ```
 
-`local` 프로필은 기동할 때마다 DB를 새로 만들고 보호소 6곳, 동물 20마리, 게시글과 댓글을 넣습니다. 게시판 예시 글은 `local`·`dev` 프로필에서만 들어가고 운영(`prod`)에서는 넣지 않습니다.
-
-| 계정 | 이메일 | 비밀번호 |
-| --- | --- | --- |
-| 데모 회원 | `demo@62dn.local` | `demo1234!` |
-| 관리자 | `admin@admin.com` | `1234` |
-
-공공데이터 동기화까지 시험하려면 `backend/.env`에 `DATA_API_KEY`(공공데이터포털에서 발급한 인코딩 키)를 넣고, 관리자 대시보드의 "데이터 동기화" 탭에서 실행합니다.
+`backend/`의 Spring Boot 서버는 이 프론트엔드가 더 이상 호출하지 않습니다. 아래 "개발 환경 (MySQL)"과 "운영 환경 변수", "배포" 절은 백엔드 버전(`legacy/spring-backend` 브랜치) 기준의 기록이며 정적 버전 전환이 끝나면 정리됩니다.
 
 ## 데이터 스냅샷 (정적 버전 준비)
 

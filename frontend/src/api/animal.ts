@@ -4,7 +4,7 @@
  * 함수 이름과 반환 모양은 백엔드 API 때와 같아서 호출하는 화면은 바뀌지 않는다.
  */
 
-import { computeStats, findAnimal, queryAnimals, urgentAnimals } from "@/data/animalQueries";
+import { computeStats, findAnimal, findAnimals, queryAnimals, urgentAnimals } from "@/data/animalQueries";
 import { loadSnapshot } from "@/data/snapshot";
 import { NotFoundError } from "@/lib/apiError";
 import { koreanToday } from "@/lib/koreanDate";
@@ -20,6 +20,9 @@ export const animalApi = {
     if (!animal) throw new NotFoundError("동물을 찾을 수 없습니다.");
     return animal;
   },
+
+  /** id 목록의 동물 (찜 목록용). 목록 순서를 유지하고 사라진 동물은 missing으로 센다 */
+  getByIds: async (ids: number[]) => findAnimals(await loadSnapshot(), ids, koreanToday()),
 
   /** 공고 마감이 가까운 동물 (랜딩 페이지용) */
   getUrgentAnimals: async (limit: number = 10) => urgentAnimals(await loadSnapshot(), limit, koreanToday()),

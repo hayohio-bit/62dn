@@ -1,46 +1,18 @@
 /**
- * Preference API 모듈
- * 사용자 입양 선호도 조회/설정
+ * 선호도 API 모듈. 백엔드 대신 브라우저 저장소(선호 조건)와 정적 스냅샷(추천)을 쓴다.
  */
-
-import axiosInstance from "@/lib/axios";
-import type {
-  PreferenceRequest,
-  PreferenceResponse,
-  AnimalListResponse,
-  ApiResponse,
-} from "@/types/dto";
+import { recommendAnimals } from "@/data/animalQueries";
+import { loadSnapshot } from "@/data/snapshot";
+import { koreanToday } from "@/lib/koreanDate";
+import { preferenceStore, savePreference } from "@/lib/preference";
+import type { PreferenceRequest } from "@/types/dto";
 
 export const preferenceApi = {
-  /**
-   * 내 선호도 조회
-   */
-  getMy: async () => {
-    const response = await axiosInstance.get<
-      ApiResponse<PreferenceResponse | null>
-    >("/users/me/preferences");
-    return response.data?.data ?? null;
-  },
+  getMy: async () => preferenceStore.snapshot(),
 
-  /**
-   * 선호도 설정/수정
-   */
-  update: async (data: PreferenceRequest) => {
-    const response = await axiosInstance.put<ApiResponse<PreferenceResponse>>(
-      "/users/me/preferences",
-      data,
-    );
-    return response.data?.data ?? null;
-  },
+  update: async (data: PreferenceRequest) => savePreference(data),
 
-  /**
-   * 선호도 기반 추천 동물 목록
-   */
-  getRecommendedAnimals: async (page = 0, size = 12) => {
-    const response = await axiosInstance.get<ApiResponse<AnimalListResponse>>(
-      "/animals/recommendations",
-      { params: { page, size } },
-    );
-    return response.data.data;
-  },
+  /** 저장된 선호 조건에 맞는 동물. 조건이 없으면 빈 목록 */
+  getRecommendedAnimals: async (page = 0, size = 12) =>
+    recommendAnimals(await loadSnapshot(), preferenceStore.snapshot(), { page, size }, koreanToday()),
 };

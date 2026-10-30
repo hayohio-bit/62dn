@@ -21,14 +21,10 @@ import type { Animal } from "@/types/entities";
 
 export default function AnimalCard({
   animal,
-  favorited,
-  onFavoriteToggle,
   index,
   fromList = true,
 }: {
   animal: Animal;
-  favorited: boolean;
-  onFavoriteToggle: (added: boolean) => void;
   index: number;
   /** 상세 화면의 "목록으로"가 뒤로 가기로 이 목록에 돌아오게 할지 여부 */
   fromList?: boolean;
@@ -98,8 +94,6 @@ export default function AnimalCard({
         <FavoriteButton
           animalId={animal.id}
           animalName={animal.name}
-          isFavorited={favorited}
-          onToggle={onFavoriteToggle}
           size="md"
         />
       </div>
