@@ -13,10 +13,9 @@ on:
   push:
     branches: [main]
 
+# build 잡은 외부 패키지를 설치하므로 읽기 권한만 준다. 게시 권한은 deploy 잡에만 둔다
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -76,6 +75,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
