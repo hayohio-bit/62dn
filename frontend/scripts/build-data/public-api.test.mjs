@@ -43,6 +43,20 @@ describe("응답 해석", () => {
     expect(() => parseItems(json)).toThrow("resultCode=22");
   });
 
+  it("오류 resultCode가 빈 body와 함께 와도 0건이 아니라 실패다 (codex 리뷰 지적)", () => {
+    const json = JSON.stringify({ response: { header: { resultCode: "22", resultMsg: "LIMITED" }, body: {} } });
+    expect(() => parseItems(json)).toThrow("resultCode=22");
+    const withItems = JSON.stringify({ response: { header: { resultCode: "99" }, body: { items: { item: [{ desertionNo: "1" }] } } } });
+    expect(() => parseItems(withItems)).toThrow("resultCode=99");
+  });
+
+  it("한도 초과 응답이 2페이지에서 오면 일부 데이터로 끝내지 않고 실패한다", async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(ok(page([{ desertionNo: "1" }, { desertionNo: "2" }])))
+      .mockResolvedValueOnce(ok({ response: { header: { resultCode: "22", resultMsg: "LIMITED" }, body: {} } }));
+    await expect(fetchAnimals({ fetchImpl, serviceKey: "k", upkind: "417000", numOfRows: 2 })).rejects.toThrow("resultCode=22");
+  });
+
   it("빈 응답과 해석할 수 없는 응답은 실패한다", () => {
     expect(() => parseItems("")).toThrow("비어");
     expect(() => parseItems("<html>")).toThrow("해석할 수 없습니다");

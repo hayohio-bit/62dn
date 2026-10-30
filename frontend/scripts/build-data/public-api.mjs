@@ -20,6 +20,7 @@ export function buildUrl(baseUrl, path, params) {
 
 /**
  * 응답 본문에서 item 목록을 꺼낸다.
+ * - header.resultCode가 "00"이 아니면 body가 있어도 오류 → 실패
  * - 정상이고 결과가 0건이면 items가 빈 문자열로 온다 → []
  * - item이 하나면 배열이 아니라 객체로 온다 → [item]
  * - 인증 오류는 JSON이 아니라 XML(OpenAPI_ServiceResponse)로 온다 → returnAuthMsg를 담아 실패
@@ -42,8 +43,9 @@ export function parseItems(text) {
   if (response == null || typeof response !== "object") {
     throw new Error("공공 API 응답 형식이 올바르지 않습니다.");
   }
-  if (response.body == null) {
-    const code = response.header?.resultCode;
+  // 한도 초과(22) 같은 오류는 HTTP 200에 resultCode만 바뀌어 올 수 있다. body 유무와 관계없이 코드가 "00"이 아니면 실패다.
+  const code = response.header?.resultCode;
+  if ((code != null && code !== "00") || response.body == null) {
     const msg = response.header?.resultMsg;
     throw new Error(`공공 API 오류 응답: resultCode=${code ?? "?"} ${msg ?? ""}`.trim());
   }
