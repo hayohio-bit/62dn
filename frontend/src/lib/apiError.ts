@@ -11,3 +11,16 @@ export function getApiErrorMessage(err: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+/** 정적 스냅샷에서 id로 찾지 못했을 때 던진다. 백엔드의 404와 같은 뜻 */
+export class NotFoundError extends Error {
+  constructor(message = "찾을 수 없습니다.") {
+    super(message);
+    this.name = "NotFoundError";
+  }
+}
+
+/** 스냅샷의 NotFoundError와 백엔드 404 응답을 같은 "없음"으로 판정한다 */
+export function isNotFoundError(err: unknown): boolean {
+  return err instanceof NotFoundError || (axios.isAxiosError(err) && err.response?.status === 404);
+}
