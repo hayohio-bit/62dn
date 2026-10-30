@@ -4,8 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/build-data/ensure-snapshot.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/build-data/ensure-snapshot.mjs",
     "build": "tsc && vite build",
+    "test": "vitest run",
+    "data:fetch": "node scripts/build-data/fetch-snapshot.mjs",
+    "data:demo": "node scripts/build-data/demo-snapshot.mjs",
     "hero:webp": "node scripts/convert-hero-to-webp.mjs",
     "success-stories:webp": "node scripts/fetch-success-stories-webp.mjs",
     "logo:webp": "node scripts/convert-logo-to-webp.mjs",
@@ -39,6 +44,7 @@
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
-    "vite": "^5.0.12"
+    "vite": "^5.0.12",
+    "vitest": "^3.2.7"
   }
 }

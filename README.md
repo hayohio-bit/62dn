@@ -76,6 +76,19 @@ npm run dev
 
 공공데이터 동기화까지 시험하려면 `backend/.env`에 `DATA_API_KEY`(공공데이터포털에서 발급한 인코딩 키)를 넣고, 관리자 대시보드의 "데이터 동기화" 탭에서 실행합니다.
 
+## 데이터 스냅샷 (정적 버전 준비)
+
+정적 사이트는 백엔드 대신 `frontend/public/data/snapshot.json`을 읽습니다. 이 파일은 git에 넣지 않고 스크립트로 만듭니다.
+
+```bash
+cd frontend
+npm run data:demo                     # 데모 데이터(보호소 6곳, 동물 20마리)로 스냅샷 생성
+DATA_API_KEY=<서비스 키> npm run data:fetch   # 공공데이터 API에서 공고 중인 동물을 받아 생성 (--days N 으로 공고 시작일 범위 제한 가능)
+npm test                              # 변환 규칙 테스트 (Vitest)
+```
+
+`npm run dev`와 `npm run build`는 스냅샷이 없을 때만 데모 스냅샷을 자동으로 만듭니다. 변환 규칙(임시 이름, 체중 기반 크기 추정, 마감 지난 공고 제외 등)은 백엔드 `AnimalSyncService`와 같고 `frontend/scripts/build-data/`에 있습니다.
+
 ## 개발 환경 (MySQL)
 
 1. MySQL 8에 `dn_platform` 데이터베이스를 만듭니다. `dev` 프로필은 `ddl-auto: update`로 테이블을 자동 생성합니다.
@@ -136,7 +149,7 @@ API 문서는 백엔드 실행 후 http://localhost:8080/swagger-ui.html 에서 
 
 ```bash
 cd backend && ./gradlew build          # 단위 테스트 포함
-cd frontend && npm run lint && npm run build
+cd frontend && npm run lint && npm test && npm run build
 ```
 
 ## 라이선스
