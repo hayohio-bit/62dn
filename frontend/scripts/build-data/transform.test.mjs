@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CAT_NAMES,
   DOG_NAMES,
+  IMAGE_VIEW_BASE,
   buildDescription,
   buildSnapshot,
   extractBreed,
@@ -22,6 +23,7 @@ import {
 } from "./transform.mjs";
 
 const TODAY = "2026-10-30";
+const build = (items, generatedAt = "t") => buildSnapshot({ items, today: TODAY, generatedAt, source: "public-api" });
 
 describe("임시 이름", () => {
   it("이름 후보 개수가 백엔드 TemporaryNames와 같다 (개 104, 고양이 119)", () => {
@@ -144,7 +146,13 @@ describe("날짜·이미지·설명·연락처", () => {
   it.each([
     ["20261030", "2026-10-30"],
     ["2026103012", "2026-10-30"],
-    ["20260230", null],
+    // Java SMART 해석과 같게 그 달에 없는 일은 마지막 날로 보정하고, 범위 밖 월·일은 null (2026-10-30 Java 21로 확인)
+    ["20260230", "2026-02-28"],
+    ["20260431", "2026-04-30"],
+    ["20261300", null],
+    ["20260100", null],
+    ["20260132", null],
+    ["00000101", null],
     ["2026-10", null],
     [null, null],
   ])("날짜 %s → %s", (input, expected) => {
@@ -159,7 +167,7 @@ describe("날짜·이미지·설명·연락처", () => {
   });
 
   it("상대 경로는 animal.go.kr 이미지 뷰어 주소로 만든다", () => {
-    const base = "https://www.animal.go.kr/front/fileMng/imageView.do?f=";
+    const base = IMAGE_VIEW_BASE;
     expect(resolveImageUrl({ popfile: "/files/shelter/2026/10/a.jpg" })).toBe(`${base}/files/shelter/2026/10/a.jpg`);
     expect(resolveImageUrl({ popfile: "/shelter/2026/10/a.jpg" })).toBe(`${base}/files/shelter/2026/10/a.jpg`);
     expect(resolveImageUrl({ popfile: "shelter/2026/10/a.jpg" })).toBe(`${base}/files/shelter/2026/10/a.jpg`);
@@ -225,12 +233,10 @@ describe("스냅샷 만들기", () => {
   };
 
   it("동물과 보호소를 만들고 보호소는 이름으로 합친다", () => {
-    const snap = buildSnapshot({
-      items: [base, { ...base, desertionNo: "448500202600102", upKindCd: "422400", careAddr: "다른 주소" }],
-      today: TODAY,
-      generatedAt: "2026-10-30T00:00:00.000Z",
-      source: "public-api",
-    });
+    const snap = build(
+      [base, { ...base, desertionNo: "448500202600102", upKindCd: "422400", careAddr: "다른 주소" }],
+      "2026-10-30T00:00:00.000Z",
+    );
     expect(snap.version).toBe(1);
     expect(snap.today).toBe(TODAY);
     expect(snap.shelters).toHaveLength(1);
@@ -273,25 +279,20 @@ describe("스냅샷 만들기", () => {
   });
 
   it("유기번호 없음, 보호 종료, 마감 지난 공고, 중복 유기번호는 제외한다", () => {
-    const snap = buildSnapshot({
-      items: [
-        { ...base, desertionNo: " " },
-        { ...base, processState: "종료(입양)" },
-        { ...base, desertionNo: "1", noticeEdt: "20261029" },
-        { ...base, desertionNo: "2", noticeEdt: "20261030" },
-        { ...base, desertionNo: "3", noticeEdt: null },
-        { ...base, desertionNo: "3", kindNm: "두 번째" },
-      ],
-      today: TODAY,
-      generatedAt: "t",
-      source: "public-api",
-    });
+    const snap = build([
+      { ...base, desertionNo: " " },
+      { ...base, processState: "종료(입양)" },
+      { ...base, desertionNo: "1", noticeEdt: "20261029" },
+      { ...base, desertionNo: "2", noticeEdt: "20261030" },
+      { ...base, desertionNo: "3", noticeEdt: null },
+      { ...base, desertionNo: "3", kindNm: "두 번째" },
+    ]);
     expect(snap.animals.map((a) => a.publicApiAnimalId)).toEqual(["2", "3"]);
     expect(snap.animals[1].breed).toBe("믹스견");
   });
 
   it("보호소 이름이 없으면 미상이고 좌표는 없다", () => {
-    const snap = buildSnapshot({ items: [{ ...base, careNm: "", careAddr: null, careTel: null }], today: TODAY, generatedAt: "t", source: "public-api" });
+    const snap = build([{ ...base, careNm: "", careAddr: null, careTel: null }]);
     expect(snap.shelters[0]).toMatchObject({ name: "미상", address: "", phone: null, regionSido: null });
   });
 
@@ -299,12 +300,7 @@ describe("스냅샷 만들기", () => {
     expect(idFromDesertionNo("448500202600101")).toBe(448500202600101);
     expect(idFromDesertionNo("99999999999999999")).toBeNull();
     expect(idFromDesertionNo("A1")).toBeNull();
-    const snap = buildSnapshot({
-      items: [{ ...base, desertionNo: "1" }, { ...base, desertionNo: "A1" }, { ...base, desertionNo: "B2" }],
-      today: TODAY,
-      generatedAt: "t",
-      source: "public-api",
-    });
+    const snap = build([{ ...base, desertionNo: "1" }, { ...base, desertionNo: "A1" }, { ...base, desertionNo: "B2" }]);
     expect(snap.animals.map((a) => a.id)).toEqual([1, 2, 3]);
   });
 });

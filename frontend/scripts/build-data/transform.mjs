@@ -129,15 +129,20 @@ export function extractBreed(item, kindMap = new Map()) {
   return cut(s, 50);
 }
 
-/** "yyyyMMdd..." 앞 8자리를 "yyyy-MM-dd"로. 달력에 없는 날짜면 null. */
+/**
+ * "yyyyMMdd..." 앞 8자리를 "yyyy-MM-dd"로.
+ * Java DateTimeFormatter.ofPattern("yyyyMMdd")의 기본 해석(SMART)과 같게, 월 1~12·일 1~31이 아니면 null이고
+ * 그 달에 없는 일(2월 30일)은 그 달의 마지막 날로 보정한다.
+ */
 export function parseDate(dateStr) {
   if (dateStr == null || dateStr.length < 8) return null;
   const m = /^(\d{4})(\d{2})(\d{2})/.exec(dateStr);
   if (!m) return null;
   const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
-  const dt = new Date(Date.UTC(y, mo - 1, d));
-  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
-  return `${m[1]}-${m[2]}-${m[3]}`;
+  if (y < 1 || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  const lastDay = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  const day = Math.min(d, lastDay);
+  return `${m[1]}-${m[2]}-${String(day).padStart(2, "0")}`;
 }
 
 /** popfile1 → popfile2 → popfile → filename 순. 전체 URL이 아니면 animal.go.kr 이미지 뷰어 주소로 만든다. */

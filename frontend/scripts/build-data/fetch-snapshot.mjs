@@ -32,12 +32,13 @@ async function main() {
   }
 
   const today = koreanToday();
-  const range = days == null ? {} : { bgnde: addDays(today, -days).replace(/-/g, ""), endde: today.replace(/-/g, "") };
+  const compact = (isoDate) => isoDate.replace(/-/g, "");
+  const range = days == null ? {} : { bgnde: compact(addDays(today, -days)), endde: compact(today) };
 
   const kindMap = await fetchKindMap({ serviceKey, upkinds: [DOG_CODE, CAT_CODE] });
   console.log(`품종 코드표 ${kindMap.size}건`);
 
-  const items = [];
+  let items = [];
   for (const upkind of [DOG_CODE, CAT_CODE]) {
     const fetched = await fetchAnimals({
       serviceKey,
@@ -45,7 +46,7 @@ async function main() {
       ...range,
       onPage: ({ pageNo, count }) => console.log(`upkind=${upkind} page=${pageNo} ${count}건`),
     });
-    items.push(...fetched);
+    items = items.concat(fetched);
   }
 
   const snapshot = buildSnapshot({

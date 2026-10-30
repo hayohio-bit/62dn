@@ -4,7 +4,7 @@
 // 공고일은 오늘(Asia/Seoul) 기준 상대값이라 실행할 때마다 새로 계산한다. 그래서 JSON을 커밋하지 않고 이 생성기를 커밋한다.
 import { fileURLToPath } from "node:url";
 import { sizeFromWeight, temporaryName } from "./transform.mjs";
-import { SNAPSHOT_PATH, addDays, koreanToday, writeSnapshot } from "./snapshot-file.mjs";
+import { addDays, koreanToday, writeSnapshot } from "./snapshot-file.mjs";
 
 const UNSPLASH = (photoId) => `https://images.unsplash.com/photo-${photoId}?w=600&h=600&fit=crop`;
 
@@ -108,6 +108,6 @@ export function buildDemoSnapshot(today = koreanToday(), generatedAt = new Date(
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const snapshot = buildDemoSnapshot();
-  const path = writeSnapshot(snapshot, SNAPSHOT_PATH);
+  const path = writeSnapshot(snapshot);
   console.log(`데모 스냅샷 저장: ${path} (동물 ${snapshot.animals.length}마리, 보호소 ${snapshot.shelters.length}곳, 기준일 ${snapshot.today})`);
 }

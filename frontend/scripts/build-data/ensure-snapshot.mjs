@@ -8,6 +8,6 @@ import { SNAPSHOT_PATH, writeSnapshot } from "./snapshot-file.mjs";
 if (existsSync(SNAPSHOT_PATH)) {
   console.log(`스냅샷이 이미 있어 그대로 둡니다: ${SNAPSHOT_PATH}`);
 } else {
-  writeSnapshot(buildDemoSnapshot(), SNAPSHOT_PATH);
+  writeSnapshot(buildDemoSnapshot());
   console.log(`스냅샷이 없어 데모 스냅샷을 만들었습니다: ${SNAPSHOT_PATH}`);
 }

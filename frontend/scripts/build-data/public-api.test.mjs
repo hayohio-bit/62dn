@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { buildUrl, fetchAnimals, fetchKindMap, maskServiceKey, parseItems } from "./public-api.mjs";
 
 const ok = (body) => ({ ok: true, status: 200, text: async () => (typeof body === "string" ? body : JSON.stringify(body)) });
-const page = (items, numOfRows = 100) => ({
-  response: { header: { resultCode: "00" }, body: { items: items.length === 0 ? "" : { item: items }, numOfRows, pageNo: 1, totalCount: items.length } },
+const page = (items) => ({
+  response: { header: { resultCode: "00" }, body: { items: items.length === 0 ? "" : { item: items } } },
 });
 
 describe("응답 해석", () => {
@@ -92,10 +92,9 @@ describe("호출", () => {
   });
 
   it("품종 코드표는 두 축종을 합친 Map이다", async () => {
-    const kinds = (items) => ok({ response: { header: {}, body: { items: { item: items } } } });
     const fetchImpl = vi.fn()
-      .mockResolvedValueOnce(kinds([{ kindCd: "000114", kNm: "말티즈" }, { kindCd: " ", kNm: "없음" }]))
-      .mockResolvedValueOnce(kinds([{ kindCd: "000200", kNm: " 코리안숏헤어 " }]));
+      .mockResolvedValueOnce(ok(page([{ kindCd: "000114", kNm: "말티즈" }, { kindCd: " ", kNm: "없음" }])))
+      .mockResolvedValueOnce(ok(page([{ kindCd: "000200", kNm: " 코리안숏헤어 " }])));
     const map = await fetchKindMap({ fetchImpl, serviceKey: "k", upkinds: ["417000", "422400"] });
     expect([...map.entries()]).toEqual([
       ["000114", "말티즈"],
