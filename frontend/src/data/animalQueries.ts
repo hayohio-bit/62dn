@@ -7,6 +7,7 @@
 import type { AnimalListRequest, AnimalStatsResponse, PageResponse } from "@/types/dto";
 import type { Animal, PublicShelterResponse } from "@/types/entities";
 import type { Snapshot, SnapshotAnimal, SnapshotShelter } from "@/types/snapshot";
+import { isTemporaryName } from "@/constants/animalLabels";
 import { addDays, addYears, daysBetween } from "@/lib/koreanDate";
 
 const SORT_FIELDS = ["noticeEndDate", "noticeStartDate", "createdAt"] as const;
@@ -62,17 +63,22 @@ function parseSort(sort: string | undefined): [SortField, "asc" | "desc"] {
   return [field as SortField, dir?.toLowerCase() === "desc" ? "desc" : "asc"];
 }
 
+/** 값이 없는 동물은 방향과 상관없이 뒤로(NULLS LAST), 같은 값은 id 오름차순 */
 function compareBy(field: SortField, dir: "asc" | "desc") {
+  const sign = dir === "asc" ? 1 : -1;
   return (a: SnapshotAnimal, b: SnapshotAnimal) => {
     const av = a[field];
     const bv = b[field];
-    if (av == null || bv == null) {
-      if (av == null && bv == null) return a.id - b.id;
-      return av == null ? 1 : -1; // NULLS LAST
-    }
-    if (av !== bv) return dir === "asc" ? (av < bv ? -1 : 1) : av < bv ? 1 : -1;
-    return a.id - b.id;
+    if (av === bv) return a.id - b.id;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    return (av < bv ? -1 : 1) * sign;
   };
+}
+
+/** 마감일이 from~to 사이(양 끝 포함)인지 */
+function endsBetween(animal: SnapshotAnimal, from: string, to: string): boolean {
+  return animal.noticeEndDate != null && animal.noticeEndDate >= from && animal.noticeEndDate <= to;
 }
 
 function paginate<T>(items: T[], page: number, size: number): PageResponse<T> {
@@ -105,7 +111,7 @@ export function queryAnimals(snapshot: Snapshot, request: AnimalListRequest, tod
     if (request.region && shelter?.regionSido !== request.region) return false;
     if (request.sigungu && shelter?.regionSigungu !== request.sigungu) return false;
     if (search) {
-      const nameMatches = !a.publicApiAnimalId && includesIgnoreCase(a.name, search);
+      const nameMatches = !isTemporaryName(a) && includesIgnoreCase(a.name, search);
       if (!includesIgnoreCase(a.breed, search) && !includesIgnoreCase(shelter?.name, search) && !nameMatches) return false;
     }
     return true;
@@ -120,7 +126,8 @@ export function queryAnimals(snapshot: Snapshot, request: AnimalListRequest, tod
 
 export function findAnimal(snapshot: Snapshot, id: number, today: string): Animal | null {
   const animal = snapshot.animals.find((a) => a.id === id);
-  return animal ? toAnimal(animal, shelterMap(snapshot).get(animal.shelterId), today) : null;
+  if (!animal) return null;
+  return toAnimal(animal, snapshot.shelters.find((s) => s.id === animal.shelterId), today);
 }
 
 /** 마감 임박: 사진이 있고 보호 중이며 마감일이 오늘부터 1년 안인 동물을 마감 가까운 순으로 (AnimalRepository.findUrgent) */
@@ -128,14 +135,7 @@ export function urgentAnimals(snapshot: Snapshot, limit: number, today: string):
   const shelters = shelterMap(snapshot);
   const until = addYears(today, 1);
   return snapshot.animals
-    .filter(
-      (a) =>
-        a.imageUrl != null &&
-        a.status === "PROTECTED" &&
-        a.noticeEndDate != null &&
-        a.noticeEndDate >= today &&
-        a.noticeEndDate <= until,
-    )
+    .filter((a) => a.imageUrl != null && a.status === "PROTECTED" && endsBetween(a, today, until))
     .sort(compareBy("noticeEndDate", "asc"))
     .slice(0, limit)
     .map((a) => toAnimal(a, shelters.get(a.shelterId), today));
@@ -147,9 +147,7 @@ export function computeStats(snapshot: Snapshot, today: string): AnimalStatsResp
   const protectedOpen = snapshot.animals.filter((a) => a.status === "PROTECTED" && isOpen(a, today));
   return {
     protectedCount: protectedOpen.length,
-    endingWithinWeekCount: protectedOpen.filter(
-      (a) => a.noticeEndDate != null && a.noticeEndDate >= today && a.noticeEndDate <= weekEnd,
-    ).length,
+    endingWithinWeekCount: protectedOpen.filter((a) => endsBetween(a, today, weekEnd)).length,
     shelterCount: new Set(protectedOpen.map((a) => a.shelterId)).size,
   };
 }

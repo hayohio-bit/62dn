@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { isNotFoundError } from "@/lib/apiError";
+import { NotFoundError } from "@/lib/apiError";
 import clsx from "clsx";
 import { animalApi, shelterApi } from "@/api";
 import Header from "@/components/layout/Header";
@@ -71,7 +71,7 @@ export default function ShelterPage() {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        const notFound = isNotFoundError(err);
+        const notFound = err instanceof NotFoundError;
         setShelterState(notFound ? "notFound" : "error");
       });
     return () => {

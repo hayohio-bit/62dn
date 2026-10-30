@@ -19,8 +19,3 @@ export class NotFoundError extends Error {
     this.name = "NotFoundError";
   }
 }
-
-/** 스냅샷의 NotFoundError와 백엔드 404 응답을 같은 "없음"으로 판정한다 */
-export function isNotFoundError(err: unknown): boolean {
-  return err instanceof NotFoundError || (axios.isAxiosError(err) && err.response?.status === 404);
-}

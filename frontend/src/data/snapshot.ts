@@ -13,9 +13,9 @@ let pending: Promise<Snapshot> | null = null;
 export function loadSnapshot(): Promise<Snapshot> {
   if (!pending) {
     pending = fetch(SNAPSHOT_URL)
-      .then(async (res) => {
+      .then((res) => {
         if (!res.ok) throw new Error(`데이터 스냅샷을 불러오지 못했습니다 (HTTP ${res.status})`);
-        return (await res.json()) as Snapshot;
+        return res.json() as Promise<Snapshot>;
       })
       .catch((err: unknown) => {
         pending = null;

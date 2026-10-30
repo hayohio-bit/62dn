@@ -7,7 +7,7 @@ import { NotFoundError } from "@/lib/apiError";
 
 export const shelterApi = {
   getPublicShelters: async (regionSido?: string, keyword?: string, page = 0, size = 10) =>
-    queryShelters(await loadSnapshot(), { regionSido: regionSido || undefined, keyword: keyword || undefined, page, size }),
+    queryShelters(await loadSnapshot(), { regionSido, keyword, page, size }),
 
   /** 보호소 상세 (보호소 페이지용). 없으면 NotFoundError */
   getPublicShelter: async (id: number) => {
