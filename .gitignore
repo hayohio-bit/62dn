@@ -2,6 +2,8 @@
 node_modules/
 frontend/node_modules/
 frontend/dist/
+# 데이터 스냅샷은 scripts/build-data 로 생성한다 (predev·prebuild 가 없을 때 데모를 만든다)
+frontend/public/data/snapshot.json
 *.local
 .env
 .env.local
