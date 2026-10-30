@@ -75,8 +75,11 @@ export function useAnimals() {
     return () => clearTimeout(id);
   }, [search]);
 
+  // 일반 보기에서는 선호 조건이 바뀌어도(다른 탭에서 저장 등) 목록을 다시 받지 않는다
+  const recommendPreference = viewMode === "recommended" ? preference : null;
+
   useEffect(() => {
-    if (viewMode === "recommended" && !preference) {
+    if (viewMode === "recommended" && !recommendPreference) {
       setApiAnimals([]);
       setApiTotalElements(0);
       setLoading(false);
@@ -122,7 +125,7 @@ export function useAnimals() {
     return () => {
       cancelled = true;
     };
-  }, [viewMode, page, pageSize, species, size, gender, status, region, sigungu, sort, debouncedSearch, preference]);
+  }, [viewMode, page, pageSize, species, size, gender, status, region, sigungu, sort, debouncedSearch, recommendPreference]);
 
   // 검색어가 실제로 바뀐 경우에만 첫 페이지로 이동한다.
   // setPage는 URL이 바뀔 때마다 새로 만들어지므로, 의존성 변화만으로 실행하면

@@ -118,7 +118,7 @@ export default function PreferencePage() {
     if (min != null && !Number.isNaN(min)) payload.minAge = min;
     if (max != null && !Number.isNaN(max)) payload.maxAge = max;
     if (size === "SMALL" || size === "MEDIUM" || size === "LARGE") payload.size = size;
-    if (regions.length > 0) payload.regions = regions.filter((r) => r.trim());
+    if (regions.length > 0) payload.regions = regions;
     savePreference(payload);
     navigate("/mypage");
   };
@@ -146,7 +146,6 @@ export default function PreferencePage() {
             </p>
           </Reveal>
 
-          {(
             <form
               onSubmit={handleSubmit}
               className="mt-10 rounded-[1.75rem] border border-ink/10 bg-cream-50 p-6 shadow-card md:p-10"
@@ -245,7 +244,6 @@ export default function PreferencePage() {
                 </button>
               </div>
             </form>
-          )}
         </div>
       </main>
       <Footer />

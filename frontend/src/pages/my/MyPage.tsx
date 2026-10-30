@@ -110,6 +110,7 @@ export default function MyPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoadError(null);
     if (favoriteIds.length === 0) {
       setFavorites([]);
       setMissing(0);
@@ -117,7 +118,7 @@ export default function MyPage() {
       return;
     }
     let cancelled = false;
-    setLoadError(null);
+    setLoading(true);
     // 최근에 찜한 아이가 먼저 오도록 저장 순서의 반대로 보여 준다
     animalApi
       .getByIds([...favoriteIds].reverse())

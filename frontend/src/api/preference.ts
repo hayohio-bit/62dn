@@ -4,14 +4,9 @@
 import { recommendAnimals } from "@/data/animalQueries";
 import { loadSnapshot } from "@/data/snapshot";
 import { koreanToday } from "@/lib/koreanDate";
-import { preferenceStore, savePreference } from "@/lib/preference";
-import type { PreferenceRequest } from "@/types/dto";
+import { preferenceStore } from "@/lib/preference";
 
 export const preferenceApi = {
-  getMy: async () => preferenceStore.snapshot(),
-
-  update: async (data: PreferenceRequest) => savePreference(data),
-
   /** 저장된 선호 조건에 맞는 동물. 조건이 없으면 빈 목록 */
   getRecommendedAnimals: async (page = 0, size = 12) =>
     recommendAnimals(await loadSnapshot(), preferenceStore.snapshot(), { page, size }, koreanToday()),
