@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // 공공데이터 API에서 공고 중인 동물을 받아 public/data/snapshot.json을 만든다.
 //
 //   DATA_API_KEY=<공공데이터포털 서비스 키(디코딩 값)> node scripts/build-data/fetch-snapshot.mjs [--out <경로>] [--days <N>]
