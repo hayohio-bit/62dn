@@ -1,10 +1,10 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import clsx from "clsx";
 import type { AnimalResponse, AnimalStatsResponse } from "@/types/dto";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
 import Reveal from "@/components/motion/Reveal";
-import { ageLabel, ddayBadgeClass, formatDday, genderLabels, isTemporaryName, speciesLabels } from "@/constants/animalLabels";
+import { ageLabel, genderLabels, isTemporaryName, speciesLabels } from "@/constants/animalLabels";
+import NoticeBar from "@/components/animals/NoticeBar";
 import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 
 interface Props {
@@ -20,7 +20,7 @@ function Arrow({ dir }: { dir: "left" | "right" }) {
   );
 }
 
-/** 공고 마감이 가까운 아이들 (어두운 띠, 가로 스크롤) */
+/** 공고 기간이 짧게 남은 아이들 (어두운 띠, 가로 스크롤) */
 export default function UrgentStrip({ animals, stats }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -37,9 +37,9 @@ export default function UrgentStrip({ animals, stats }: Props) {
       <div className="mx-auto max-w-[76rem] px-6">
         <Reveal className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="dn-eyebrow !text-terracotta-400">Urgent</p>
+            <p className="dn-eyebrow !text-terracotta-400">Waiting now</p>
             <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">
-              공고 마감이 가까운 아이들
+              공고 기간이 짧게 남은 아이들
             </h2>
             <p className="mt-3 max-w-xl text-cream/60">
               공고 기간이 지나 새 가족을 찾기 어려우면, 지자체 판단에 따라 인도적 처리(안락사)될 수 있어요. 한 번 더
@@ -82,7 +82,6 @@ export default function UrgentStrip({ animals, stats }: Props) {
         className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-6 pb-4 [scrollbar-width:none] scroll-pl-6 md:px-[max(1.5rem,calc((100vw_-_76rem)/2_+_1.5rem))] md:scroll-pl-[max(1.5rem,calc((100vw_-_76rem)/2_+_1.5rem))] [&::-webkit-scrollbar]:hidden"
       >
         {animals.map((a, i) => {
-          const dday = formatDday(a.daysUntilExpiry);
           return (
             <Reveal key={a.id} delay={Math.min(i, 5) * 0.06} className="w-[15.5rem] shrink-0 snap-start md:w-[16.5rem]">
               <Link to={`/animals/${a.id}`} className="group block">
@@ -97,16 +96,12 @@ export default function UrgentStrip({ animals, stats }: Props) {
                   ) : (
                     <AnimalImageFallback />
                   )}
-                  {dday && (
-                    <span
-                      className={clsx(
-                        "absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold",
-                        ddayBadgeClass(a.daysUntilExpiry),
-                      )}
-                    >
-                      {dday}
-                    </span>
-                  )}
+                  <NoticeBar
+                    className="absolute left-3 top-3"
+                    daysUntilExpiry={a.daysUntilExpiry}
+                    noticeStartDate={a.noticeStartDate}
+                    noticeEndDate={a.noticeEndDate}
+                  />
                 </div>
                 <div className="mt-4 flex items-baseline justify-between gap-3">
                   <h3 className="flex min-w-0 items-center gap-2 font-display text-2xl">

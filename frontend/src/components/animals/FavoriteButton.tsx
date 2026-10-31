@@ -1,5 +1,5 @@
 /**
- * 찜(즐겨찾기) 버튼 - 하트 아이콘
+ * 관심 동물 버튼 - 하트 아이콘
  * 로그인 없이 쓰고, 이 브라우저에 저장한다. 같은 동물의 하트는 어느 화면에서든 함께 바뀐다.
  */
 
@@ -45,7 +45,7 @@ export default function FavoriteButton({ animalId, animalName, className = "", s
       type="button"
       onClick={handleClick}
       aria-pressed={favorited}
-      aria-label={`${animalName ? `${animalName} ` : ""}${favorited ? "찜 해제" : "찜하기"}`}
+      aria-label={`${animalName ? `${animalName} ` : ""}${favorited ? "관심 동물에서 빼기" : "관심 동물로 저장"}`}
       className={clsx(
         "grid shrink-0 place-items-center rounded-full backdrop-blur transition duration-200",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta",

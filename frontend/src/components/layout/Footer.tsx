@@ -7,7 +7,7 @@ const columns = [
     links: [
       { to: "/animals", label: "가족 찾기" },
       { to: "/support", label: "봉사·기부" },
-      { to: "/mypage", label: "찜한 아이들" },
+      { to: "/mypage", label: "관심 동물" },
     ],
   },
   {

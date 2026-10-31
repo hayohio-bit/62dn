@@ -18,7 +18,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 const PAGE_SIZE_OPTIONS = [8, 12, 20];
 
 const SORT_OPTIONS = [
-  { value: "noticeEndDate,asc", label: "공고 마감 임박순" },
+  { value: "noticeEndDate,asc", label: "공고 기간이 짧게 남은 순" },
   { value: "noticeStartDate,desc", label: "새로 들어온 순" },
 ];
 

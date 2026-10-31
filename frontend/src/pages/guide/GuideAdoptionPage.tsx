@@ -8,7 +8,7 @@ import GuideLayout, { type GuideStep } from "@/components/guide/GuideLayout";
 const ADOPTION_STEPS: GuideStep[] = [
   {
     title: "입양할 아이 찾기",
-    desc: "62댕냥이나 국가동물보호정보시스템에서 보호소 공고를 확인하세요. 공고한 날부터 10일이 지나도 보호자가 나타나지 않으면 소유권이 지자체로 넘어가 입양(분양) 대상이 될 수 있습니다(동물보호법 제43조·제45조).",
+    desc: "국가동물보호정보시스템이나 공고를 게시한 지자체·보호소에서 보호소 공고를 확인하세요. 공고한 날부터 10일이 지나도 보호자가 나타나지 않으면 소유권이 지자체로 넘어가 입양(분양) 대상이 될 수 있습니다(동물보호법 제43조·제45조).",
     link: { label: "국가동물보호정보시스템", url: "https://www.animal.go.kr" },
   },
   {

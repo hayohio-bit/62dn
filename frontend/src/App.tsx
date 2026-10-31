@@ -43,7 +43,7 @@ function App() {
             <Route path="/support" element={<SupportPage />} />
             <Route path="/shelters/:id" element={<ShelterPage />} />
 
-            {/* 이 브라우저에 저장하는 찜·선호 조건 */}
+            {/* 이 브라우저에 저장하는 관심 동물·선호 조건 */}
             <Route path="/mypage" element={<MyPage />} />
             <Route path="/mypage/preferences" element={<PreferencePage />} />
 

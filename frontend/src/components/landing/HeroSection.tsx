@@ -2,14 +2,15 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import type { AnimalResponse, AnimalStatsResponse } from "@/types/dto";
-import { ageLabel, ddayBadgeClass, formatDday, genderLabels, isTemporaryName } from "@/constants/animalLabels";
+import { ageLabel, genderLabels, isTemporaryName } from "@/constants/animalLabels";
+import NoticeBar from "@/components/animals/NoticeBar";
 import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 import QuickFind from "@/components/landing/QuickFind";
 import { heroStats } from "@/constants/landingContent";
 import { assetUrl } from "@/lib/assetUrl";
 
 interface Props {
-  /** 공고 마감이 가장 가까운 동물 (없으면 카드 대신 안내 문구를 보여 준다) */
+  /** 공고 기간이 가장 짧게 남은 동물 (없으면 카드 대신 안내 문구를 보여 준다) */
   featured?: AnimalResponse;
   /** 실시간 현황 (불러오기 전이거나 실패하면 null) */
   stats: AnimalStatsResponse | null;
@@ -17,11 +18,8 @@ interface Props {
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
-/** 히어로 상단 알림 문구: 일주일 안에 공고가 끝나는 아이가 있으면 그 수를, 없으면 공고 중인 아이 수를 보여 준다 */
+/** 히어로 상단 알림 문구: 공고 중인 아이 수를 보여 준다 */
 function liveMessage(stats: AnimalStatsResponse | null) {
-  if (stats && stats.endingWithinWeekCount > 0) {
-    return `일주일 안에 공고가 끝나는 아이 ${stats.endingWithinWeekCount.toLocaleString()}마리`;
-  }
   if (stats && stats.protectedCount > 0) return `지금 ${stats.protectedCount.toLocaleString()}마리가 가족을 기다려요`;
   return "전국 보호소의 공고를 한곳에 모았어요";
 }
@@ -32,8 +30,6 @@ export default function HeroSection({ featured, stats }: Props) {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const yBack = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -60]);
   const yFront = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -140]);
-
-  const dday = formatDday(featured?.daysUntilExpiry);
 
   return (
     <section ref={ref} className="relative overflow-hidden pt-[calc(var(--header-height)+2rem)]">
@@ -169,13 +165,13 @@ export default function HeroSection({ featured, stats }: Props) {
                     <span className="truncate">{featured.name || "이름 없음"}</span>
                     {isTemporaryName(featured) && <TemporaryNameBadge className="text-ink-muted" />}
                   </span>
-                  {dday && (
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${ddayBadgeClass(featured.daysUntilExpiry)}`}
-                    >
-                      {dday}
-                    </span>
-                  )}
+                  <NoticeBar
+                    onLight
+                    className="shrink-0"
+                    daysUntilExpiry={featured.daysUntilExpiry}
+                    noticeStartDate={featured.noticeStartDate}
+                    noticeEndDate={featured.noticeEndDate}
+                  />
                 </div>
                 <p className="mt-1 text-sm text-ink-muted">
                   {[featured.breed, ageLabel(featured.age), featured.gender && genderLabels[featured.gender]]
@@ -185,7 +181,7 @@ export default function HeroSection({ featured, stats }: Props) {
                 <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-ink-soft">
                   {featured.description || `${featured.shelterName ?? "보호소"}에서 새 가족을 기다리고 있어요.`}
                 </p>
-                <p className="mt-3 text-xs font-semibold text-terracotta">공고 마감이 가장 가까운 아이 →</p>
+                <p className="mt-3 text-xs font-semibold text-terracotta">공고 기간이 짧게 남은 아이 →</p>
               </Link>
             ) : (
               <div className="rounded-2xl bg-white/90 p-5 shadow-lift backdrop-blur">

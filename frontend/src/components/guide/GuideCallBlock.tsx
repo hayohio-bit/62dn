@@ -24,7 +24,7 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^0-9+]/g, "")}`;
 export function CallInquiryTip({ animal, className = "" }: { animal: Animal; className?: string }) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const phrase = animal.publicApiAnimalId
-    ? `62댕냥 사이트 보고 연락드렸는데, 유기번호 ${animal.publicApiAnimalId} 해당 동물에 대해 문의드려도 될까요?`
+    ? `공고를 보고 연락드렸는데, 유기번호 ${animal.publicApiAnimalId} 해당 동물에 대해 문의드려도 될까요?`
     : null;
 
   useEffect(() => {

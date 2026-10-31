@@ -27,6 +27,7 @@ export default {
           600: "#B04632",
           700: "#8E3726",
         },
+        honey: "#B7791F",
         sage: {
           DEFAULT: "#8A9A5B",
           50: "#F1F3E8",
@@ -60,7 +61,7 @@ export default {
         marquee: { from: { transform: "translateX(0)" }, to: { transform: "translateX(-50%)" } },
       },
       animation: {
-        marquee: "marquee 60s linear infinite",
+        marquee: "marquee 160s linear infinite",
       },
     },
   },

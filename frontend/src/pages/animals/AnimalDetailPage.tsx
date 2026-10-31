@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import clsx from "clsx";
+import NoticeBar from "@/components/animals/NoticeBar";
 import { animalApi } from "@/api";
 import { recordRecentAnimal } from "@/lib/recentAnimals";
 import type { Animal } from "@/types/entities";
@@ -16,9 +17,6 @@ import Reveal from "@/components/motion/Reveal";
 import MoreAnimals from "@/components/animals/MoreAnimals";
 import {
   ageLabel,
-  ddayBadgeClass,
-  ddayTone,
-  formatDday,
   genderLabels,
   isTemporaryName,
   neuteredLabel,
@@ -188,8 +186,6 @@ export default function AnimalDetailPage() {
   if (!animal) return null;
 
   const name = animal.name || "이름 없음";
-  const dday = formatDday(animal.daysUntilExpiry);
-  const tone = ddayTone(animal.daysUntilExpiry);
   const temporaryName = isTemporaryName(animal);
   const expired = animal.daysUntilExpiry != null && animal.daysUntilExpiry < 0;
   // 담당자 번호와 보호소 번호가 같은 경우가 많으므로 한 번만 보여 준다
@@ -273,17 +269,6 @@ export default function AnimalDetailPage() {
                 ) : (
                   <AnimalImageFallback />
                 )}
-                {dday && (
-                  <span
-                    className={clsx(
-                      "pointer-events-none absolute left-4 top-4 rounded-full px-3.5 py-1.5 text-sm font-bold tabular-nums shadow-sm",
-                      ddayBadgeClass(animal.daysUntilExpiry),
-                    )}
-                  >
-                    {dday}
-                    <span className="sr-only"> 공고 마감</span>
-                  </span>
-                )}
               </div>
             </motion.div>
 
@@ -301,14 +286,14 @@ export default function AnimalDetailPage() {
                   {temporaryName && (
                     <p className="mt-3 flex items-center gap-2 text-sm text-ink-muted">
                       <TemporaryNameBadge />
-                      공고에 이름이 없어 62댕냥이 붙인 이름이에요.
+                      공고에 이름이 없어 임시로 붙인 이름이에요.
                     </p>
                   )}
                 </div>
                 <div className="mt-1 flex shrink-0 gap-2">
                   <ShareButton
                     title={`${name} | 62댕냥`}
-                    text={`${shareIntro}${dday && !expired ? ` 공고 마감 ${dday}` : ""}`}
+                    text={shareIntro}
                   />
                   <FavoriteButton
                     animalId={animal.id}
@@ -327,13 +312,18 @@ export default function AnimalDetailPage() {
                   <span>
                     공고 기간 {noticeStart} – {noticeEnd}
                   </span>
-                  {dday && !expired && (
-                    <span className={clsx("font-semibold", tone === "normal" ? "text-ink-soft" : "text-terracotta-700")}>
-                      · 마감까지 {animal.daysUntilExpiry === 0 ? "오늘" : `${animal.daysUntilExpiry}일`}
-                    </span>
-                  )}
                   {expired && <span className="font-semibold text-ink-soft">· 공고 기간이 끝났어요</span>}
                 </p>
+              )}
+              {!expired && (
+                <NoticeBar
+                  size="md"
+                  onLight
+                  className="mt-3"
+                  daysUntilExpiry={animal.daysUntilExpiry}
+                  noticeStartDate={animal.noticeStartDate}
+                  noticeEndDate={animal.noticeEndDate}
+                />
               )}
 
               <dl className="mt-8 grid grid-cols-2 border-t border-ink/10">

@@ -1,16 +1,14 @@
 /**
- * 동물 카드: 사진, 공고 마감 D-day, 이름·나이·품종·보호소, 찜 버튼
+ * 동물 카드: 사진, 공고 기간 막대, 이름·나이·품종·보호소, 관심 동물 버튼
  * 동물 목록, 보호소 페이지, 동물 상세의 "같은 보호소의 다른 아이들"에서 함께 쓴다.
  */
 import { Link } from "react-router-dom";
-import clsx from "clsx";
 import FavoriteButton from "@/components/animals/FavoriteButton";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
+import NoticeBar from "@/components/animals/NoticeBar";
 import Reveal from "@/components/motion/Reveal";
 import {
   ageLabel,
-  ddayBadgeClass,
-  formatDday,
   genderLabels,
   isTemporaryName,
   sizeLabels,
@@ -29,7 +27,6 @@ export default function AnimalCard({
   /** 상세 화면의 "목록으로"가 뒤로 가기로 이 목록에 돌아오게 할지 여부 */
   fromList?: boolean;
 }) {
-  const dday = formatDday(animal.daysUntilExpiry);
   const meta = [
     ageLabel(animal.age) ?? "나이 미상",
     (animal.gender && genderLabels[animal.gender]) ?? "성별 미상",
@@ -59,17 +56,12 @@ export default function AnimalCard({
             <AnimalImageFallback />
           )}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink/25 to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
-          {dday && (
-            <span
-              className={clsx(
-                "absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold tabular-nums shadow-sm",
-                ddayBadgeClass(animal.daysUntilExpiry),
-              )}
-            >
-              {dday}
-              <span className="sr-only"> 공고 마감</span>
-            </span>
-          )}
+          <NoticeBar
+            className="absolute left-3 top-3"
+            daysUntilExpiry={animal.daysUntilExpiry}
+            noticeStartDate={animal.noticeStartDate}
+            noticeEndDate={animal.noticeEndDate}
+          />
         </div>
         <div className="px-1 pt-4">
           <h3 className="flex min-w-0 items-center gap-2 font-display text-[1.375rem] leading-tight text-ink transition-colors group-hover:text-terracotta md:text-2xl">

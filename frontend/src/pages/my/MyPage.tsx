@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import clsx from "clsx";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Reveal from "@/components/motion/Reveal";
@@ -8,13 +7,12 @@ import { animalApi } from "@/api/animal";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
 import {
   ageLabel,
-  ddayBadgeClass,
-  formatDday,
   genderLabels,
   isTemporaryName,
   sizeLabels,
   speciesLabels,
 } from "@/constants/animalLabels";
+import NoticeBar from "@/components/animals/NoticeBar";
 import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useFavoriteIds } from "@/hooks/useFavoriteIds";
@@ -24,7 +22,6 @@ import type { Animal } from "@/types/entities";
 
 function FavoriteCard({ animal }: { animal: Animal }) {
   const [imageFailed, setImageFailed] = useState(false);
-  const dday = formatDday(animal.daysUntilExpiry);
   const meta = [animal.breed || "품종 미상", ageLabel(animal.age), animal.gender && genderLabels[animal.gender]]
     .filter(Boolean)
     .join(" · ");
@@ -43,16 +40,12 @@ function FavoriteCard({ animal }: { animal: Animal }) {
         ) : (
           <AnimalImageFallback />
         )}
-        {dday && (
-          <span
-            className={clsx(
-              "absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold shadow-sm",
-              ddayBadgeClass(animal.daysUntilExpiry),
-            )}
-          >
-            {dday}
-          </span>
-        )}
+        <NoticeBar
+          className="absolute left-3 top-3"
+          daysUntilExpiry={animal.daysUntilExpiry}
+          noticeStartDate={animal.noticeStartDate}
+          noticeEndDate={animal.noticeEndDate}
+        />
       </div>
       <p className="mt-3 flex min-w-0 items-center gap-2 font-display text-xl text-ink transition-colors group-hover:text-terracotta">
         <span className="truncate">{animal.name || "이름 없음"}</span>
@@ -99,9 +92,9 @@ function PreferenceSummary({ preference }: { preference: PreferenceRequest }) {
   );
 }
 
-/** 이 브라우저에 저장한 찜과 선호 조건. 로그인이 없어서 기기마다 따로 저장된다 */
+/** 이 브라우저에 저장한 관심 동물과 선호 조건. 로그인이 없어서 기기마다 따로 저장된다 */
 export default function MyPage() {
-  useDocumentTitle("찜한 아이들");
+  useDocumentTitle("관심 동물");
   const { favoriteIds } = useFavoriteIds();
   const { preference } = usePreference();
   const [favorites, setFavorites] = useState<Animal[]>([]);
@@ -119,7 +112,7 @@ export default function MyPage() {
     }
     let cancelled = false;
     setLoading(true);
-    // 최근에 찜한 아이가 먼저 오도록 저장 순서의 반대로 보여 준다
+    // 최근에 저장한 아이가 먼저 오도록 저장 순서의 반대로 보여 준다
     animalApi
       .getByIds([...favoriteIds].reverse())
       .then(({ animals, missing: gone }) => {
@@ -128,7 +121,7 @@ export default function MyPage() {
         setMissing(gone);
       })
       .catch(() => {
-        if (!cancelled) setLoadError("찜한 아이들을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+        if (!cancelled) setLoadError("관심 동물을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -144,9 +137,9 @@ export default function MyPage() {
       <main className="flex-1">
         <Reveal className="dn-page-head">
           <p className="dn-eyebrow">My page</p>
-          <h1 className="dn-page-title">찜한 아이들</h1>
+          <h1 className="dn-page-title">관심 동물</h1>
           <p className="dn-page-desc">
-            찜한 아이들과 입양 선호 조건은 이 브라우저에 저장돼요. 로그인이 없어서 다른 기기와는 공유되지 않아요.
+            관심 동물과 입양 선호 조건은 이 브라우저에 저장돼요. 로그인이 없어서 다른 기기와는 공유되지 않아요.
           </p>
         </Reveal>
 
@@ -177,7 +170,7 @@ export default function MyPage() {
           <section aria-labelledby="mypage-fav" className="lg:col-span-8">
             <div className="flex items-end justify-between gap-4 border-b border-ink/15 pb-5">
               <h2 id="mypage-fav" className="font-display text-3xl text-ink">
-                찜한 아이들 {favorites.length > 0 && <span className="text-terracotta">{favorites.length}</span>}
+                관심 동물 {favorites.length > 0 && <span className="text-terracotta">{favorites.length}</span>}
               </h2>
               <Link to="/animals" className="border-b border-ink/30 pb-0.5 text-[0.9375rem] hover:border-ink">
                 아이들 더 보기
@@ -200,7 +193,7 @@ export default function MyPage() {
             ) : favorites.length === 0 ? (
               <div className="mt-8 rounded-[1.75rem] border border-dashed border-ink/20 px-6 py-16 text-center">
                 <p className="font-display text-2xl text-ink">
-                  {missing > 0 ? "찜한 아이들의 공고가 모두 끝났어요" : "아직 찜한 아이가 없어요"}
+                  {missing > 0 ? "관심 동물의 공고가 모두 끝났어요" : "아직 관심 동물이 없어요"}
                 </p>
                 <p className="mx-auto mt-3 max-w-sm leading-relaxed text-ink-muted">
                   공고를 둘러보다 마음이 가는 아이의 하트를 눌러 두면 여기에서 다시 볼 수 있어요.

@@ -4,9 +4,8 @@
  */
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import clsx from "clsx";
 import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
-import { ddayTextClass, formatDday } from "@/constants/animalLabels";
+import NoticeBar from "@/components/animals/NoticeBar";
 import { clearRecentAnimals, daysUntil, getRecentAnimals } from "@/lib/recentAnimals";
 
 export default function RecentAnimals({ className = "" }: { className?: string }) {
@@ -34,7 +33,6 @@ export default function RecentAnimals({ className = "" }: { className?: string }
       <ul className="-mx-6 mt-3 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:thin]">
         {items.map((a) => {
           const days = a.noticeEndDate ? daysUntil(a.noticeEndDate) : null;
-          const dday = formatDday(days);
           return (
             <li key={a.id} className="w-[4.5rem] shrink-0">
               <Link
@@ -51,13 +49,7 @@ export default function RecentAnimals({ className = "" }: { className?: string }
                   )}
                 </span>
                 <span className="mt-2 block truncate text-sm text-ink group-hover:text-terracotta">{a.name || "이름 없음"}</span>
-                {dday && (
-                  <span
-                    className={clsx("block text-[0.6875rem] font-semibold tabular-nums", ddayTextClass(days))}
-                  >
-                    {dday}
-                  </span>
-                )}
+                <NoticeBar size="xs" onLight className="mx-auto mt-1.5" daysUntilExpiry={days} />
               </Link>
             </li>
           );

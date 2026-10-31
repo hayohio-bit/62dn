@@ -62,7 +62,7 @@ export default function MoreAnimals({ animal }: MoreAnimalsProps) {
         <div>
           <p className="dn-eyebrow">{fromShelter ? "Same shelter" : "Waiting now"}</p>
           <h2 id="more-animals" className="mt-3 font-display text-3xl leading-tight text-ink md:text-4xl">
-            {fromShelter ? "같은 보호소의 다른 아이들" : `마감이 가까운 다른 ${speciesLabels[species] ?? "아이"}들`}
+            {fromShelter ? "같은 보호소의 다른 아이들" : `공고 기간이 짧게 남은 다른 ${speciesLabels[species] ?? "아이"}들`}
           </h2>
           {fromShelter && (
             <p className="mt-2 text-sm text-ink-soft">한 번의 방문이나 전화로 함께 문의할 수 있어요.</p>
