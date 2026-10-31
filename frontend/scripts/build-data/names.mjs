@@ -109,10 +109,10 @@ export const BREED_POOLS = {
 };
 
 const COLOR_KEYWORDS = {
-  white: ["흰", "백색", "하양", "하얀", "화이트", "백구"],
+  white: ["흰", "백", "하양", "하얀", "화이트"],
   black: ["검", "흑", "블랙", "까만"],
-  brown: ["갈", "브라운", "초코", "쵸코", "밤색"],
-  yellow: ["황", "노랑", "노란", "누렁", "치즈", "골드", "금색", "옐로", "살구", "오렌지", "주황"],
+  brown: ["갈", "고동", "브라운", "초코", "쵸코", "밤색"],
+  yellow: ["황", "노랑", "노란", "누렁", "겨자", "레몬", "인절미", "치즈", "골드", "금색", "옐로", "살구", "오렌지", "주황"],
   gray: ["회", "그레이", "은색", "잿"],
   cream: ["크림", "베이지", "아이보리", "미색"],
 };
@@ -165,7 +165,7 @@ export function colorTag(color, isCat) {
   if (text === "") return null;
   if (text.includes("삼색") || text.includes("카오스")) return "tricolor";
   if (text.includes("턱시도")) return "tuxedo";
-  if (["고등어", "태비", "줄무늬", "호랑"].some((w) => text.includes(w))) return "tabby";
+  if (["고등어", "태비", "줄무늬", "호랑", "브린들", "호피"].some((w) => text.includes(w))) return "tabby";
   if (["얼룩", "점박", "젖소", "바둑"].some((w) => text.includes(w))) return "spotted";
   const colors = baseColors(text);
   if (colors.length >= 3) return "tricolor";
@@ -192,8 +192,11 @@ export function breedTag(breed) {
 
 /**
  * 동물의 특징에 맞는 이름 후보를 모아 돌려준다. 알 수 있는 특징이 하나도 없으면 빈 배열이다.
- * 털색은 눈에 가장 잘 띄는 특징이라 풀을 두 번 넣어 선택될 비중을 높인다.
+ * 털색 풀은 COLOR_WEIGHT번 넣어 선택될 비중을 높인다.
  */
+/** 털색 풀을 후보에 넣는 횟수. 털색은 가장 눈에 띄는 특징이라 크기·나이·품종보다 선택될 비중을 높인다 */
+export const COLOR_WEIGHT = 3;
+
 export function traitCandidates({ color, size, age, breed, isCat = false } = {}) {
   const tag = colorTag(color, isCat);
   // 고양이의 줄무늬(고등어·태비)는 생선 이름 풀을, 개의 호랑이 무늬는 브린들 풀을 쓴다
@@ -202,7 +205,7 @@ export function traitCandidates({ color, size, age, breed, isCat = false } = {})
   // 크기는 개에게만 특징으로 본다 (고양이는 대부분 5kg 미만이라 구분이 되지 않고, 큰 값은 체중 오입력일 수 있다)
   const sizePool = isCat ? [] : (SIZE_POOLS[size] ?? []);
   const agePool = AGE_POOLS[ageGroup(age)] ?? [];
-  return [...colorPool, ...colorPool, ...breedPool, ...sizePool, ...agePool];
+  return [...Array(COLOR_WEIGHT).fill(colorPool).flat(), ...breedPool, ...sizePool, ...agePool];
 }
 
 /**

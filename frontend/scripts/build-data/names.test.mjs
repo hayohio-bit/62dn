@@ -3,6 +3,7 @@ import {
   AGE_POOLS,
   BREED_POOLS,
   COLOR_POOLS,
+  COLOR_WEIGHT,
   SIZE_POOLS,
   ageGroup,
   breedTag,
@@ -39,6 +40,34 @@ describe("털색 분류", () => {
     expect(colorTag("흰색, 갈색", false)).toBe("white");
     expect(colorTag("흰색+검정", true)).toBe("tuxedo");
     expect(colorTag("흰색+검정", false)).toBe("spotted");
+  });
+
+  // 2026-10-31 첫 게시 데이터(2,217마리, 털색 표기 210종)에서 실제로 나온 표기
+  it.each([
+    ["갈색&흰색", "brown"],
+    ["레몬색&흰색", "yellow"],
+    ["검정&황갈색", "black"],
+    ["갈색&검정&흰색", "tricolor"],
+    ["검은색흰색황토색조합", "tricolor"],
+    ["평행·전체·부분줄무늬", "tabby"],
+    ["흰색/검은색 얼룩무늬", "spotted"],
+    ["기타(고등어+흰)", "tabby"],
+    ["기타(고등어태비)", "tabby"],
+    ["기타(삼색)", "tricolor"],
+    ["기타(황갈색)", "brown"],
+    ["겨자색", "yellow"],
+    ["고동색말단", "brown"],
+    ["기타(브린들)", "tabby"],
+    ["기타(진호피무늬)", "tabby"],
+    ["기타(인절미)", "yellow"],
+    ["기타(백)", "white"],
+    ["기타()", null],
+    ["회백색", "gray"],
+    ["연백색", "white"],
+    ["백갈색", "white"],
+    ["갈백색", "brown"],
+  ])("실제 표기 %s → %s", (input, expected) => {
+    expect(colorTag(input, false)).toBe(expected);
   });
 
   it("황갈색·흑갈색 같은 합성 표기는 갈색 한 가지로 본다 (삼색으로 잘못 분류하지 않는다)", () => {
@@ -97,9 +126,10 @@ describe("나이·품종 분류", () => {
 });
 
 describe("이름 후보", () => {
-  it("털색 풀은 비중을 높이려고 두 번 들어간다", () => {
+  it("털색 풀은 가장 눈에 띄는 특징이라 COLOR_WEIGHT번 들어간다", () => {
+    expect(COLOR_WEIGHT).toBeGreaterThan(1);
     const c = traitCandidates({ color: "흰색" });
-    for (const name of COLOR_POOLS.white) expect(c.filter((n) => n === name)).toHaveLength(2);
+    for (const name of COLOR_POOLS.white) expect(c.filter((n) => n === name)).toHaveLength(COLOR_WEIGHT);
   });
 
   it("특징에 맞는 풀의 이름만 후보가 된다 (검정 고양이는 흰색 풀 이름을 받지 않는다)", () => {
