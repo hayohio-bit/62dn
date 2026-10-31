@@ -5,7 +5,7 @@
 // --days N: 공고 시작일 범위를 오늘-N일 ~ 오늘(bgnde·endde)로 제한한다. 기본은 범위 없이 state=notice 전체다.
 // 서비스 키는 URL에만 쓰고 출력하지 않는다.
 import { CAT_CODE, DOG_CODE, buildSnapshot } from "./transform.mjs";
-import { fetchAnimals, fetchKindMap, maskServiceKey } from "./public-api.mjs";
+import { fetchAnimals, fetchKindMapOrEmpty, maskServiceKey } from "./public-api.mjs";
 import { SNAPSHOT_PATH, addDays, assertNotEmpty, koreanToday, writeSnapshot } from "./snapshot-file.mjs";
 
 function parseArgs(argv) {
@@ -34,7 +34,7 @@ async function main() {
   const compact = (isoDate) => isoDate.replace(/-/g, "");
   const range = days == null ? {} : { bgnde: compact(addDays(today, -days)), endde: compact(today) };
 
-  const kindMap = await fetchKindMap({ serviceKey, upkinds: [DOG_CODE, CAT_CODE] });
+  const kindMap = await fetchKindMapOrEmpty({ serviceKey, upkinds: [DOG_CODE, CAT_CODE] });
   console.log(`품종 코드표 ${kindMap.size}건`);
 
   let items = [];

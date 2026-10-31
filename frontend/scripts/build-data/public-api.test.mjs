@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildUrl, fetchAnimals, fetchKindMap, maskServiceKey, parseItems } from "./public-api.mjs";
+import { buildUrl, fetchAnimals, fetchKindMap, fetchKindMapOrEmpty, maskServiceKey, parseItems } from "./public-api.mjs";
 
 const ok = (body) => ({ ok: true, status: 200, text: async () => (typeof body === "string" ? body : JSON.stringify(body)) });
 const page = (items) => ({
@@ -114,6 +114,33 @@ describe("호출", () => {
       ["000114", "말티즈"],
       ["000200", "코리안숏헤어"],
     ]);
-    expect(fetchImpl.mock.calls[0][0].pathname).toBe("/1543061/abandonmentPublicService_v2/getKindList");
+    expect(fetchImpl.mock.calls[0][0].pathname).toBe("/1543061/abandonmentPublicService_v2/kind_v2");
+  });
+
+  it("품종명 필드가 knm·kindNm으로 와도 읽는다", async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(ok(page([{ kindCd: "1", knm: "푸들" }, { kindCd: "2", kindNm: "시츄" }])))
+      .mockResolvedValueOnce(ok(page([])));
+    const map = await fetchKindMap({ fetchImpl, serviceKey: "k", upkinds: ["417000", "422400"] });
+    expect([...map.entries()]).toEqual([["1", "푸들"], ["2", "시츄"]]);
+  });
+
+  it("품종 조회가 거부돼도(존재하지 않는 주소 등) 빈 표로 계속하고 키는 가려서 경고한다", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      text: async () => "NO_OPENAPI_SERVICE_ERROR serviceKey=secret",
+    });
+    const warn = vi.fn();
+    const map = await fetchKindMapOrEmpty({ fetchImpl, serviceKey: "secret", upkinds: ["417000"] }, warn);
+    expect(map.size).toBe(0);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain("HTTP 400");
+    expect(warn.mock.calls[0][0]).not.toContain("secret");
+  });
+
+  it("동물 목록 조회 거부는 품종표와 달리 실패로 남는다", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: false, status: 400, text: async () => "NO_OPENAPI_SERVICE_ERROR" });
+    await expect(fetchAnimals({ fetchImpl, serviceKey: "k", upkind: "417000" })).rejects.toThrow("HTTP 400");
   });
 });
