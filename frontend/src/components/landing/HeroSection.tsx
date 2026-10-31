@@ -6,6 +6,7 @@ import { ageLabel, genderLabels, isTemporaryName } from "@/constants/animalLabel
 import NoticeBar from "@/components/animals/NoticeBar";
 import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 import QuickFind from "@/components/landing/QuickFind";
+import StatsSourceLinks from "@/components/landing/StatsSourceLinks";
 import { heroStats } from "@/constants/landingContent";
 import { assetUrl } from "@/lib/assetUrl";
 
@@ -106,7 +107,9 @@ export default function HeroSection({ featured, stats }: Props) {
                 </div>
               ))}
             </dl>
-            <p className="mt-4 text-xs text-ink-muted">출처: 농림축산식품부, 2025년 조사</p>
+            <p className="mt-4 text-xs leading-relaxed text-ink-muted">
+              <StatsSourceLinks />
+            </p>
           </motion.div>
         </div>
 

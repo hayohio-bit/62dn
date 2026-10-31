@@ -5,6 +5,7 @@ import AnimalImageFallback from "@/components/animals/AnimalImageFallback";
 import Reveal from "@/components/motion/Reveal";
 import { ageLabel, genderLabels, isTemporaryName, speciesLabels } from "@/constants/animalLabels";
 import NoticeBar from "@/components/animals/NoticeBar";
+import { NOTICE_RULE } from "@/constants/landingContent";
 import TemporaryNameBadge from "@/components/animals/TemporaryNameBadge";
 
 interface Props {
@@ -42,8 +43,7 @@ export default function UrgentStrip({ animals, stats }: Props) {
               공고 기간이 짧게 남은 아이들
             </h2>
             <p className="mt-3 max-w-xl text-cream/60">
-              공고 기간이 지나 새 가족을 찾기 어려우면, 지자체 판단에 따라 인도적 처리(안락사)될 수 있어요. 한 번 더
-              눈여겨봐 주세요.
+              {NOTICE_RULE} 공고 기간이 짧게 남은 아이들을 한 번 더 살펴봐 주세요.
             </p>
             {stats && stats.protectedCount > 0 && (
               <p className="mt-5 text-sm text-cream/80">

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, useInView, useReducedMotion } from "framer-motion";
 import Reveal from "@/components/motion/Reveal";
-import { realityStats, statsSources } from "@/constants/landingContent";
+import { NOTICE_RULE, realityStats } from "@/constants/landingContent";
+import StatsSourceLinks from "@/components/landing/StatsSourceLinks";
 import { assetUrl } from "@/lib/assetUrl";
 
 /** 화면에 들어오면 0부터 목표 숫자까지 올라간다 */
@@ -35,11 +36,11 @@ export default function RealitySection() {
               src={assetUrl("hero-three-left-behind.webp")}
               alt="텅 빈 보호소 견사에 홀로 앉아 있는 개"
               loading="lazy"
-              className="aspect-[4/3] w-full object-cover grayscale-[35%]"
+              className="aspect-[4/3] w-full object-cover"
             />
           </div>
           <p className="absolute -bottom-5 right-5 max-w-[15rem] rounded-2xl bg-ink px-5 py-4 text-sm leading-relaxed text-cream shadow-lift">
-            공고 후 10일이 지나도 보호자가 나타나지 않으면, 많은 아이들이 보호소에 남아 새 가족을 기다립니다.
+            {NOTICE_RULE}
           </p>
         </Reveal>
 
@@ -47,17 +48,17 @@ export default function RealitySection() {
           <Reveal>
             <p className="dn-eyebrow">Reality · 2025</p>
             <h2 className="mt-4 font-display text-4xl leading-tight md:text-5xl">
-              구조되어도,
+              구조된 동물 중
               <br />
-              <span className="text-terracotta">10마리 중 4마리</span>는
+              <span className="text-terracotta">약 4분의 1</span>이
               <br />
-              보호소에서 생을 마감해요
+              입양으로 새 가족을 만나요
             </h2>
             <p className="mt-6 leading-relaxed text-ink-soft">
-              2025년 한 해 동안 95,685마리가 구조되었습니다. 원래 가족에게 돌아간 아이는 11.2%, 새 가족을 만난 아이는
-              25.6%였어요. 43%는 보호소에서 자연사하거나 인도적 처리(안락사)로 생을 마감했습니다. 입양을 계획하는
-              사람의 88.3%가 유기동물 입양 의향이 있다고 답했어요. 그 마음이 전화 한 통으로 이어지면 이 숫자는 바뀔 수
-              있습니다.
+              2025년 한 해 동안 95,685마리가 구조되었습니다. 구조된 동물 전체 가운데 입양 25.6%, 자연사 25.7%, 인도적
+              처리 17.3%, 보호중 13.2%, 반환 11.2%, 기증 4.6%, 방사·미포획 2.4%로 조치되었어요. 한편 1년 안에 반려동물
+              입양 계획이 있는 응답자의 88.3%는 유실·유기동물 입양 의향이 있다고 답했어요. 그 마음이 보호소에 닿으면
+              더 많은 아이가 새 가족을 만날 수 있어요.
             </p>
           </Reveal>
 
@@ -74,16 +75,9 @@ export default function RealitySection() {
             ))}
           </dl>
           <p className="mt-8 text-xs leading-relaxed text-ink-muted">
-            출처:{" "}
-            {statsSources.map((src, i) => (
-              <span key={src.href}>
-                {i > 0 && ", "}
-                <a href={src.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-ink">
-                  {src.label}
-                </a>
-              </span>
-            ))}
-            <span className="sr-only"> (새 창)</span>
+            <StatsSourceLinks />
+            <br />
+            비율은 구조 동물 전체(95,685마리) 대비이며, 마지막 숫자는 원문의 자연사와 인도적 처리 비율을 더해 계산한 값입니다.
           </p>
         </div>
       </div>

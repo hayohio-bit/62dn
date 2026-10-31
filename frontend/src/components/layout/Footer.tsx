@@ -59,7 +59,7 @@ export default function Footer() {
         </div>
         <div className="mt-16 flex flex-col gap-2 border-t border-cream/10 pt-6 md:flex-row md:items-center md:justify-between">
           <p className="toss-footer-copy">© {new Date().getFullYear()} 62댕냥. All rights reserved.</p>
-          <p className="toss-footer-copy">동물 정보 출처: 농림축산식품부 국가동물보호정보시스템 (공공데이터포털)</p>
+          <p className="toss-footer-copy">공고 정보 출처: 농림축산식품부 농림축산검역본부 국가동물보호정보시스템 구조동물 조회 서비스(공공데이터포털), 하루 한 번 갱신</p>
         </div>
       </div>
     </footer>
