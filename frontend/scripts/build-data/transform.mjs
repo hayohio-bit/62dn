@@ -117,14 +117,12 @@ export function mapSpecies(item) {
   return "DOG";
 }
 
-/** kindNm → kindFullNm에서 [축종] 제거 → kindCd 순. 품종 코드표(kindMap)에 있으면 이름으로 바꾸고, 숫자 코드만 남으면 "믹스". */
-export function extractBreed(item, kindMap = new Map()) {
+/** kindNm → kindFullNm에서 [축종] 제거 → kindCd 순. 숫자 코드만 남으면 "믹스". */
+export function extractBreed(item) {
   if (!isBlank(item.kindNm)) return cut(item.kindNm.trim(), 50);
   const full = item.kindFullNm;
   const s = full != null ? full.replace(/\[.*?\]\s*/g, "").trim() : item.kindCd ?? "";
   if (s === "") return "믹스";
-  const name = kindMap.get(s);
-  if (name != null) return cut(name, 50);
   if (/^\d{4,}$/.test(s)) return "믹스";
   return cut(s, 50);
 }
@@ -273,7 +271,7 @@ export function idFromDesertionNo(desertionNo) {
  * 제외: 유기번호 없음, 보호 대상 아님(입양·안락사 등), 공고 마감일이 오늘(Asia/Seoul) 이전. 같은 유기번호는 첫 항목만 쓴다.
  * 보호소는 이름으로 식별하고 첫 등장 순서로 id를 준다 (백엔드와 같은 규칙).
  */
-export function buildSnapshot({ items, kindMap = new Map(), today, generatedAt, source }) {
+export function buildSnapshot({ items, today, generatedAt, source }) {
   const shelters = [];
   const shelterIdByName = new Map();
   const animals = [];
@@ -312,7 +310,7 @@ export function buildSnapshot({ items, kindMap = new Map(), today, generatedAt, 
       publicApiAnimalId: desertionNo,
       shelterId,
       species,
-      breed: extractBreed(item, kindMap),
+      breed: extractBreed(item),
       name: temporaryName(desertionNo, species === "CAT"),
       age: parseAge(item.age, today),
       gender: mapGender(item.sexCd),
