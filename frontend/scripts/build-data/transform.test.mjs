@@ -122,23 +122,21 @@ describe("나이·성별·상태·종류", () => {
 });
 
 describe("품종", () => {
-  const kindMap = new Map([["000114", "말티즈"]]);
-
   it("kindNm이 있으면 그대로 쓴다 (50자 제한)", () => {
-    expect(extractBreed({ kindNm: " 믹스견 " }, kindMap)).toBe("믹스견");
-    expect(extractBreed({ kindNm: "가".repeat(60) }, kindMap)).toHaveLength(50);
+    expect(extractBreed({ kindNm: " 믹스견 " })).toBe("믹스견");
+    expect(extractBreed({ kindNm: "가".repeat(60) })).toHaveLength(50);
   });
 
-  it("kindFullNm에서 [축종]을 떼고, 코드표에 있으면 이름으로 바꾼다", () => {
-    expect(extractBreed({ kindFullNm: "[개] 푸들" }, kindMap)).toBe("푸들");
-    expect(extractBreed({ kindFullNm: "[개] 000114" }, kindMap)).toBe("말티즈");
-    expect(extractBreed({ kindCd: "000114" }, kindMap)).toBe("말티즈");
+  it("kindNm이 없으면 kindFullNm에서 [축종]을 뗀 값을 쓴다", () => {
+    expect(extractBreed({ kindFullNm: "[개] 푸들" })).toBe("푸들");
+    expect(extractBreed({ kindFullNm: "[고양이] 코리안 숏헤어" })).toBe("코리안 숏헤어");
   });
 
   it("값이 없거나 4자리 이상 숫자 코드만 남으면 믹스다", () => {
-    expect(extractBreed({}, kindMap)).toBe("믹스");
-    expect(extractBreed({ kindFullNm: "[개] " }, kindMap)).toBe("믹스");
-    expect(extractBreed({ kindCd: "999999" }, kindMap)).toBe("믹스");
+    expect(extractBreed({})).toBe("믹스");
+    expect(extractBreed({ kindFullNm: "[개] " })).toBe("믹스");
+    expect(extractBreed({ kindFullNm: "[개] 000114" })).toBe("믹스");
+    expect(extractBreed({ kindCd: "999999" })).toBe("믹스");
   });
 });
 

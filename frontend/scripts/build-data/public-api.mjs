@@ -3,8 +3,6 @@
 
 export const DEFAULT_BASE_URL = "https://apis.data.go.kr/1543061/abandonmentPublicService_v2";
 const ANIMAL_LIST_PATH = "/abandonmentPublic_v2";
-// v2의 품종 조회 주소는 kind_v2다. 예전(v1) 이름 getKindList는 "해당 오픈API 서비스가 없거나 폐기됨"(코드 12)으로 거부된다 (2026-10-31 확인)
-const KIND_LIST_PATH = "/kind_v2";
 
 /** 오류 메시지에 서비스 키가 섞여 나가지 않도록 가린다. */
 export function maskServiceKey(text) {
@@ -98,32 +96,4 @@ export async function fetchAnimals({
     if (items.length < numOfRows) break;
   }
   return all;
-}
-
-/** 품종 코드 → 품종명 표. kindCd가 코드로만 오는 항목의 품종명을 채우는 데 쓴다. */
-export async function fetchKindMap({ fetchImpl = fetch, baseUrl = DEFAULT_BASE_URL, serviceKey, upkinds }) {
-  const map = new Map();
-  for (const upkind of upkinds) {
-    const url = buildUrl(baseUrl, KIND_LIST_PATH, { serviceKey, upkind, _type: "json" });
-    for (const kind of parseItems(await getText(fetchImpl, url))) {
-      const code = kind.kindCd?.trim();
-      // 품종명 필드 표기가 문서마다 달라(kNm, knm, kindNm) 있는 것을 쓴다
-      const name = (kind.kNm ?? kind.knm ?? kind.kindNm)?.trim();
-      if (code && name) map.set(code, name);
-    }
-  }
-  return map;
-}
-
-/**
- * 품종 코드표는 kindNm이 없는 항목의 품종명을 보정하는 보조 정보다.
- * 조회에 실패해도 동물 목록 게시를 막지 않고 경고만 남긴 뒤 빈 표로 계속한다.
- */
-export async function fetchKindMapOrEmpty(options, warn = console.warn) {
-  try {
-    return await fetchKindMap(options);
-  } catch (err) {
-    warn(`품종 코드표를 받지 못해 건너뜁니다: ${maskServiceKey(err instanceof Error ? err.message : String(err))}`);
-    return new Map();
-  }
 }
