@@ -70,6 +70,21 @@ npm test                              # 변환 규칙 테스트 (Vitest)
 
 `npm run dev`와 `npm run build`는 스냅샷이 없을 때만 데모 스냅샷을 자동으로 만듭니다. 변환 규칙(임시 이름, 체중 기반 크기 추정, 마감 지난 공고 제외 등)은 백엔드 `AnimalSyncService`와 같고 `frontend/scripts/build-data/`에 있습니다.
 
+## GitHub Pages 게시
+
+`.github/workflows/pages.yml`이 매일 03:20(KST)에 공공데이터를 받아 스냅샷을 만들고, 테스트와 빌드를 거쳐 `https://hayohio-bit.github.io/62dn/`에 게시합니다. 빌드 결과는 하위 경로 `/62dn/` 기준이며, 새로고침 때 404가 나지 않도록 `404.html`(= `index.html`)을 함께 만듭니다. 다른 경로에 올릴 때는 `VITE_BASE`로 바꿉니다.
+
+처음 게시하기 전에 저장소 관리자가 한 번 설정해야 합니다. 이 설정을 마치기 전에는 예약 실행과 `main` push가 아무것도 하지 않습니다.
+
+1. Settings → Pages → Build and deployment → Source를 "GitHub Actions"로 바꿉니다 (지금은 `main`의 `/docs`)
+2. Settings → Secrets and variables → Actions → Secrets에 `DATA_API_KEY`(공공데이터포털 서비스 키, 디코딩 값)를 등록합니다. 선택으로 카카오 지도 키 `VITE_MAP_API_KEY`도 등록합니다 (카카오 개발자 콘솔에서 허용 도메인에 `https://hayohio-bit.github.io`를 추가)
+3. 같은 화면의 Variables에 `PAGES_ENABLED`를 `true`로 등록합니다
+4. Actions 탭의 "Pages"에서 Run workflow로 첫 게시를 실행합니다 (수동 실행은 변수와 상관없이 됩니다)
+
+키가 없거나 공공데이터에서 동물을 한 마리도 받지 못하면 워크플로가 실패하고 기존 사이트는 그대로 유지됩니다. 공개 저장소는 60일 동안 활동이 없으면 예약 실행이 꺼지므로, 오래 쉬었다면 수동 실행으로 다시 켭니다.
+
+로컬에서 하위 경로 빌드를 확인하려면 `cd frontend && npm run build && npm run preview`를 실행하고 `http://localhost:4173/62dn/`을 엽니다.
+
 ## 개발 환경 (MySQL)
 
 1. MySQL 8에 `dn_platform` 데이터베이스를 만듭니다. `dev` 프로필은 `ddl-auto: update`로 테이블을 자동 생성합니다.

@@ -30,3 +30,13 @@ export function writeSnapshot(snapshot, path = SNAPSHOT_PATH) {
   writeFileSync(path, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
   return path;
 }
+
+/**
+ * 실제 공공데이터로 만든 스냅샷이 비어 있으면 저장하지 않는다.
+ * API가 오류 없이 0건을 돌려주는 경우(점검, 조회 조건 변경 등)에 배포가 사이트를 빈 화면으로 바꾸는 것을 막는다.
+ */
+export function assertNotEmpty(snapshot) {
+  if (snapshot.animals.length === 0) {
+    throw new Error("공공데이터에서 공고 중인 동물을 한 마리도 받지 못했습니다. 스냅샷을 저장하지 않습니다.");
+  }
+}

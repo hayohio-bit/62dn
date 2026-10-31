@@ -3,6 +3,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Reveal from "@/components/motion/Reveal";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { assetUrl } from "@/lib/assetUrl";
 
 // 이 컴포넌트로 연결된 준비 중 페이지만 둔다. (봉사·기부 신청 페이지는 제거된 기능이므로 제외)
 const pages: Record<string, { title: string; eyebrow: string }> = {
@@ -60,7 +61,7 @@ export default function PlaceholderPage() {
                 style={{ borderRadius: "50% 50% 2rem 2rem / 36% 36% 2rem 2rem" }}
               >
                 <img
-                  src="/images/landing/hero-cat.webp"
+                  src={assetUrl("images/landing/hero-cat.webp")}
                   alt=""
                   className="aspect-[4/5] w-full object-cover"
                 />

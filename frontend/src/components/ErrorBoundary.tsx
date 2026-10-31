@@ -32,7 +32,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex min-h-screen items-center bg-cream px-6 py-16" role="alert">
           <div className="mx-auto w-full max-w-xl">
-            <a href="/" className="toss-logo" aria-label="62댕냥 홈">
+            <a href={import.meta.env.BASE_URL} className="toss-logo" aria-label="62댕냥 홈">
               <Wordmark />
             </a>
             <div className="mt-14">
@@ -55,7 +55,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               >
                 다시 시도
               </button>
-              <a href="/" className="toss-btn toss-btn-outline">
+              <a href={import.meta.env.BASE_URL} className="toss-btn toss-btn-outline">
                 홈으로 가기
               </a>
             </div>

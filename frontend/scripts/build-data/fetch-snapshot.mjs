@@ -6,7 +6,7 @@
 // 서비스 키는 URL에만 쓰고 출력하지 않는다.
 import { CAT_CODE, DOG_CODE, buildSnapshot } from "./transform.mjs";
 import { fetchAnimals, fetchKindMap, maskServiceKey } from "./public-api.mjs";
-import { SNAPSHOT_PATH, addDays, koreanToday, writeSnapshot } from "./snapshot-file.mjs";
+import { SNAPSHOT_PATH, addDays, assertNotEmpty, koreanToday, writeSnapshot } from "./snapshot-file.mjs";
 
 function parseArgs(argv) {
   const args = { out: SNAPSHOT_PATH, days: null };
@@ -55,6 +55,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     source: "public-api",
   });
+  assertNotEmpty(snapshot);
   const path = writeSnapshot(snapshot, out);
   console.log(`스냅샷 저장: ${path}`);
   console.log(`받은 항목 ${items.length}건 → 동물 ${snapshot.animals.length}마리, 보호소 ${snapshot.shelters.length}곳 (기준일 ${today})`);
