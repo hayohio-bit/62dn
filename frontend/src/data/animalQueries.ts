@@ -40,6 +40,7 @@ export function toAnimal(animal: SnapshotAnimal, shelter: SnapshotShelter | unde
     shelterLongitude: shelter?.longitude ?? undefined,
     species: animal.species,
     breed: animal.breed,
+    color: animal.color,
     name: animal.name,
     age: animal.age,
     gender: animal.gender,

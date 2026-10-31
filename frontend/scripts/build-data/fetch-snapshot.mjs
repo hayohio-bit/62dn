@@ -6,6 +6,7 @@
 // 서비스 키는 URL에만 쓰고 출력하지 않는다.
 import { CAT_CODE, DOG_CODE, buildSnapshot } from "./transform.mjs";
 import { fetchAnimals, maskServiceKey } from "./public-api.mjs";
+import { summarizeColors } from "./names.mjs";
 import { SNAPSHOT_PATH, addDays, assertNotEmpty, koreanToday, writeSnapshot } from "./snapshot-file.mjs";
 
 function parseArgs(argv) {
@@ -52,6 +53,9 @@ async function main() {
     source: "public-api",
   });
   assertNotEmpty(snapshot);
+  const colors = summarizeColors(snapshot.animals);
+  console.log(`털색: 분류 ${colors.classified}마리, 못 알아본 표기 ${colors.unclassified}마리, 털색 없음 ${colors.missing}마리`);
+  if (colors.topUnclassified.length > 0) console.log(`못 알아본 털색 표기(많은 순): ${colors.topUnclassified.map(([v, n]) => `${v} ${n}`).join(", ")}`);
   const path = writeSnapshot(snapshot, out);
   console.log(`스냅샷 저장: ${path}`);
   console.log(`받은 항목 ${items.length}건 → 동물 ${snapshot.animals.length}마리, 보호소 ${snapshot.shelters.length}곳 (기준일 ${today})`);

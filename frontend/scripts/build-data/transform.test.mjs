@@ -255,6 +255,7 @@ describe("스냅샷 만들기", () => {
       shelterId: 1,
       species: "DOG",
       breed: "믹스견",
+      color: null,
       name: DOG_NAMES[67],
       age: 2,
       gender: "MALE",

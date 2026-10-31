@@ -27,6 +27,8 @@ export interface SnapshotAnimal {
   shelterId: number;
   species: Species;
   breed: string;
+  /** 공공데이터의 털색 표기(colorCd 원문, 최대 30자). 없으면 null */
+  color: string | null;
   name: string;
   age: number | null;
   gender: Gender | null;

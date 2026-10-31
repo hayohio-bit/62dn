@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildDemoSnapshot } from "./demo-snapshot.mjs";
-import { CAT_NAMES, DOG_NAMES } from "./transform.mjs";
+import { CAT_NAMES } from "./transform.mjs";
+import { traitCandidates } from "./names.mjs";
 import { addDays, assertNotEmpty, koreanToday } from "./snapshot-file.mjs";
 
 const TODAY = "2026-10-30";
@@ -34,14 +35,17 @@ describe("데모 스냅샷", () => {
 
   it("공공데이터로 들어온 것처럼 표시한 두 마리는 임시 이름·중성화 모름·체중 기반 크기다", () => {
     const [dog, cat] = [snap.animals[9], snap.animals[17]];
-    expect(dog).toMatchObject({ publicApiAnimalId: "448500202600101", name: DOG_NAMES[67], neutered: false, weight: 11.4, size: "MEDIUM" });
-    expect(cat).toMatchObject({ publicApiAnimalId: "448500202600102", name: CAT_NAMES[50], neutered: false, weight: null, size: null });
+    expect(dog).toMatchObject({ publicApiAnimalId: "448500202600101", neutered: false, weight: 11.4, size: "MEDIUM" });
+    expect(cat).toMatchObject({ publicApiAnimalId: "448500202600102", neutered: false, weight: null, size: null });
+    // 이름은 특징(프렌치 불도그)에 맞는 후보에서 고르고, 특징이 없는 고양이(코리안숏헤어, 3살)는 종류별 일반 후보에서 고른다
+    expect(traitCandidates({ breed: dog.breed, age: dog.age, size: dog.size })).toContain(dog.name);
+    expect(CAT_NAMES).toContain(cat.name);
     expect(snap.animals.filter((a) => a.publicApiAnimalId)).toHaveLength(2);
   });
 
   it("스냅샷 타입의 필드를 모두 채운다", () => {
     const animalKeys = [
-      "id", "publicApiAnimalId", "shelterId", "species", "breed", "name", "age", "gender", "size", "weight", "neutered",
+      "id", "publicApiAnimalId", "shelterId", "species", "breed", "color", "name", "age", "gender", "size", "weight", "neutered",
       "status", "noticeStartDate", "noticeEndDate", "imageUrl", "description", "orgName", "chargeName", "chargePhone", "createdAt",
     ].sort();
     const shelterKeys = ["id", "name", "address", "regionSido", "regionSigungu", "latitude", "longitude", "phone"].sort();

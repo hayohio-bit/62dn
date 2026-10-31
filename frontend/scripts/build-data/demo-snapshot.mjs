@@ -74,6 +74,7 @@ export function buildDemoSnapshot(today = koreanToday(), generatedAt = new Date(
       shelterId: shelter.id,
       species,
       breed,
+      color: null,
       name,
       age,
       gender,
@@ -96,10 +97,11 @@ export function buildDemoSnapshot(today = koreanToday(), generatedAt = new Date(
   for (const [index, desertionNo, weightUnknown] of PUBLIC_DATA_MARKS) {
     const a = animals[index];
     a.publicApiAnimalId = desertionNo;
-    a.name = temporaryName(desertionNo, a.species === "CAT");
     a.neutered = false;
     if (weightUnknown) a.weight = null;
     a.size = sizeFromWeight(a.weight);
+    // 이름은 마지막에 정한다 (체중을 모르면 크기도 특징에서 빠진다)
+    a.name = temporaryName(desertionNo, a.species === "CAT", { color: a.color, size: a.size, age: a.age, breed: a.breed });
   }
 
   return { version: 1, source: "demo", generatedAt, today, animals, shelters };

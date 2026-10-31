@@ -2,6 +2,8 @@
 // 백엔드 AnimalSyncService·TemporaryNames·SizeEstimate·AddressRegionParser·ContactPhone의 규칙을 그대로 옮겼다.
 // 규칙을 바꾸면 화면의 표시 원칙(임시 이름, "(추정)" 크기, 보호소 확인 필요)이 달라지므로 테스트로 고정한다.
 
+import { traitCandidates } from "./names.mjs";
+
 export const DOG_CODE = "417000";
 export const CAT_CODE = "422400";
 export const IMAGE_VIEW_BASE = "https://www.animal.go.kr/front/fileMng/imageView.do?f=";
@@ -54,9 +56,14 @@ export function floorMod(a, n) {
   return ((a % n) + n) % n;
 }
 
-/** 유기번호로 임시 이름을 고정 배정한다. 유기번호가 없으면 첫 이름이다. */
-export function temporaryName(desertionNo, isCat) {
-  const pool = isCat ? CAT_NAMES : DOG_NAMES;
+/**
+ * 유기번호로 임시 이름을 고정 배정한다.
+ * 털색·크기·나이·품종(traits)에 맞는 후보가 있으면 그 안에서, 알 수 있는 특징이 없으면 종류별 일반 후보에서 고른다.
+ * 유기번호가 없으면 후보의 첫 이름이다.
+ */
+export function temporaryName(desertionNo, isCat, traits = {}) {
+  const candidates = traitCandidates({ ...traits, isCat });
+  const pool = candidates.length > 0 ? candidates : isCat ? CAT_NAMES : DOG_NAMES;
   if (isBlank(desertionNo)) return pool[0];
   return pool[floorMod(javaHashCode(desertionNo), pool.length)];
 }
@@ -305,16 +312,21 @@ export function buildSnapshot({ items, today, generatedAt, source }) {
 
     const species = mapSpecies(item);
     const weight = parseWeight(item.weight);
+    const size = sizeFromWeight(weight);
+    const age = parseAge(item.age, today);
+    const breed = extractBreed(item);
+    const color = trimMax(item.colorCd, 30);
     animals.push({
       id,
       publicApiAnimalId: desertionNo,
       shelterId,
       species,
-      breed: extractBreed(item),
-      name: temporaryName(desertionNo, species === "CAT"),
-      age: parseAge(item.age, today),
+      breed,
+      color,
+      name: temporaryName(desertionNo, species === "CAT", { color, size, age, breed }),
+      age,
       gender: mapGender(item.sexCd),
-      size: sizeFromWeight(weight),
+      size,
       weight,
       neutered: String(item.neuterYn ?? "").toUpperCase() === "Y",
       status,

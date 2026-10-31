@@ -33,6 +33,7 @@ const animal = (id: number, over: Partial<SnapshotAnimal> = {}): SnapshotAnimal 
   shelterId: 1,
   species: "DOG",
   breed: "믹스견",
+  color: null,
   name: `이름${id}`,
   age: 2,
   gender: "MALE",

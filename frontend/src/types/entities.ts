@@ -29,6 +29,8 @@ export interface Animal {
   shelterLongitude?: number;
   species: Species;
   breed: string;
+  /** 털색 (공공데이터 표기 그대로) */
+  color?: string | null;
   name: string;
   /** 공공데이터는 나이·성별·크기를 모를 수 있다 */
   age: number | null;

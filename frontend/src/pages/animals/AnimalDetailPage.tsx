@@ -204,6 +204,7 @@ export default function AnimalDetailPage() {
   const facts: { label: string; value: string }[] = [
     { label: "종류", value: speciesLabels[animal.species] ?? "미상" },
     { label: "품종", value: animal.breed || "미상" },
+    { label: "털색", value: animal.color || "미상" },
     { label: "나이", value: ageLabel(animal.age) ?? "미상" },
     { label: "성별", value: (animal.gender && genderLabels[animal.gender]) ?? "미상" },
     { label: "크기 · 체중", value: sizeAndWeight },
@@ -286,7 +287,7 @@ export default function AnimalDetailPage() {
                   {temporaryName && (
                     <p className="mt-3 flex items-center gap-2 text-sm text-ink-muted">
                       <TemporaryNameBadge />
-                      공고에 이름이 없어 임시로 붙인 이름이에요.
+                      공고에 이름이 없어 털색·크기·나이 등을 보고 임시로 붙인 이름이에요.
                     </p>
                   )}
                 </div>
