@@ -74,11 +74,12 @@ export default function RealitySection() {
               </Reveal>
             ))}
           </dl>
-          <p className="mt-8 text-xs leading-relaxed text-ink-muted">
+          <div className="mt-8 text-xs leading-relaxed text-ink-muted">
             <StatsSourceLinks />
-            <br />
-            비율은 구조 동물 전체(95,685마리) 대비이며, 마지막 숫자는 원문의 자연사와 인도적 처리 비율을 더해 계산한 값입니다.
-          </p>
+            <p className="mt-2">
+              비율은 구조 동물 전체(95,685마리) 대비이며, 마지막 숫자는 원문의 자연사와 인도적 처리 비율을 더해 계산한 값입니다.
+            </p>
+          </div>
         </div>
       </div>
     </section>

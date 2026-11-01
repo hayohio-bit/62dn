@@ -150,11 +150,19 @@ export function parseDate(dateStr) {
   return `${m[1]}-${m[2]}-${String(day).padStart(2, "0")}`;
 }
 
+/**
+ * 국가동물보호정보시스템(animal.go.kr 계열)은 https로도 같은 사진을 내려 주므로(2026. 11. 1. openapi.animal.go.kr 확인)
+ * http 주소는 https로 바꾼다. 확인하지 않은 다른 도메인은 그대로 둔다.
+ */
+function upgradeToHttps(url) {
+  return /^http:\/\/([a-z0-9-]+\.)*animal\.go\.kr(\/|$)/i.test(url) ? url.replace("http://", "https://") : url;
+}
+
 /** popfile1 → popfile2 → popfile → filename 순. 전체 URL이 아니면 animal.go.kr 이미지 뷰어 주소로 만든다. */
 export function resolveImageUrl(item) {
   const raw = [item.popfile1, item.popfile2, item.popfile, item.filename].find((v) => !isBlank(v));
   if (raw == null) return null;
-  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return upgradeToHttps(raw);
   let relPath;
   if (raw.startsWith("/files/")) {
     relPath = raw;

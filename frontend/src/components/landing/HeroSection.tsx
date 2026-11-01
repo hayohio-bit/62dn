@@ -107,9 +107,9 @@ export default function HeroSection({ featured, stats }: Props) {
                 </div>
               ))}
             </dl>
-            <p className="mt-4 text-xs leading-relaxed text-ink-muted">
+            <div className="mt-4 text-xs leading-relaxed text-ink-muted">
               <StatsSourceLinks />
-            </p>
+            </div>
           </motion.div>
         </div>
 

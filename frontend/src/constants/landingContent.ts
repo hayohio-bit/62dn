@@ -13,11 +13,13 @@ import { assetUrl } from "@/lib/assetUrl";
  */
 export const statsSources = [
   {
-    label: "농림축산식품부, 2025 동물보호·복지 실태조사 (2026. 6. 29. 게시)",
+    label: "농림축산식품부, 2025 동물보호·복지 실태조사",
+    published: "2026. 6. 29. 게시",
     href: "https://www.animal.go.kr/front/community/show.do?boardId=boardID03&menuNo=5000000019&seq=300193",
   },
   {
-    label: "농림축산식품부, 2025 동물복지에 대한 국민의식조사 (2026. 2. 13. 게시)",
+    label: "농림축산식품부, 2025 동물복지에 대한 국민의식조사",
+    published: "2026. 2. 13. 게시",
     href: "https://www.animal.go.kr/front/community/show.do?boardId=boardID03&menuNo=5000000019&seq=300180",
   },
 ];

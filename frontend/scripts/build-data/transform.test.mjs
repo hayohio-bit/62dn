@@ -164,6 +164,15 @@ describe("날짜·이미지·설명·연락처", () => {
     expect(resolveImageUrl({})).toBeNull();
   });
 
+  it("animal.go.kr 계열의 http 사진 주소는 https로 바꾼다 (암호화되지 않은 요청과 혼합 콘텐츠를 피한다)", () => {
+    const url = "http://openapi.animal.go.kr/openapi/service/rest/fileDownloadSrvc/files/shelter/2026/10/a.jpg";
+    expect(resolveImageUrl({ popfile1: url })).toBe(url.replace("http://", "https://"));
+    expect(resolveImageUrl({ popfile1: "http://www.animal.go.kr/a.jpg" })).toBe("https://www.animal.go.kr/a.jpg");
+    // 확인하지 않은 다른 도메인은 그대로 둔다 (https를 지원하는지 모름)
+    expect(resolveImageUrl({ popfile1: "http://example.com/a.jpg" })).toBe("http://example.com/a.jpg");
+    expect(resolveImageUrl({ popfile1: "https://openapi.animal.go.kr/a.jpg" })).toBe("https://openapi.animal.go.kr/a.jpg");
+  });
+
   it("상대 경로는 animal.go.kr 이미지 뷰어 주소로 만든다", () => {
     const base = IMAGE_VIEW_BASE;
     expect(resolveImageUrl({ popfile: "/files/shelter/2026/10/a.jpg" })).toBe(`${base}/files/shelter/2026/10/a.jpg`);

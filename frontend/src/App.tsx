@@ -14,7 +14,9 @@ const SupportPage = lazyPage(() => import("@/pages/support/SupportPage"));
 const ShelterPage = lazyPage(() => import("@/pages/shelters/ShelterPage"));
 const MyPage = lazyPage(() => import("@/pages/my/MyPage"));
 const PreferencePage = lazyPage(() => import("@/pages/my/PreferencePage"));
-const PlaceholderPage = lazyPage(() => import("@/pages/PlaceholderPage"));
+const NotFoundPage = lazyPage(() => import("@/pages/NotFoundPage"));
+const PrivacyPage = lazyPage(() => import("@/pages/info/PrivacyPage"));
+const TermsPage = lazyPage(() => import("@/pages/info/TermsPage"));
 const GuideAdoptionPage = lazyPage(
   () => import("@/pages/guide/GuideAdoptionPage"),
 );
@@ -48,11 +50,11 @@ function App() {
             <Route path="/mypage/preferences" element={<PreferencePage />} />
 
             {/* 약관 */}
-            <Route path="/privacy" element={<PlaceholderPage />} />
-            <Route path="/terms" element={<PlaceholderPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
 
             {/* 정의되지 않은 주소: 빈 화면 대신 안내 페이지 표시 */}
-            <Route path="*" element={<PlaceholderPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

@@ -22,7 +22,7 @@ const columns = [
     title: "정보",
     links: [
       { to: "/privacy", label: "개인정보처리방침" },
-      { to: "/terms", label: "이용약관" },
+      { to: "/terms", label: "이용 안내" },
     ],
   },
 ];
