@@ -66,7 +66,7 @@ const sections: InfoSection[] = [
             ["Google Fonts (fonts.googleapis.com, fonts.gstatic.com)", "‘Gowun Dodum’ 글꼴", "모든 화면"],
             ["jsDelivr (cdn.jsdelivr.net)", "‘Pretendard’ 글꼴", "모든 화면"],
             ["국가동물보호정보시스템 (openapi.animal.go.kr)", "동물 사진", "동물 사진이 보이는 화면"],
-            ["카카오 지도 (dapi.kakao.com)", "지도 표시", "동물 상세·보호소 화면에서 지도를 보여 줄 때. 지도 SDK가 추가로 접속하는 주소와 저장하는 정보는 카카오의 정책을 따릅니다"],
+            ["카카오 지도 (dapi.kakao.com, t1.kakaocdn.net, mts.kakaocdn.net)", "지도 표시", "동물 상세·보호소 화면에서 지도를 보여 줄 때. 지도 SDK가 이 밖에 접속하는 주소와 저장하는 정보는 카카오의 정책을 따릅니다"],
           ]}
         />
         <p>
