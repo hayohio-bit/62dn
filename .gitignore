@@ -56,13 +56,6 @@ accessKeys*.csv
 backup_*.sql
 *.sql.backup
 
-# ===== Terraform =====
-terraform/.terraform/
-terraform/*.tfstate
-terraform/*.tfstate.*
-terraform/.terraform.lock.hcl
-terraform/terraform.tfvars
-
 # ===== 기타 =====
 *.pid
 *.seed
@@ -79,4 +72,3 @@ docs/
 skills-lock.json
 *.py
 *.sh
-!deploy.sh
