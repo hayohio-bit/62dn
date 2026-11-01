@@ -76,7 +76,7 @@ npm test                              # 변환 규칙 테스트 (Vitest)
 새 저장소에 게시할 때는 저장소 관리자가 한 번 설정해야 합니다. 설정을 마치기 전에는 예약 실행과 `main` push가 아무것도 하지 않습니다.
 
 1. Settings → Pages → Build and deployment → Source를 "GitHub Actions"로 바꿉니다
-2. Settings → Secrets and variables → Actions → Secrets에 `DATA_API_KEY`(공공데이터포털 서비스 키, 디코딩 값)를 등록합니다. 선택으로 카카오 지도 키 `VITE_MAP_API_KEY`도 등록합니다 (카카오 개발자 콘솔에서 허용 도메인에 `https://hayohio-bit.github.io`를 추가)
+2. Settings → Secrets and variables → Actions → Secrets에 `DATA_API_KEY`(공공데이터포털 서비스 키, 디코딩 값)를 등록합니다. 선택으로 카카오 지도 키 `VITE_KAKAO_MAP_KEY`도 등록합니다 (카카오 개발자 콘솔에서 허용 도메인에 `https://hayohio-bit.github.io`를 추가)
 3. 같은 화면의 Variables에 `PAGES_ENABLED`를 `true`로 등록합니다
 4. Actions 탭의 "Pages"에서 Run workflow로 첫 게시를 실행합니다 (수동 실행은 변수와 상관없이 됩니다)
 
