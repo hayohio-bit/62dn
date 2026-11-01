@@ -7,24 +7,6 @@ on:
     branches: [main]
 
 jobs:
-  backend:
-    name: Backend (test, build)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: "gradle"
-
-      - name: Test & Build
-        working-directory: backend
-        run: |
-          chmod +x gradlew
-          ./gradlew build
-
   frontend:
     name: Frontend (lint, build)
     runs-on: ubuntu-latest

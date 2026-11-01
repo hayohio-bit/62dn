@@ -9,30 +9,13 @@ frontend/public/data/snapshot.json
 .env.local
 .env.*.local
 
-# ===== Java / Maven / Backend =====
-target/
-backend/target/
-*.class
-*.jar
-!backend/gradle/wrapper/gradle-wrapper.jar
-*.war
-*.ear
-.gradle/
-build/
-bin/
+# ===== 빌드 산출물 =====
 *.tar.gz
 
 # ===== 로컬 비밀/키 =====
 .env
 *.env
-backend.env
-backend/env
-backend/.env
 frontend/.env
-
-# ===== 업로드 파일 =====
-uploads/
-backend/uploads/
 
 # ===== IDE / Editor =====
 .idea/
