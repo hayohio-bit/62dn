@@ -53,11 +53,8 @@ export default function InfoPage({ eyebrow, title, intro, effectiveDate, section
   );
 }
 
-/** 표 한 줄 */
-export type InfoRow = string[];
-
 /** 문서형 페이지의 표. 모바일에서는 가로로 스크롤한다 */
-export function InfoTable({ caption, head, rows }: { caption: string; head: string[]; rows: InfoRow[] }) {
+export function InfoTable({ caption, head, rows }: { caption: string; head: string[]; rows: string[][] }) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-ink/10 bg-cream-50">
       <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
@@ -72,15 +69,15 @@ export function InfoTable({ caption, head, rows }: { caption: string; head: stri
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row[0]} className="border-b border-ink/5 align-top last:border-b-0">
+          {rows.map((row, ri) => (
+            <tr key={ri} className="border-b border-ink/5 align-top last:border-b-0">
               {row.map((cell, i) =>
                 i === 0 ? (
-                  <th key={cell} scope="row" className="px-4 py-3 font-medium text-ink">
+                  <th key={i} scope="row" className="px-4 py-3 font-medium text-ink">
                     {cell}
                   </th>
                 ) : (
-                  <td key={cell} className="px-4 py-3">
+                  <td key={i} className="px-4 py-3">
                     {cell}
                   </td>
                 ),
